@@ -7,7 +7,7 @@ from datetime import datetime
 server = ECMWFDataServer()
 
 product = 'hindcast' # forecast, hincast
-dirbase = '/nird/projects/nird/NS9853K/DATA/S2S'
+dirbase = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
 dir = '%s/%s/%s/'%(dirbase,product,'/ECMWF/sfc')
 
 forcastcycle = 'CY46R1'
@@ -77,12 +77,7 @@ dates_fcycle = dates_monday.union(dates_thursday)
     
    # Program start
 for filename in (
-    'tp',
-    't2m',
     'sst',
-    'mslp',
-    'u10',
-    'v10',
 ):
     for prefix in (
         'pf',
