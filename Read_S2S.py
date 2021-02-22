@@ -6,17 +6,19 @@ import matplotlib.dates as mdates
 import numpy as np
 from calendar import monthrange,  monthcalendar, datetime
 
-var_short = 't2m' 
+var_short = 'sst' 
 ftype = 'pf'
 product = 'hindcast' # forecast
-cycle = 'CY43R3_CY45R1'
+
+cycle = 'CY46R1'
+
 # Bergen
 lat = 60.23
 lon = 5.19
 
-#ds_grib = xr.open_dataset('data/weather/min_max_t_and_wind_gust.grib',engine='cfgrib')
 
-dirbase_S2S = '/nird/projects/NS9853K/DATA/S2S/SUMMER2018/'
+
+dirbase_S2S = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
 dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
 
 dates_monday = pd.date_range("20180426", periods=1, freq="7D") # forecasts start Monday
