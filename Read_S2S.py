@@ -34,8 +34,9 @@ for idate in dates_fcycle:
     S2S_BR_daily = dataopen.sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     
     print(S2S_BR_daily.head(20)) # print the 20 first lines
-    S2S_BR_daily_reset_index = S2S_BR_daily.reset_index(inplace=True) 
-    print(S2S_BR_daily_reset_index.head(20))
+    #index.get_level_values() 
+    S2S_BR_daily.reset_index(inplace=True) 
+    print(S2S_BR_daily.head(20)) # print the 20 first lines
 
     
     
