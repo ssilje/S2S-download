@@ -24,7 +24,8 @@ basedict = {
     'model': 'glob',
     'origin': 'ecmf',
     'stream': STREAM ,
-    'time': '00:00:00'
+    'time': '00:00:00',
+    'area': '70/0/50/15'
 }
 
 l = range(0,1128,24)
