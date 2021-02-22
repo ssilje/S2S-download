@@ -40,16 +40,16 @@ for idate in dates_fcycle:
     
     
     print('cf')
-    print(S2S_BR_daily_cf.head(20)) # print the 20 first lines
+    print(S2S_BR_daily_cf.head(50)) # print the 20 first lines
     S2S_BR_daily_cf.reset_index(inplace=True)
     print('cf-reset')
-    print(S2S_BR_daily_cf.head(20)) # print the 20 first lines
+    print(S2S_BR_daily_cf.head(50)) # print the 20 first lines
     
     print('pf')
-    print(S2S_BR_daily_pf.head(20)) # print the 20 first lines
+    print(S2S_BR_daily_pf.head(50)) # print the 20 first lines
     S2S_BR_daily_pf.reset_index(inplace=True)
     print('pf-reset')
-    print(S2S_BR_daily_pf.head(20)) # print the 20 first lines
+    print(S2S_BR_daily_pf.head(50)) # print the 20 first lines
 
     
     
