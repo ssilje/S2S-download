@@ -35,7 +35,7 @@ for idate in dates_fcycle:
     S2S_BR_daily_cf = dataopen.sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     
     dS2S_pf = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf','.grb')
-    dataopen = xr.open_dataset(dS2S_cp,engine='cfgrib')
+    dataopen = xr.open_dataset(dS2S_pf,engine='cfgrib')
     S2S_BR_daily_pf = dataopen.sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     
     
