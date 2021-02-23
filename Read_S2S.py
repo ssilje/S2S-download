@@ -41,13 +41,13 @@ for idate in dates_fcycle:
         dS2S = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,ftype,'.grb')
         dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     data_append = dataopen_cf.append(dataopen) 
-    
+    data_append.reset_index(inplace=True)  
     if d == dates_monday[0].strftime('%Y-%m-%d'):
         data_all = data_append
     else:                             
         data_all = data_all.append(data_append) 
     
-    data_all.reset_index(inplace=True)  
+    #data_all.reset_index(inplace=True)  
     print('data_all')
     print(data_all.head(50)) # print the 20 first lines
     
