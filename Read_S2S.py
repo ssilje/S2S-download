@@ -29,38 +29,27 @@ dates_fcycle = dates_monday.union(dates_thursday)
 
 for idate in dates_fcycle: 
     d = idate.strftime('%Y-%m-%d')
-    
+  
     for ftype in (
         'cf',
         'pf',
     ):
         
-        if ftype = 'pf': data_append = S2S_BR_daily_cf.append(S2S_BR_daily_pf) 
-        dataopen_cf =     
+        if ftype = 'pf': 
+            dataopen_cf = dataopen
+           
         dS2S = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'ftype,'.grb')
         dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
-        
-                                      dS2S_pf = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf','.grb')
-    dataopen = xr.open_dataset(dS2S_pf,engine='cfgrib')
-    S2S_BR_daily_pf = dataopen.sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    data_append = dataopen_cf.append(dataopen) 
     
+    if d == dates_monday[0].strftime('%Y-%m-%d'):
+        data_all = data_append
+    else:                             
+        data_all = data_all.append(data_append) 
     
-    print('cf')
-    print(S2S_BR_daily_cf.head(50)) # print the 20 first lines
-    S2S_BR_daily_cf.reset_index(inplace=True)
-    print('cf-reset')
-    print(S2S_BR_daily_cf.head(50)) # print the 20 first lines
-    
-    print('pf')
-    print(S2S_BR_daily_pf.head(50)) # print the 20 first lines
-    S2S_BR_daily_pf.reset_index(inplace=True)
-    print('pf-reset')
-    print(S2S_BR_daily_pf.head(50)) # print the 20 first lines
-    
-    
-    data_append = S2S_BR_daily_cf.append(S2S_BR_daily_pf) 
-
-    
+    data_all.reset_index(inplace=True)  
+    print('data_all')
+    print(data_all.head(50)) # print the 20 first lines
     
     
     
