@@ -35,9 +35,9 @@ for idate in dates_fcycle:
     dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     dS2S_pf = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf','.grb')
     dataopen_pf = xr.open_dataset(dS2S_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
-    #dataopen_pf.reset_index(inplace=True)
-    #dataopen_cf.reset_index(inplace=True)  
-    data_append = dataopen_cf.reset_index(inplace=True).append(dataopen_pf).reset_index(inplace=True)  
+    dataopen_pf.reset_index(inplace=True)
+    dataopen_cf.reset_index(inplace=True)  
+    data_append = dataopen_cf.append(dataopen_pf)
     
   #  data_append.reset_index(inplace=True)  
     if d == dates_monday[0].strftime('%Y-%m-%d'):
