@@ -38,7 +38,7 @@ for idate in dates_fcycle:
         if ftype == 'pf': 
             dataopen_cf = dataopen
            
-        dS2S = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'ftype,'.grb')
+        dS2S = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,ftype,'.grb')
         dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     data_append = dataopen_cf.append(dataopen) 
     
