@@ -28,21 +28,20 @@ dates_fcycle = dates_monday.union(dates_thursday)
 
 
 for idate in dates_fcycle: 
+#for idate in dates_monday: 
     d = idate.strftime('%Y-%m-%d')
-  
-    for ftype in (
-        'cf',
-        'pf',
-    ):
-        
-        if ftype == 'pf': 
-            dataopen_cf = dataopen
-           
-        dS2S = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,ftype,'.grb')
-        dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
-    data_append = dataopen_cf.append(dataopen) 
-    data_append.reset_index(inplace=True)  
+    
+    dS2S_cf = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf','.grb')
+    dataopen_cf = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    dS2S_pf = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf','.grb')
+    dataopen_pf = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    dataopen_pf.reset_index(inplace=True)
+    dataopen_cf.reset_index(inplace=True)  
+    data_append = dataopen_cf.append(dataopen_pf) 
+    
+  #  data_append.reset_index(inplace=True)  
     if d == dates_monday[0].strftime('%Y-%m-%d'):
+        
         data_all = data_append
     else:                             
         data_all = data_all.append(data_append) 
