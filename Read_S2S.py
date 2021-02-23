@@ -53,4 +53,6 @@ for idate in dates_fcycle:
 print('data_all')
 print(data_all.head(50)) # print the 20 first lines
     
+data_all.to_excel("output.xlsx")  
+#https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_excel.html
     
