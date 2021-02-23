@@ -47,8 +47,9 @@ for idate in dates_fcycle:
         data_all = data_all.append(data_append) 
     
     #data_all.reset_index(inplace=True)  
-    print('data_all')
-    print(data_all.head(50)) # print the 20 first lines
-    
+   # print('data_all')
+   # print(data_all.head(50)) # print the 20 first lines
+print('data_all')
+print(data_all.head(50)) # print the 20 first lines
     
     
