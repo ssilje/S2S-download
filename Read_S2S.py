@@ -35,7 +35,7 @@ for idate in dates_fcycle:
         'pf',
     ):
         
-        if ftype = 'pf': 
+        if ftype == 'pf': 
             dataopen_cf = dataopen
            
         dS2S = '%s/%s/%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'ftype,'.grb')
