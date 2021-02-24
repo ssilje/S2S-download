@@ -22,8 +22,8 @@ lon = 5.19
 dirbase_S2S = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
 dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
 
-dates_monday = pd.date_range("20190701", periods=52, freq="7D") # forecasts start Monday
-dates_thursday = pd.date_range("20190704", periods=52, freq="7D") # forecasts start Thursday
+dates_monday = pd.date_range("20190701", periods=1, freq="7D") # forecasts start Monday
+dates_thursday = pd.date_range("20190704", periods=1, freq="7D") # forecasts start Thursday
 
 dates_fcycle = dates_monday.union(dates_thursday)   
 
