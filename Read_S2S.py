@@ -58,7 +58,7 @@ print(data_all.head(50)) # print the 20 first lines
 dirbase = '/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc'
 dates_era = pd.date_range(start='19990701', end='19991001', freq="D")
 for i,d in enumerate(dates_era):
-    dERA5 = '%s/%s_%s_%s'%(dirbase,var_long,d.strftime('%Y%m%d'),'.nc')
+    dERA5 = '%s/%s_%s%s'%(dirbase,var_long,d.strftime('%Y%m%d'),'.nc')
     dataopen = xr.open_dataset(dERA5)
     if i == 0:
         ERA5_BR_daily = dataopen.sst.sel(lat=lat, lon=lon, method='nearest').resample(time='D').mean().to_dataframe() # Maa interpolere 
