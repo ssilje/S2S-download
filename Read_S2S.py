@@ -63,7 +63,7 @@ for i,d in enumerate(dates_era):
     if i == 0:
         ERA5_BR_daily = dataopen.sst.sel(lat=lat, lon=lon, method='nearest').resample(time='D').mean().to_dataframe() # Maa interpolere 
     else:
-        ERA5_BR_daily = pd.concat([ERA5_BR_daily, dataopen.sst.sel(lat=lat, lon=lon, method='nearest').resample(time='D').mean().to_dataframe()])
+        ERA5_BR_daily = pd.concat([ERA5_BR_daily, dataopen.sst.sel(latitude=lat, longitude=lon, method='nearest').resample(time='D').mean().to_dataframe()])
                 
                 
 #data_all.to_excel("output.xlsx")  
