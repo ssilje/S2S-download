@@ -7,7 +7,9 @@ import numpy as np
 from calendar import monthrange,  monthcalendar, datetime
 from openpyxl import Workbook
 
+var_long='sea_surface_temperature' 
 var_short = 'sst' 
+
 ftype = 'pf'
 product = 'hindcast' # forecast
 
@@ -52,7 +54,18 @@ for idate in dates_fcycle:
    # print(data_all.head(50)) # print the 20 first lines
 print('data_all')
 print(data_all.head(50)) # print the 20 first lines
-    
+
+dirbase = '/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc'
+dates_era = pd.date_range(start='19990701', end='19991001', freq="D")
+for i,d in enumerate(dates_era):
+    dERA5 = '%s/%s_%s_%s'%(dirbase,var_long,d.strftime('%Y%m%d'),'.nc')
+    dataopen = xr.open_dataset(dERA5)
+    if i == 0:
+        ERA5_BR_daily = dataopen.sst.sel(lat=lat, lon=lon, method='nearest').resample(time='D').mean().to_dataframe() # Maa interpolere 
+    else:
+        ERA5_BR_daily = pd.concat([ERA5_BR_daily, dataopen.sst.sel(lat=lat, lon=lon, method='nearest').resample(time='D').mean().to_dataframe()])
+                
+                
 #data_all.to_excel("output.xlsx")  
 #https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_excel.html
     
