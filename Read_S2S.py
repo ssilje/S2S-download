@@ -20,6 +20,16 @@ lat = 60.23
 lon = 5.19
 
 
+dirbase = '/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc'
+dates_era = pd.date_range(start='19990701', end='19991001', freq="D")
+for i,d in enumerate(dates_era):
+    dERA5 = '%s/%s_%s%s'%(dirbase,var_long,d.strftime('%Y%m%d'),'.nc')
+    dataopen = xr.open_dataset(dERA5)
+    if i == 0:
+        ERA5_BR_daily = dataopen.sst.sel(latitude=lat, longitude=lon, method='nearest').resample(time='D').mean().to_dataframe() # Maa interpolere 
+    else:
+        ERA5_BR_daily = pd.concat([ERA5_BR_daily, dataopen.sst.sel(latitude=lat, longitude=lon, method='nearest').resample(time='D').mean().to_dataframe()])
+
 
 dirbase_S2S = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
 dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
@@ -55,16 +65,12 @@ for idate in dates_fcycle:
 print('data_all')
 print(data_all.head(50)) # print the 20 first lines
 
-dirbase = '/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc'
-dates_era = pd.date_range(start='19990701', end='19991001', freq="D")
-for i,d in enumerate(dates_era):
-    dERA5 = '%s/%s_%s%s'%(dirbase,var_long,d.strftime('%Y%m%d'),'.nc')
-    dataopen = xr.open_dataset(dERA5)
-    if i == 0:
-        ERA5_BR_daily = dataopen.sst.sel(latitude=lat, longitude=lon, method='nearest').resample(time='D').mean().to_dataframe() # Maa interpolere 
-    else:
-        ERA5_BR_daily = pd.concat([ERA5_BR_daily, dataopen.sst.sel(latitude=lat, longitude=lon, method='nearest').resample(time='D').mean().to_dataframe()])
-                
+for index, row in data_all.iterrows(): 
+    #print(row['c1'], row['c2'])
+    # need to add a columd to a DF
+   # if data_all.valid_time == ERA5_BR_daily.index.get_level_values('time')
+    #next need to find the matching time and calculate the bias
+
                 
 #data_all.to_excel("output.xlsx")  
 #https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.to_excel.html
