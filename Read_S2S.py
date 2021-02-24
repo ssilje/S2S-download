@@ -61,7 +61,7 @@ for i,d in enumerate(dates_era):
     dERA5 = '%s/%s_%s%s'%(dirbase,var_long,d.strftime('%Y%m%d'),'.nc')
     dataopen = xr.open_dataset(dERA5)
     if i == 0:
-        ERA5_BR_daily = dataopen.sst.sel(lat=lat, lon=lon, method='nearest').resample(time='D').mean().to_dataframe() # Maa interpolere 
+        ERA5_BR_daily = dataopen.sst.sel(latitude=lat, longitude=lon, method='nearest').resample(time='D').mean().to_dataframe() # Maa interpolere 
     else:
         ERA5_BR_daily = pd.concat([ERA5_BR_daily, dataopen.sst.sel(latitude=lat, longitude=lon, method='nearest').resample(time='D').mean().to_dataframe()])
                 
