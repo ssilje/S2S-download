@@ -6,7 +6,7 @@ from datetime import datetime
 
 server = ECMWFDataServer()
 
-product = 'hindcast' # forecast, hincast
+product = 'forecast' # forecast, hincast
 dirbase = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
 dir = '%s/%s/%s/'%(dirbase,product,'/ECMWF/sfc')
 
@@ -90,7 +90,7 @@ for filename in (
             if not os.path.exists(datadir)  :
                 os.makedirs(datadir)
             hdate = '/'.join([d.replace('%i'%refyear,'%i'%i) for i in range(refyear-20,refyear)])
-            target = '%s/%s_%s_%s_%s.grb'%(datadir,filename,forcastcycle,d,prefix)
+            target = '%s/%s_%s_%s_%s_%s.grb'%(datadir,filename,forcastcycle,d,prefix,product)
             if not os.path.isfile(target):
                dic = basedict.copy()
                for k,v in meta[filename].items():
