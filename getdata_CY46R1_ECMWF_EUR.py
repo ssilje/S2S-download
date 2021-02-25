@@ -85,7 +85,7 @@ dates_fcycle = dates_monday
     
    # Program start
 for filename in (
-    'sst',
+    'sal',
 ):
     for prefix in (
         'pf',
