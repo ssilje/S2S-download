@@ -66,9 +66,11 @@ print('data_all')
 print(data_all.head(50)) # print the 20 first lines
 
 for index, row in data_all.iterrows(): 
-    #print(row['c1'], row['c2'])
+   # print(row, index)
+   # row.valid_time
     # need to add a columd to a DF
-   # if data_all.valid_time == ERA5_BR_daily.index.get_level_values('time')
+    if row.valid_time == ERA5_BR_daily.index.get_level_values('time')
+    ERA5_BR_daily.index==row.valid_time
     #next need to find the matching time and calculate the bias
 
                 
