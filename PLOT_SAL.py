@@ -10,7 +10,7 @@ from openpyxl import Workbook
 var_short = 'sal' 
 
 ftype = 'pf'
-product = 'forecast' # forecast
+
 
 cycle = 'CY46R1'
 
@@ -19,7 +19,6 @@ lat = 65
 lon = 0
 
 dirbase_S2S = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
-dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
 
 dates_monday = pd.date_range("20200504", periods=1, freq="7D") # forecasts start Monday
 dates_thursday = pd.date_range("20190704", periods=1, freq="7D") # forecasts start Thursday
@@ -29,25 +28,40 @@ dates_fcycle = dates_monday
 for idate in dates_fcycle: 
 #for idate in dates_monday: 
     d = idate.strftime('%Y-%m-%d')
-    #(latitude=slice(50,30), longitude=slice(180,240))
+    product = 'forecast' # forecast
+    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
     dS2S_cf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
     dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
-    #dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=slice(65,60), longitude=slice(0,5)).to_dataframe() # Picking out a grid point
     dS2S_pf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
     dataopen_pf = xr.open_dataset(dS2S_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    
+    product = 'hindcast' # forecast
+    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
+    dS2S_cf_hc = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
+    dataopen_cf_hc = xr.open_dataset(dS2S_cf_hc,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    dS2S_pf_hc = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
+    dataopen_pf_hc = xr.open_dataset(dS2S_pf_hc,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
 
     
 
 
 f, ax = plt.subplots(1, 1)
+for ens in range(1,11):
+    print(ens)
+    ax.plot(dataopen_pf_hc.valid_time[dataopen_pf_hc.valid_time.index.get_level_values('number') == ens], dataopen_pf_hc.sav300[dataopen_pf_hc.sav300.index.get_level_values('number') == ens],color='b',linewidth=0.2)
+
+ax.plot(dataopen_cf_hc.valid_time, dataopen_cf_hc.sav300, linewidth=0.2, color='b')
+
+
 for ens in range(1,51):
-    ax.plot(dataopen_pf.valid_time[dataopen_pf.sav300.index.get_level_values('number') == 1], dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens])
+    print(ens)
+    ax.plot(dataopen_pf.valid_time[dataopen_pf.valid_time.index.get_level_values('number') == ens], dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens],color='r',linewidth=0.5)
 #ax.plot(ERA5_BR.time, ERA5_BR.SST, color='0.1')
 #ax.plot(ERA5_BR.time, ERA5_BR.SST-ERA5_BR_std.SST, color='0.5')
 #ax.plot(ERA5_BR.time, ERA5_BR.SST+ERA5_BR_std.SST, color='0.5')
 #ax.plot(ERA5_BR.time, ERA5_BR.SST+ERA5_BR_std.SST, color='0.5')
-
-xfmt = mdates.DateFormatter('%d')
+ax.plot(dataopen_cf.valid_time, dataopen_cf.sav300, linewidth=2, color='k')
+xfmt = mdates.DateFormatter('%m%d')
 ax.xaxis.set_major_formatter(xfmt)
 
 ax.set_xlabel('time')
