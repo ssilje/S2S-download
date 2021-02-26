@@ -29,9 +29,10 @@ dates_fcycle = dates_monday
 for idate in dates_fcycle: 
 #for idate in dates_monday: 
     d = idate.strftime('%Y-%m-%d')
-    
+    (latitude=slice(50,30), longitude=slice(180,240))
     dS2S_cf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
-    dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+   # dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=slice(65,60), longitude=slice(0,5), method='nearest').to_dataframe() # Picking out a grid point
     dS2S_pf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
     dataopen_pf = xr.open_dataset(dS2S_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     dataopen_pf.reset_index(inplace=True)
