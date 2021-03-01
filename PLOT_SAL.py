@@ -49,7 +49,7 @@ for idate in dates_fcycle:
 
 forecast_length = pd.date_range(start="20200505", periods=46) # forecasts start Monday
 
-#f, ax = plt.subplots(1, 1)
+f, ax = plt.subplots(1, 1)
 #for ens in range(1,11):
 #    print(ens)
     #ax.plot(dataopen_pf_hc.valid_time[dataopen_pf_hc.valid_time.index.get_level_values('number') == ens], dataopen_pf_hc.sav300[dataopen_pf_hc.sav300.index.get_level_values('number') == ens],color='b',linewidth=0.2)
