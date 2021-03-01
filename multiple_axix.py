@@ -1,3 +1,12 @@
+
+
+import xarray as xr
+import cartopy.crs as ccrs
+import pandas as pd
+import matplotlib.dates as mdates
+import numpy as np
+from calendar import monthrange,  monthcalendar, datetime
+
 dates = [datetime.datetime(2018, 1, 1) + datetime.timedelta(hours=k * 6)
          for k in range(240)]
 temperature = np.random.randn(len(dates)) * 4 + 6.7
