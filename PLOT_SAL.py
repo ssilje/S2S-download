@@ -61,8 +61,8 @@ f, ax = plt.subplots(1, 1)
 for ens in range(1,51):
     print(ens)
     #ax.plot(dataopen_pf.valid_time[dataopen_pf.valid_time.index.get_level_values('number') == ens], dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens],color='r',linewidth=0.5)
-    #ax.plot(dataopen_pf.valid_time[dataopen_pf.valid_time.index.get_level_values('number') == ens], dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens] ,color='r',linewidth=0.5)
-    ax.plot(dataopen_pf.valid_time[dataopen_pf.valid_time.index.get_level_values('number') == ens].index.get_level_values('step'), dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens] ,color='r',linewidth=0.5)
+    ax.plot(dataopen_pf.valid_time[dataopen_pf.valid_time.index.get_level_values('number') == ens], dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens] ,color='r',linewidth=0.5)
+   # ax.plot(dataopen_pf.valid_time[dataopen_pf.valid_time.index.get_level_values('number') == ens].index.get_level_values('step'), dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens] ,color='r',linewidth=0.5)
 #ax.plot(dataopen_cf.valid_time, dataopen_cf.sav300, linewidth=2, color='k')
 ax.plot(dataopen_cf.index.get_level_values('step'), dataopen_cf.sav300, linewidth=2, color='k')
 
