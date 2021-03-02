@@ -47,42 +47,26 @@ for idate in dates_fcycle:
     #dataopen_pf_hc.reset_index(inplace=True) 
     
 
-forecast_length = pd.date_range(start="20200505", periods=46) # forecasts start Monday
 
+lead_time = np.arange(1,47)
 f, ax = plt.subplots(1, 1)
-#for ens in range(1,11):
-#    print(ens)
-    #ax.plot(dataopen_pf_hc.valid_time[dataopen_pf_hc.valid_time.index.get_level_values('number') == ens], dataopen_pf_hc.sav300[dataopen_pf_hc.sav300.index.get_level_values('number') == ens],color='b',linewidth=0.2)
-#    ax.plot(dataopen_pf_hc.index.get_level_values('step'), dataopen_pf_hc.sav300[dataopen_pf_hc.sav300.index.get_level_values('number') == ens],color='b',linewidth=0.2)
+for y in range(2000,2020):
+    year = '%s'%(y)
+    d = pd.date_range(start='%s-%s-%s'%(y,'05','04'), periods=46) # forecasts start Monday
 
-#ax.plot(dataopen_cf.valid_time, dataopen_cf_hc.sav300, linewidth=0.2, color='b')
-
+    for ens in range(1,11):    
+        ax.plot(lead_time, dataopen_pf_hc.sav300.loc[(ens,slice(None), year)],color='b',linewidth=0.2)
+    ax.plot(lead_time, dataopen_cf_hc.sav300.loc[((slice(None),d.strftime('%Y%m%d')))],color='k',linewidth=0.2)
 
 for ens in range(1,51):
-    print(ens)
-    #ax.plot(dataopen_pf.valid_time[dataopen_pf.valid_time.index.get_level_values('number') == ens], dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens],color='r',linewidth=0.5)
-    ax.plot(dataopen_pf.valid_time[dataopen_pf.valid_time.index.get_level_values('number') == ens], dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens] ,color='r',linewidth=0.5)
-   # ax.plot(dataopen_pf.valid_time[dataopen_pf.valid_time.index.get_level_values('number') == ens].index.get_level_values('step'), dataopen_pf.sav300[dataopen_pf.sav300.index.get_level_values('number') == ens] ,color='r',linewidth=0.5)
-#ax.plot(dataopen_cf.valid_time, dataopen_cf.sav300, linewidth=2, color='k')
-ax.plot(dataopen_cf.index.get_level_values('step'), dataopen_cf.sav300, linewidth=2, color='k')
+    ax.plot(lead_time, dataopen_pf.sav300.loc[(ens)] ,color='r',linewidth=0.5)
+ax.plot(lead_time, dataopen_cf.sav300 ,color='k',linewidth=1)
 
-xfmt = mdates.DateFormatter('%m%d')
-ax.xaxis.set_major_formatter(xfmt)
 
-ax.set_xlabel('time')
+ax.set_xlabel('lead time')
 ax.set_ylabel('SALINITY')
-#ax.set_title('SST July', fontsize=16)
 
 
 
-#ERA5_BR.SST_std.plot()-ERA5_BR.SST
-#ERA5_BR.groupby(ERA5_BR_df.index.1).mean().plot()
-f.savefig('SALINITY.png')
+plt.show()
 
-
-#for idata_all, rdata_all in data_all.iterrows(): 
-#    for iera, rera in ERA5_BR_daily.iterrows():   
-#        if rdata_all.valid_time == rera.time
-#           rdata_all.sst
-##    if (row.valid_time==ERA5_BR_daily.index) is True:
- #   ERA5_BR_daily.index==row.valid_time
