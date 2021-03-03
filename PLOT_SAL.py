@@ -10,6 +10,7 @@ from openpyxl import Workbook
 var_short = 'sal' 
 cycle = 'CY46R1'
 dirbase_S2S = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
+lead_time = np.arange(1,47)
 
 # Bergen
 lat = 65
@@ -23,8 +24,19 @@ def read_grib(dirbase_S2S,product,ftype,d,lat,lon):
     dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     return dataopen
 
-
-
+def calc_stats_lead_time(dataopen,step,var,ftype):
+    if ftype == 'cf':
+        data_mean = dataopen.loc[(step,slice(None)),var].mean()
+        data_std = dataopen.loc[(step,slice(None)),var].std()
+    if ftype == 'pf':
+        data_mean = dataopen.loc[(slice(None),step,slice(None)),var].mean()
+        data_std = dataopen.loc[(slice(None),step,slice(None)),var].std()
+        
+    data_stats = pd.DataFrame({"mean": [data_mean], "std": [data_std]}, index=[step])
+    data_stats.index.name = 'step'
+    
+    return data_stats
+    
 
 dates_fcycle = pd.date_range("20200504", periods=1, freq="7D") # forecasts start Monday
 
@@ -37,9 +49,12 @@ for idate in dates_fcycle:
     dataopen_pf_hc = read_grib(dirbase_S2S,'hindcast','pf',d,lat,lon) #product, ftype, lat, lon
    
 
-lead_time = np.arange(1,47)
+calc_stats_lead_time(dataopen_cf_hc,step,var,'cf')
+
+
 f, ax = plt.subplots(1, 1)
-for y in range(2000,2020):
+
+for y in range(2000,2020): # need to check for the hcast years
     year = '%s'%(y)
     d = pd.date_range(start='%s-%s-%s'%(y,'05','04'), periods=46) # forecasts start Monday
 
