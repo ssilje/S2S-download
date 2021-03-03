@@ -8,6 +8,7 @@ from calendar import monthrange,  monthcalendar, datetime
 from openpyxl import Workbook
 
 var_short = 'sal' 
+var = 'sav300'
 cycle = 'CY46R1'
 dirbase_S2S = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
 lead_time = np.arange(1,47)
@@ -17,6 +18,7 @@ fcday=4
 # Bergen
 lat = 65
 lon = 0
+dates_fcycle = pd.date_range(start='%s-%s-%s'%(fcyear,fcmonth,fcday), periods=1, freq="7D") # forecasts start Monday
 
 def read_grib(dirbase_S2S,product,ftype,d,lat,lon):
     dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
@@ -40,8 +42,6 @@ def calc_stats_lead_time(dataopen,step,var,ftype):
     return data_stats
     
 
-dates_fcycle = pd.date_range(start='%s-%s-%s'%(fcyear,fcmonth,fcday), periods=1, freq="7D") # forecasts start Monday
-
 for idate in dates_fcycle: 
 
     d = idate.strftime('%Y-%m-%d')
@@ -58,7 +58,13 @@ for nstep in set(dataopen_cf_hc.index.get_level_values('step').days): # set gets
     #step = '%s%s'%(nstep,' days')
     print(nstep)
     print('%s%s'%(nstep,' days'))
-    data_stats_cf_hc = calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')
+    if nstep == 1: 
+        data_stats_cf_hc = calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')
+        data_stats_pf_hc = calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'pf')
+ 
+    else:
+        data_stats_cf_hc = pd.concat([data_stats_cf_hc, calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')])
+        data_stats_pf_hc = pd.concat([data_stats_cf_hc, calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'pf')])
 
 
 f, ax = plt.subplots(1, 1)
