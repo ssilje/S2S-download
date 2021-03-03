@@ -60,11 +60,11 @@ for nstep in set(dataopen_cf_hc.index.get_level_values('step').days): # set gets
     print('%s%s'%(nstep,' days'))
     if nstep == 1: 
         data_stats_cf_hc = calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')
-        data_stats_pf_hc = calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'pf')
+        data_stats_pf_hc = calc_stats_lead_time(dataopen_pf_hc,'%s%s'%(nstep,' days'),var,'pf')
  
     else:
         data_stats_cf_hc = pd.concat([data_stats_cf_hc, calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')])
-        data_stats_pf_hc = pd.concat([data_stats_cf_hc, calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'pf')])
+        data_stats_pf_hc = pd.concat([data_stats_pf_hc, calc_stats_lead_time(dataopen_pf_hc,'%s%s'%(nstep,' days'),var,'pf')])
 
 
 f, ax = plt.subplots(1, 1)
