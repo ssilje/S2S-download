@@ -50,11 +50,15 @@ for idate in dates_fcycle:
     dataopen_cf_hc = read_grib(dirbase_S2S,'hindcast','cf',d,lat,lon) #product, ftype, lat, lon
     dataopen_pf_hc = read_grib(dirbase_S2S,'hindcast','pf',d,lat,lon) #product, ftype, lat, lon
    
-nstep = set(dataopen_cf_hc.index.get_level_values('step')) # set getst the unique values
+#ns = set(dataopen_cf_hc.index.get_level_values('step').days) # set getst the unique values
 
 # Pandas timedeltas: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.TimedeltaIndex.html
 
-calc_stats_lead_time(dataopen_cf_hc,step,var,'cf')
+for nstep in set(dataopen_cf_hc.index.get_level_values('step').days): # set getst the unique values
+    #step = '%s%s'%(nstep,' days')
+    print(nstep)
+    print('%s%s'%(nstep,' days'))
+    data_stats_cf_hc = calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')
 
 
 f, ax = plt.subplots(1, 1)
