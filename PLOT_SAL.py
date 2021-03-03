@@ -8,28 +8,39 @@ from calendar import monthrange,  monthcalendar, datetime
 from openpyxl import Workbook
 
 var_short = 'sal' 
-
 cycle = 'CY46R1'
+dirbase_S2S = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
 
 # Bergen
 lat = 65
 lon = 0
 
-dirbase_S2S = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
+def read_grib(dirbase_S2S,product,ftype,lat,lon):
+    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
+    dS2S = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,ftype,product,'.grb')
+    dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    return dataopen
+
+
+
 
 dates_fcycle = pd.date_range("20200504", periods=1, freq="7D") # forecasts start Monday
 
 for idate in dates_fcycle: 
 
     d = idate.strftime('%Y-%m-%d')
-    product = 'forecast' # forecast
-    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
-    dS2S_cf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
-    dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     
-    dS2S_pf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
-    dataopen_pf = xr.open_dataset(dS2S_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
- 
+    
+    
+    #dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
+    #dS2S_cf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
+    #dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    
+    #dS2S_pf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
+    #dataopen_pf = xr.open_dataset(dS2S_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    
+    dataopen_cf = read_grib(dirbase_S2S,'forecast','cf',lat,lon) #product, ftype, lat, lon
+    dataopen_pf = read_grib(dirbase_S2S,'forecast','cf',lat,lon) #product, ftype, lat, lon
     
     product = 'hindcast' # forecast
     dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
