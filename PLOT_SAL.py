@@ -11,7 +11,9 @@ var_short = 'sal'
 cycle = 'CY46R1'
 dirbase_S2S = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
 lead_time = np.arange(1,47)
-
+fcyear = 2020
+fcmonth=5
+fcday=4
 # Bergen
 lat = 65
 lon = 0
@@ -38,7 +40,7 @@ def calc_stats_lead_time(dataopen,step,var,ftype):
     return data_stats
     
 
-dates_fcycle = pd.date_range("20200504", periods=1, freq="7D") # forecasts start Monday
+dates_fcycle = pd.date_range(start='%s-%s-%s'%(fcyear,fcmonth,fcday), periods=1, freq="7D") # forecasts start Monday
 
 for idate in dates_fcycle: 
 
@@ -48,15 +50,18 @@ for idate in dates_fcycle:
     dataopen_cf_hc = read_grib(dirbase_S2S,'hindcast','cf',d,lat,lon) #product, ftype, lat, lon
     dataopen_pf_hc = read_grib(dirbase_S2S,'hindcast','pf',d,lat,lon) #product, ftype, lat, lon
    
+nstep = set(dataopen_cf_hc.index.get_level_values('step')) # set getst the unique values
+
+# Pandas timedeltas: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.TimedeltaIndex.html
 
 calc_stats_lead_time(dataopen_cf_hc,step,var,'cf')
 
 
 f, ax = plt.subplots(1, 1)
-
-for y in range(2000,2020): # need to check for the hcast years
+syr=dataopen_cf_hc.valid_time.min().year
+for y in range(syr,fcyear): # need to check for the hcast years
     year = '%s'%(y)
-    d = pd.date_range(start='%s-%s-%s'%(y,'05','04'), periods=46) # forecasts start Monday
+    d = pd.date_range(start='%s-%s-%s'%(y,fcmonth,fcday), periods=46) # forecasts start Monday
 
     for ens in range(1,11):    
         ax.plot(lead_time, dataopen_pf_hc.sav300.loc[(ens,slice(None), year)],color='gray',linewidth=0.2)
