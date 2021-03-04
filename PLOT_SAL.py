@@ -7,6 +7,10 @@ import numpy as np
 from calendar import monthrange,  monthcalendar, datetime
 from openpyxl import Workbook
 
+
+import globals as stosgl
+
+
 var_short = 'sal' 
 var = 'sav300'
 cycle = 'CY46R1'
@@ -20,67 +24,15 @@ lat = 65
 lon = 0
 dates_fcycle = pd.date_range(start='%s-%s-%s'%(fcyear,fcmonth,fcday), periods=1, freq="7D") # forecasts start Monday
 
-def read_grib(dirbase_S2S,product,ftype,d,lat,lon):
-    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
-    dS2S = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,ftype,product,'.grb')
-    print('reading file:')
-    print(dS2S)
-    dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
-    return dataopen
-
-def read_grib_cf_pf(dirbase_S2S,product,d,lat,lon):
-    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')  
-    dS2S_cf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
-    dS2S_pf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
-    
-    print('reading file:')
-    print(dS2S_pf)   
-    dataopen_pf = xr.open_dataset(dS2S_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe().reset_index(level='number')
-    
-    print('reading file:')
-    print(dS2S_cf)   
-    dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
-    
-    dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
-    return dataopen
-
-def calc_stats_lead_time(dataopen,step,var,ftype):
-    if ftype == 'cf':
-        data_mean = dataopen.loc[(step,slice(None)),var].mean()
-        data_std = dataopen.loc[(step,slice(None)),var].std()
-    if ftype == 'pf':
-        data_mean = dataopen.loc[(slice(None),step,slice(None)),var].mean()
-        data_std = dataopen.loc[(slice(None),step,slice(None)),var].std()
-        
-    data_stats = pd.DataFrame({"mean": [data_mean], "std": [data_std]}, index=[step])
-    data_stats.index.name = 'step'
-    
-    return data_stats
-
-def calc_stats_lead_time_cf_pf(dataopen_cf,dataopen_pf,step,var,ftype):
-    data_pf_cf = pd.concat([dataopen_cf_pf.loc[(step,slice(None)),var], dataopen_cf_pf.loc[(slice(None),step,slice(None)),var])
-    
-    if ftype == 'cf':
-        data_mean = dataopen.loc[(step,slice(None)),var].mean()
-        data_std = dataopen.loc[(step,slice(None)),var].std()
-    if ftype == 'pf':
-        data_mean = dataopen.loc[(slice(None),step,slice(None)),var].mean()
-        data_std = dataopen.loc[(slice(None),step,slice(None)),var].std()
-        
-    data_stats = pd.DataFrame({"mean": [data_mean], "std": [data_std]}, index=[step])
-    data_stats.index.name = 'step'
-    
-    return data_stats
-    
-
 for idate in dates_fcycle: 
 
     d = idate.strftime('%Y-%m-%d')
-    dataopen_cf = read_grib(dirbase_S2S,'forecast','cf',d,lat,lon) #product, ftype, lat, lon
-    dataopen_pf = read_grib(dirbase_S2S,'forecast','pf',d,lat,lon) #product, ftype, lat, lon
-    dataopen_cf_hc = read_grib(dirbase_S2S,'hindcast','cf',d,lat,lon) #product, ftype, lat, lon
-    dataopen_pf_hc = read_grib(dirbase_S2S,'hindcast','pf',d,lat,lon) #product, ftype, lat, lon
-   
+    dataopen_cf = stosgl.read_grib(dirbase_S2S,'forecast','cf',d,lat,lon) #product, ftype, lat, lon
+    dataopen_pf = stosgl.read_grib(dirbase_S2S,'forecast','pf',d,lat,lon) #product, ftype, lat, lon
+    dataopen_cf_hc = stosgl.read_grib(dirbase_S2S,'hindcast','cf',d,lat,lon) #product, ftype, lat, lon
+    dataopen_pf_hc = stosgl.read_grib(dirbase_S2S,'hindcast','pf',d,lat,lon) #product, ftype, lat, lon
+
+#read_grib_cf_pf(dirbase_S2S,'forecast',d,lat,lon)
 #ns = set(dataopen_cf_hc.index.get_level_values('step').days) # set getst the unique values
 
 # Pandas timedeltas: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.TimedeltaIndex.html
@@ -90,12 +42,12 @@ for nstep in set(dataopen_cf_hc.index.get_level_values('step').days): # set gets
     print(nstep)
     print('%s%s'%(nstep,' days'))
     if nstep == 1: 
-        data_stats_cf_hc = calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')
-        data_stats_pf_hc = calc_stats_lead_time(dataopen_pf_hc,'%s%s'%(nstep,' days'),var,'pf')
+        data_stats_cf_hc = stosgl.calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')
+        data_stats_pf_hc = stosgl.calc_stats_lead_time(dataopen_pf_hc,'%s%s'%(nstep,' days'),var,'pf')
  
     else:
-        data_stats_cf_hc = pd.concat([data_stats_cf_hc, calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')])
-        data_stats_pf_hc = pd.concat([data_stats_pf_hc, calc_stats_lead_time(dataopen_pf_hc,'%s%s'%(nstep,' days'),var,'pf')])
+        data_stats_cf_hc = pd.concat([data_stats_cf_hc, stosgl.calc_stats_lead_time(dataopen_cf_hc,'%s%s'%(nstep,' days'),var,'cf')])
+        data_stats_pf_hc = pd.concat([data_stats_pf_hc, stosgl.calc_stats_lead_time(dataopen_pf_hc,'%s%s'%(nstep,' days'),var,'pf')])
 
         
 f, axes = plt.subplots(1, 1)
