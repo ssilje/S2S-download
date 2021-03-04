@@ -49,17 +49,11 @@ def calc_stats_lead_time(dataopen,step,var,ftype):
 
   
   
-#def calc_stats_lead_time_cf_pf(dataopen_cf,dataopen_pf,step,var,ftype):
-#    data_pf_cf = pd.concat([dataopen_cf_pf.loc[(step,slice(None)),var], dataopen_cf_pf.loc[(slice(None),step,slice(None)),var])
-    
-#    if ftype == 'cf':
- #       data_mean = dataopen.loc[(step,slice(None)),var].mean()
- #       data_std = dataopen.loc[(step,slice(None)),var].std()
- #   if ftype == 'pf':
-  #      data_mean = dataopen.loc[(slice(None),step,slice(None)),var].mean()
-  #      data_std = dataopen.loc[(slice(None),step,slice(None)),var].std()
+def calc_stats_lead_time_cf_pf(dataopen_cf,dataopen_pf,step,var,ftype):
+    data_mean = dataopen.loc[(step,slice(None)),var].mean()
+    data_std = dataopen.loc[(step,slice(None)),var].std()
         
-   # data_stats = pd.DataFrame({"mean": [data_mean], "std": [data_std]}, index=[step])
-   # data_stats.index.name = 'step'
+    data_stats = pd.DataFrame({"mean": [data_mean], "std": [data_std]}, index=[step])
+    data_stats.index.name = 'step'
     
-    #return data_stats
+    return data_stats
