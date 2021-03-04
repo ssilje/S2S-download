@@ -16,7 +16,7 @@ def read_grib(dirbase_S2S,product,ftype,d,lat,lon):
   
   
 
-def read_grib_cf_pf(dirbase_S2S,product,d,lat,lon):
+def read_grib_cf_pf(dirbase_S2S,product,d,lat,lon,var_short,cycle):
     dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')  
     dS2S_cf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
     dS2S_pf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
