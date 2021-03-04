@@ -7,7 +7,7 @@ from datetime import datetime
 server = ECMWFDataServer()
 
 product = 'hindcast' # forecast, hincast
-dirbase = '/nird/projects/NS9001K/sso102/S2S/DATA/grib'
+dirbase = '/nird/projects/nird/NS9001K/sso102/S2S/DATA/grib'
 dir = '%s/%s/%s/'%(dirbase,product,'/ECMWF/sfc')
 
 forcastcycle = 'CY46R1'
@@ -68,16 +68,24 @@ meta = {
         'param': '151',  
         'levtype': 'sfc',
         'step': '0/to/1104/by/24'
+    },
+     
+    'sal': {
+        'param': '151175',  
+        'levtype': 'o2d',
+        'step': '/'.join([final]) 
     }
 }
 
-dates_monday = pd.date_range("20190701", periods=52, freq="7D") # forecasts start Monday
+dates_monday = pd.date_range("20200504", periods=1, freq="7D") # forecasts start Monday
+#dates_monday = pd.date_range("20190701", periods=52, freq="7D") # forecasts start Monday
 dates_thursday = pd.date_range("20190704", periods=52, freq="7D") # forecasts start Thursday
-dates_fcycle = dates_monday.union(dates_thursday)   
+#dates_fcycle = dates_monday.union(dates_thursday)   
+dates_fcycle = dates_monday 
     
    # Program start
 for filename in (
-    'sst',
+    'sal',
 ):
     for prefix in (
         'pf',
@@ -90,7 +98,7 @@ for filename in (
             if not os.path.exists(datadir)  :
                 os.makedirs(datadir)
             hdate = '/'.join([d.replace('%i'%refyear,'%i'%i) for i in range(refyear-20,refyear)])
-            target = '%s/%s_%s_%s_%s.grb'%(datadir,filename,forcastcycle,d,prefix)
+            target = '%s/%s_%s_%s_%s_%s.grb'%(datadir,filename,forcastcycle,d,prefix,product)
             if not os.path.isfile(target):
                dic = basedict.copy()
                for k,v in meta[filename].items():
