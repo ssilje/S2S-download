@@ -49,7 +49,7 @@ def calc_stats_lead_time(dataopen,step,var,ftype):
 
   
   
-def calc_stats_lead_time_cf_pf(dataopen_cf,dataopen_pf,step,var,ftype):
+def calc_stats_lead_time_cf_pf(dataopen,step,var):
     data_mean = dataopen.loc[(step,slice(None)),var].mean()
     data_std = dataopen.loc[(step,slice(None)),var].std()
         
