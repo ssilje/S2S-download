@@ -27,10 +27,12 @@ dates_fcycle = pd.date_range(start='%s-%s-%s'%(fcyear,fcmonth,fcday), periods=1,
 for idate in dates_fcycle: 
 
     d = idate.strftime('%Y-%m-%d')
-    dataopen_cf = stosgl.read_grib(dirbase_S2S,'forecast','cf',d,lat,lon) #product, ftype, lat, lon
-    dataopen_pf = stosgl.read_grib(dirbase_S2S,'forecast','pf',d,lat,lon) #product, ftype, lat, lon
-    dataopen_cf_hc = stosgl.read_grib(dirbase_S2S,'hindcast','cf',d,lat,lon) #product, ftype, lat, lon
-    dataopen_pf_hc = stosgl.read_grib(dirbase_S2S,'hindcast','pf',d,lat,lon) #product, ftype, lat, lon
+    dataopen_fc =stosgl.read_grib_cf_pf(dirbase_S2S,'forecast',d,lat,lon,var_short,cycle)
+    dataopen_hc = stosgl.read_grib_cf_pf(dirbase_S2S,'hindcast',d,lat,lon,var_short,cycle)
+    
+    
+   # dataopen_cf_hc = stosgl.read_grib(dirbase_S2S,'hindcast','cf',d,lat,lon) #product, ftype, lat, lon
+   # dataopen_pf_hc = stosgl.read_grib(dirbase_S2S,'hindcast','pf',d,lat,lon) #product, ftype, lat, lon
 
 #read_grib_cf_pf(dirbase_S2S,'forecast',d,lat,lon)
 #ns = set(dataopen_cf_hc.index.get_level_values('step').days) # set getst the unique values
