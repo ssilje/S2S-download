@@ -30,3 +30,16 @@ for idate in dates_fcycle:
     dataopen_hc = stosgl.read_grib_cf_pf(dirbase_S2S,'hindcast',d,lat,lon,var_short,cycle)
     
 
+for nstep in set(dataopen_hc.index.get_level_values('step').days): # set gets the unique values
+    
+    print(nstep)
+    print('%s%s'%(nstep,' days'))
+    if nstep == 1: 
+     
+        data_stats_hc = stosgl.calc_stats_lead_time_cf_pf(dataopen_hc,'%s%s'%(nstep,' days'),var)
+        data_stats_fc = stosgl.calc_stats_lead_time_cf_pf(dataopen_hc,'%s%s'%(nstep,' days'),var)
+ 
+    else:
+        data_stats_hc = pd.concat([data_stats_hc, stosgl.calc_stats_lead_time_cf_pf(dataopen_hc,'%s%s'%(nstep,' days'),var)])
+        data_stats_hc = pd.concat([data_stats_hc, stosgl.calc_stats_lead_time_cf_pf(dataopen_hc,'%s%s'%(nstep,' days'),var)])
+        
