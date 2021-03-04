@@ -29,33 +29,19 @@ def read_grib(dirbase_S2S,product,ftype,d,lat,lon):
     return dataopen
 
 def read_grib_cf_pf(dirbase_S2S,product,d,lat,lon):
-    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
-    
+    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')  
     dS2S_cf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
     dS2S_pf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
     
     print('reading file:')
     print(dS2S_pf)   
-    dataopen = xr.open_dataset(dS2S_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
-
+    dataopen_pf = xr.open_dataset(dS2S_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe().reset_index(level='number')
+    
     print('reading file:')
     print(dS2S_cf)   
     dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
-    newdata = pd.Series(
-        {"time": [dataopen_cf.time], 
-        "oceanLayer": [dataopen_cf.oceanLayer], 
-        "latitude": [dataopen_cf.latitude], 
-        "longitude": [dataopen_cf.longitude], 
-        "valid_time": [dataopen_cf.valid_time], 
-        "sav300": [dataopen_cf.sav300]},
-        index=pd.MultiIndex.from_product([["number", "step"], [dataopen_cf.number,dataopen_cf.index.get_level_values('step')]]),
-   
     
-    #test_dataopen = dataopen.join(dataopen_cf.set_index('number'), on='number')
-    index = pd.MultiIndex.from_tuples(dataopen_cf['number'], names=["step","number"])
-    data_stats = pd.DataFrame({"mean": [data_mean], "std": [data_std]}, index=[step])
-    data_stats.index.name = 'step'    
-    
+    dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
     return dataopen
 
 def calc_stats_lead_time(dataopen,step,var,ftype):
