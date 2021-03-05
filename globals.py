@@ -31,6 +31,8 @@ def read_grib_cf_pf(dirbase_S2S,product,d,lat,lon,var_short,cycle):
     
     dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
     
+    if product == 'forecast':
+         dataopen.set_index('time',append=True)
   
     return dataopen
 
