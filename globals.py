@@ -33,6 +33,7 @@ def read_grib_cf_pf(dirbase_S2S,product,d,lat,lon,var_short,cycle):
     
     if product == 'forecast':
          dataopen.set_index('time',append=True)
+         dataopen.index=dataopen.index.swaplevel(1,2)
   
     return dataopen
 
