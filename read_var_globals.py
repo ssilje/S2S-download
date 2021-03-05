@@ -50,5 +50,4 @@ plt.fill_between(lead_time, data_stats_hc.data_mean - data_stats_hc.data_std , d
 
 ax.set_xlabel('lead time')
 ax.set_ylabel('SALINITY')
-
-plt.show()
+fig.savefig('test.png')
