@@ -30,6 +30,8 @@ def read_grib_cf_pf(dirbase_S2S,product,d,lat,lon,var_short,cycle):
     dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     
     dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
+    
+  
     return dataopen
 
   
