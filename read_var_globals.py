@@ -1,6 +1,6 @@
 
 import xarray as xr
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.dates as mdates
 import numpy as np
@@ -35,7 +35,7 @@ for nstep in set(dataopen_hc.index.get_level_values('step').days): # set gets th
     if nstep == 1: 
      
         data_stats_hc = stosgl.calc_stats_lead_time_cf_pf(dataopen_hc,'%s%s'%(nstep,' days'),var)
-        data_stats_fc = stosgl.calc_stats_lead_time_cf_pf(dataopen_hc,'%s%s'%(nstep,' days'),var)
+        data_stats_fc = stosgl.calc_stats_lead_time_cf_pf(dataopen_fc,'%s%s'%(nstep,' days'),var)
  
     else:
         data_stats_hc = pd.concat([data_stats_hc, stosgl.calc_stats_lead_time_cf_pf(dataopen_hc,'%s%s'%(nstep,' days'),var)])
