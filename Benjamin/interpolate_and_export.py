@@ -1,4 +1,7 @@
 #%%
+import sys  
+sys.path.append('/nird/projects/NS9001K/sso102/Python/S2S-download/lib')  
+
 import xarray as xr
 import matplotlib.pyplot as plt
 import pandas as pd
