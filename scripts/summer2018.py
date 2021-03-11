@@ -53,7 +53,7 @@ for curr_dates in dates_fcycle:
             lat=[90,50],
             lon=[0,5]
             )
-    dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf andf
-print(ds_forecast.head())
-print(ds_hindcast.head())
+    globals()[f"ds_{product}"] = globals()[f"ds_{product}"].append(globals()[f"ds_{product}"])
+
+    #print(ds_hindcast.head())
 
