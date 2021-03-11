@@ -43,8 +43,8 @@ for product in (
         'forecast',
         'hindcast',
     ):
-        name = '%s_%s'%('ds',product)
-        name = read_grib_file_slice_merge_ftype(
+   
+        globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
         S2S_dirbase=S2S_dirbase,
         product=product,
         model_version=mdl_vrsn,
@@ -53,5 +53,6 @@ for product in (
         lat=[90,50],
         lon=[0,5]
         )
-        print(name.head())
+print(ds_forecast.head())
+print(ds_hindcast.head())
 
