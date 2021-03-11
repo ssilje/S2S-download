@@ -102,8 +102,8 @@ for step in ds_cf.get_index('step'):
     
     
     cf_values = gridpp.bilinear(
-        ECMWF_grid, 
-        ECMWF_grid_grid1deg, 
+        ECMWF_grid1deg, 
+        BW_grid, 
         gridpp.fill_missing(cf_ovalues_grid1deg)
     )
 
