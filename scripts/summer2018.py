@@ -57,7 +57,7 @@ for d in dates_fcycle:
         model_version=mdl_vrsn,
         var_name_abbr=var_name_abbr,
         date_str=curr_date,
-        cast_type
+        cast_type='cf'
         )
         if filecheck is True:
             print('file exist')
