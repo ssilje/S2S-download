@@ -50,6 +50,8 @@ for product in (
         model_version=mdl_vrsn,
         var_name_abbr=var_name_abbr,
         date_str=curr_date,
+        lat=[90,50],
+        lon=[0,5]
         )
         print(name.head())
 
