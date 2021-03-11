@@ -47,21 +47,42 @@ def check_file(
     product,
     model_version,
     var_name_abbr,
-    date_str,
-    cast_type
+    date_str
 ):
-    file_name =  '_'.join([var_name_abbr, model_version, date_str,cast_type, product]) + '.grb'
+    cast_type='cf'
+    
+    file_name =  '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
     file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
     
     if not os.path.isfile(file_path):
         file_name =  '_'.join([var_name_abbr, model_version, date_str,cast_type]) + '.grb'
         file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
         if not os.path.isfile(file_path):
-            fileexist = False
+            fileexist_cf= False
         else: 
-            fileexist = True
+            fileexist_cf = True
     else:     
+        fileexist_cf = True
+     
+    cast_type='pf'
+    
+    file_name =  '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
+    file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    
+    if not os.path.isfile(file_path):
+        file_name =  '_'.join([var_name_abbr, model_version, date_str,cast_type]) + '.grb'
+        file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+        if not os.path.isfile(file_path):
+            fileexist_pf = False
+        else: 
+            fileexist_pf = True
+    else:     
+        fileexist_pf = True
+    if fileexist_pf is True &&    fileexist_cf is True:
         fileexist = True
+    else:
+        fileexist = False
+    
     return fileexist
 
 def read_grib_file_slice_merge_ftype(
