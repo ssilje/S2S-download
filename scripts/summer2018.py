@@ -37,22 +37,23 @@ var_name_abbr='tp'
 mdl_vrsn='CY43R3_CY45R1'
 S2S_dirbase=DIR['S2S_DIR_summer2018']
 #product='forecast'
-curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
-
-for product in (
-        'forecast',
-        'hindcast',
-    ):
+#curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
+for curr_dates in dates_fcycle:
+    for product in (
+            'forecast',
+            'hindcast',
+        ):
    
-        globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
-        S2S_dirbase=S2S_dirbase,
-        product=product,
-        model_version=mdl_vrsn,
-        var_name_abbr=var_name_abbr,
-        date_str=curr_date,
-        lat=[90,50],
-        lon=[0,5]
-        )
+            globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
+            S2S_dirbase=S2S_dirbase,
+            product=product,
+            model_version=mdl_vrsn,
+            var_name_abbr=var_name_abbr,
+            date_str=curr_date,
+            lat=[90,50],
+            lon=[0,5]
+            )
+    dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf andf
 print(ds_forecast.head())
 print(ds_hindcast.head())
 
