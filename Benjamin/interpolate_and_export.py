@@ -94,9 +94,9 @@ for step in ds_cf.get_index('step'):
     print('Time step: ' + str(step))
     # NB: Is this the best way to deal with missings from on-land coordinates? 
     # NB: Axes of lat/lon are reversed between gridpp and xarray.
-    cf_ovalues_sst2sal = gridpp.bilinear(
+    cf_ovalues_grid1deg = gridpp.bilinear(
        ECMWF_grid,
-       ECMWF_grid_sal,
+       ECMWF_grid1deg,
        np.transpose(ds_cf_sst.sst[step.days - 1,:,:].data)
     )
     
@@ -104,7 +104,7 @@ for step in ds_cf.get_index('step'):
     cf_values = gridpp.bilinear(
         ECMWF_grid, 
         ECMWF_grid_grid1deg, 
-        gridpp.fill_missing(cf_ovalues_sst2sal)
+        gridpp.fill_missing(cf_ovalues_grid1deg)
     )
 
     pf_values = np.empty((len(data_BW), len(ds_pf.get_index('number'))), dtype=float)
