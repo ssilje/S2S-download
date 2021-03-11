@@ -70,19 +70,19 @@ for d in dates_fcycle:
             lat=[90,50],
             lon=[0,5]
             )
-            
+        else: 
+            print('Missing file')
            
             print(product)
 
             print(curr_date)
-            if curr_date == dates_fcycle[0].strftime('%Y-%m-%d'):
-                ds_forecast_all = ds_forecast
-                ds_hindcast_all = ds_hindcast
-            else:
-                ds_forecast_all = ds_forecast_all.append(ds_forecast)
-                ds_hindcast_all = ds_hindcast_all.append(ds_hindcast)
-        else: 
-                print('Missing file')
+        if curr_date == dates_fcycle[0].strftime('%Y-%m-%d'):
+            ds_forecast_all = ds_forecast
+            ds_hindcast_all = ds_hindcast
+        else:
+            ds_forecast_all = ds_forecast_all.append(ds_forecast)
+            ds_hindcast_all = ds_hindcast_all.append(ds_hindcast)
+        
  
 ds_forecast_all.to_csv('ds_forecast_all.csv')
 ds_hindcast_all.to_csv('ds_hindcast_all.csv')
