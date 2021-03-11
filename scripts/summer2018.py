@@ -75,14 +75,14 @@ for d in dates_fcycle:
             print(product)
 
             print(curr_date)
-        if curr_date == dates_fcycle[0].strftime('%Y-%m-%d'):
-            ds_forecast_all = ds_forecast
-            ds_hindcast_all = ds_hindcast
-        else:
-            ds_forecast_all = ds_forecast_all.append(ds_forecast)
-            ds_hindcast_all = ds_hindcast_all.append(ds_hindcast)
+            if curr_date == dates_fcycle[0].strftime('%Y-%m-%d'):
+                ds_forecast_all = ds_forecast
+                ds_hindcast_all = ds_hindcast
+            else:
+                ds_forecast_all = ds_forecast_all.append(ds_forecast)
+                ds_hindcast_all = ds_hindcast_all.append(ds_hindcast)
         else: 
-            print('Missing file')
+                print('Missing file')
  
 ds_forecast_all.to_csv('ds_forecast_all.csv')
 ds_hindcast_all.to_csv('ds_hindcast_all.csv')
