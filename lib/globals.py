@@ -22,18 +22,21 @@ def read_grib_file(
 
 
 def read_grib_file_point(
-    dirbase_S2S,
+    S2S_dirbase,
     product,
-    ftype,
-    d,
+    model_version,
+    var_name_abbr,
+    cast_type,
+    date_str,
     lat,
     lon
 ):
-    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
-    dS2S = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,ftype,product,'.grb')
+    file_name =  '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
+    file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    
     print('reading file:' + dS2S)
 
-    dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest') # Picking out a grid point
 
     return dataopen
   
