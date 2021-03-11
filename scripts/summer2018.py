@@ -70,8 +70,9 @@ for d in dates_fcycle:
     else:
         ds_forecast_all = ds_forecast_all.append(ds_forecast)
         ds_hindcast_all = ds_hindcast_all.append(ds_hindcast)
-    
-    
+ 
+ds_forecast_all.to_csv('ds_forecast_all.csv')
+ds_hindcast_all.to_csv('ds_hindcast_all.csv')
   
     #print(ds_hindcast.head())
 
