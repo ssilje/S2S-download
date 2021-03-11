@@ -31,15 +31,21 @@ dates_fcycle=pd.date_range(start=f'{fcyear}-{fcmonth}-{fcday}', periods=2, freq=
 var_name_abbr='sst'
 mdl_vrsn='CY46R1'
 S2S_dirbase=DIR['S2S_DIR']
-product='forecast'
+#product='forecast'
 curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
 
+for product in (
+        'forecast',
+        'hindcast',
+    ):
 
-ds = read_grib_file_merge_ftype(
-   S2S_dirbase=S2S_dirbase,
-   product=product,
-   model_version=mdl_vrsn,
-   var_name_abbr=var_name_abbr,
-   date_str=curr_date,
-   )
+name = '%s_%s'%('ds',product)
+
+    name = read_grib_file_merge_ftype(
+       S2S_dirbase=S2S_dirbase,
+       product=product,
+       model_version=mdl_vrsn,
+       var_name_abbr=var_name_abbr,
+       date_str=curr_date,
+       )
 print(ds.head())
