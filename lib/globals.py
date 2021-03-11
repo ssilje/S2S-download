@@ -63,17 +63,17 @@ def read_grib_file_merge_ftype(
     
     print('reading file:')
     print(file_path_pf)   
-    dataopen_pf = xr.open_dataset(file_path_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe().reset_index(level='number')
+    dataopen_pf = xr.open_dataset(file_path_pf,engine='cfgrib').to_dataframe().reset_index(level='number')
     
     print('reading file:')
     print(file_path_cf)   
-    dataopen_cf = xr.open_dataset(file_path_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    dataopen_cf = xr.open_dataset(file_path_cf,engine='cfgrib').to_dataframe() # Picking out a grid point
     
     dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
     
     if product == 'forecast':
          dataopen = dataopen.set_index('time',append=True)
-         dataopen.index = dataopen.index.swaplevel(1,2)
+         dataopen.index = dataopen.index.swaplevel(2,3)
   
     return dataopen
 
