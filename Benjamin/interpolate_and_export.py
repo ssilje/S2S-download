@@ -12,7 +12,8 @@ import gridpp
 import json 
 import os
 
-from load_functions import read_grib_file
+from load_functions import read_grib_file, read_grib_file_point, read_grib_file_merge_ftype
+#from load_functions import read_grib_file
 from local_configuration import config
 
 #%% Dates
