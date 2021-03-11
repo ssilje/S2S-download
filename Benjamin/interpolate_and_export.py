@@ -60,12 +60,12 @@ def make_grid(lats, lons):
 ECMWF_grid = make_grid(ds_cf.latitude.data, ds_cf.longitude.data)
 
 
-with open(os.path.join(config['BW_DIR'], "metadata_BW_sites_sst.json")) as json_file:
+with open(os.path.join(config['BW_DIR'], "metadata_BW_sites.json")) as json_file:
     data_BW = pd.DataFrame(json.load(json_file))
 BW_grid = gridpp.Points(data_BW.lat, data_BW.lon)
 
 #%%
-file_path = os.path.join(config['CF_DATA_DIR'], f'{product}_{curr_date}_bilinear.csv')
+file_path = os.path.join(config['CF_DATA_DIR'], f'{product}_{curr_date}_bilinear_sst.csv')
 
 print('File save location: ' + file_path)
 
