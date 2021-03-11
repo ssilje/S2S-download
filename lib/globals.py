@@ -57,7 +57,7 @@ def read_grib_file_merge_ftype(
     file_path_cf = os.path.join(file_name_cf, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
     
     file_name_pf =  '_'.join([var_name_abbr, model_version, date_str,'pf', product]) + '.grb'
-    file_path_pf = os.path.join(file_name_pf product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    file_path_pf = os.path.join(file_name_pf, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
     
    
     
@@ -67,7 +67,7 @@ def read_grib_file_merge_ftype(
     
     print('reading file:')
     print(file_path_cf)   
-    dataopen_cf = xr.open_dataset(file_path_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    dataopen_cf = xr.open_dataset(file_path_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     
     dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
     
