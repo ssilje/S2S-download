@@ -57,6 +57,13 @@ def read_grib_file_merge_ftype(
     file_name_pf =  '_'.join([var_name_abbr, model_version, date_str,'pf', product]) + '.grb'
     file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
     
+    if not os.path.isfile(file_path_pf):
+        file_name_cf =  '_'.join([var_name_abbr, model_version, date_str,'cf']) + '.grb'
+        file_path_cf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
+    
+        file_name_pf =  '_'.join([var_name_abbr, model_version, date_str,'pf']) + '.grb'
+        file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
+               
    
     
     print('reading file:')
