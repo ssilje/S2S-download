@@ -45,7 +45,8 @@ S2S_dirbase=DIR['S2S_DIR_summer2018']
 #curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
 for d in dates_fcycle:
     curr_date=d.strftime('%Y-%m-%d')
-    if not os.path.isfile(file_path_pf):
+    
+        
     for product in (
             'forecast',
             'hindcast',
