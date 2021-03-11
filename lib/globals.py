@@ -29,15 +29,17 @@ def read_grib_file_point(
     cast_type,
     date_str,
     lat,
-    lon
+    lon,
+    df_con
 ):
     file_name =  '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
     file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
     
     print('reading file:' + file_path)
-
-    dataopen = xr.open_dataset(file_path,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest') # Picking out a grid point
-
+    if df_con:  
+        dataopen = xr.open_dataset(file_path,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() 
+    else: 
+        dataopen = xr.open_dataset(file_path,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest')
     return dataopen
   
   
