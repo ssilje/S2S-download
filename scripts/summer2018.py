@@ -55,6 +55,10 @@ for d in dates_fcycle:
             lon=[0,5]
             )
             globals()[f"ds_{product}"] = globals()[f"ds_{product}"].append(globals()[f"ds_{product}"])
-
+    ds_forecast_all = ds_forecast.append(ds_forecast)
+    ds_hindcast_all = ds_hindcast.append(ds_hindcast)
+    
+    
+  
     #print(ds_hindcast.head())
 
