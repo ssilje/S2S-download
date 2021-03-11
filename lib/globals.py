@@ -78,7 +78,7 @@ def check_file(
             fileexist_pf = True
     else:     
         fileexist_pf = True
-    if fileexist_pf is True &&    fileexist_cf is True:
+    if fileexist_pf is True and    fileexist_cf is True:
         fileexist = True
     else:
         fileexist = False
