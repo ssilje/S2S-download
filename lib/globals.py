@@ -45,25 +45,29 @@ def read_grib_file_point(
   
 
 def read_grib_file_merge_ftype(
-    dirbase_S2S,
+    S2S_dirbase,
     product,
-    d,
+    model_version,
+    var_name_abbr,
+    date_str,
     lat,
-    lon,
-    var_short,
-    cycle
+    lon
 ):
-    dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')  
-    dS2S_cf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
-    dS2S_pf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
+    file_name_cf =  '_'.join([var_name_abbr, model_version, date_str,'cf', product]) + '.grb'
+    file_path_cf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    
+    file_name_pf =  '_'.join([var_name_abbr, model_version, date_str,'pf', product]) + '.grb'
+    file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    
+   
     
     print('reading file:')
-    print(dS2S_pf)   
-    dataopen_pf = xr.open_dataset(dS2S_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe().reset_index(level='number')
+    print(file_path_pf)   
+    dataopen_pf = xr.open_dataset(file_path_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe().reset_index(level='number')
     
     print('reading file:')
-    print(dS2S_cf)   
-    dataopen_cf = xr.open_dataset(dS2S_cf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+    print(file_path_cf)   
+    dataopen_cf = xr.open_dataset(file_path_pf,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
     
     dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
     
