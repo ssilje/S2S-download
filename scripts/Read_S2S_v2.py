@@ -34,6 +34,7 @@ S2S_dirbase=config['S2S_DIR']
 product='forecast'
 curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
 
+
 ds = read_grib_file_merge_ftype(
    S2S_dirbase=S2S_dirbase,
    product=product,
@@ -41,3 +42,4 @@ ds = read_grib_file_merge_ftype(
    var_name_abbr=var_name_abbr,
    date_str=curr_date,
    )
+print(ds.head())
