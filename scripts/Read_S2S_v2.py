@@ -38,14 +38,12 @@ for product in (
         'forecast',
         'hindcast',
     ):
-
-name = '%s_%s'%('ds',product)
-
-    name = read_grib_file_merge_ftype(
-       S2S_dirbase=S2S_dirbase,
-       product=product,
-       model_version=mdl_vrsn,
-       var_name_abbr=var_name_abbr,
-       date_str=curr_date,
-       )
+        name = '%s_%s'%('ds',product)
+        name = read_grib_file_merge_ftype(
+        S2S_dirbase=S2S_dirbase,
+        product=product,
+        model_version=mdl_vrsn,
+        var_name_abbr=var_name_abbr,
+        date_str=curr_date,
+        )
 print(ds.head())
