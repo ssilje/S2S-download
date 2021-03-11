@@ -52,12 +52,12 @@ for d in dates_fcycle:
             'hindcast',
         ):            
         filecheck = check_file(
-            S2S_dirbase=S2S_dirbase,
-            product=product,
-            model_version=mdl_vrsn,
-            var_name_abbr=var_name_abbr,
-            date_str=curr_date,
-            cast_type
+        S2S_dirbase=S2S_dirbase,
+        product=product,
+        model_version=mdl_vrsn,
+        var_name_abbr=var_name_abbr,
+        date_str=curr_date,
+        cast_type
         )
             
             if filecheck is True:
@@ -69,7 +69,7 @@ for d in dates_fcycle:
                 date_str=curr_date,
                 lat=[90,50],
                 lon=[0,5]
-            )
+                )
             
            
                 print(product)
