@@ -14,7 +14,7 @@ import os
 
 from globals import read_grib_file, read_grib_file_point, read_grib_file_merge_ftype
 
-from local_configuration import config
+from settings_directories import DIR
 
 #%% Dates
 # var_name='sav300' 
@@ -30,7 +30,7 @@ dates_fcycle=pd.date_range(start=f'{fcyear}-{fcmonth}-{fcday}', periods=2, freq=
 
 var_name_abbr='sst'
 mdl_vrsn='CY46R1'
-S2S_dirbase=config['S2S_DIR']
+S2S_dirbase=DIR['S2S_DIR']
 product='forecast'
 curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
 
