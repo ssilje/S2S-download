@@ -35,11 +35,9 @@ product='forecast'
 curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
 
 ds = read_grib_file_merge_ftype(
-   ...:     S2S_dirbase=S2S_dirbase,
-   ...:     product=product,
-   ...:     model_version=mdl_vrsn,
-   ...:     var_name_abbr=var_name_abbr,
-   ...:     date_str=curr_date,
-   ...:     lat=60,
-   ...:     lon=1
-   ...: )
+   S2S_dirbase=S2S_dirbase,
+   product=product,
+   model_version=mdl_vrsn,
+   var_name_abbr=var_name_abbr,
+   date_str=curr_date,
+   )
