@@ -56,9 +56,9 @@ for d in dates_fcycle:
         product=product,
         model_version=mdl_vrsn,
         var_name_abbr=var_name_abbr,
-        date_str=curr_date,
-        cast_type='cf'
+        date_str=curr_date
         )
+        
         if filecheck is True:
             print('file exist')
             globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
