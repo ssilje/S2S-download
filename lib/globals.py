@@ -50,7 +50,7 @@ def check_file(
     date_str,
     cast_type
 ):
-    file_name =  '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
+    file_name_cf =  '_'.join([var_name_abbr, model_version, date_str,cast_type, product]) + '.grb'
     file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
     
     if not os.path.isfile(file_path):
