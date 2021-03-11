@@ -54,7 +54,7 @@ for d in dates_fcycle:
             lat=[90,50],
             lon=[0,5]
             )
-    globals()[f"ds_{product}"] = globals()[f"ds_{product}"].append(globals()[f"ds_{product}"])
+            globals()[f"ds_{product}"] = globals()[f"ds_{product}"].append(globals()[f"ds_{product}"])
 
     #print(ds_hindcast.head())
 
