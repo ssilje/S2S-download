@@ -42,7 +42,28 @@ def read_grib_file_point(
         dataopen = xr.open_dataset(file_path,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest')
     return dataopen
   
-  
+def check_file(
+    S2S_dirbase,
+    product,
+    model_version,
+    var_name_abbr,
+    date_str,
+    cast_type
+):
+    file_name =  '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
+    file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    
+    if not os.path.isfile(file_path):
+        file_name =  '_'.join([var_name_abbr, model_version, date_str,cast_type]) + '.grb'
+        file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
+        if not os.path.isfile(file_path):
+            fileexist = False
+        else: 
+            fileexist = True
+    else:     
+        fileexist = True
+    return fileexist
+
 def read_grib_file_slice_merge_ftype(
     S2S_dirbase,
     product,
