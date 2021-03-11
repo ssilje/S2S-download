@@ -34,7 +34,7 @@ dates_fcycle = dates_monday.union(dates_thursday)
 #%% Read in data for a given date
 
 var_name_abbr='tp'
-mdl_vrsn='CY43R3_CY45R1''
+mdl_vrsn='CY43R3_CY45R1'
 S2S_dirbase=DIR['S2SEUR_DIR']
 #product='forecast'
 curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
