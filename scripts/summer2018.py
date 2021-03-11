@@ -58,7 +58,7 @@ for d in dates_fcycle:
             var_name_abbr=var_name_abbr,
             date_str=curr_date,
             cast_type
-            )
+        )
             
             if filecheck is True:
                 globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
@@ -69,7 +69,7 @@ for d in dates_fcycle:
                 date_str=curr_date,
                 lat=[90,50],
                 lon=[0,5]
-                )
+            )
             
            
                 print(product)
