@@ -12,7 +12,7 @@ import gridpp
 import json 
 import os
 
-from globals import read_grib_file, read_grib_file_point, read_grib_file_merge_ftype
+from globals import read_grib_file, read_grib_file_point, read_grib_file_slice_merge_ftype
 
 from settings_directories import DIR
 
