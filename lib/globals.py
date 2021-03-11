@@ -70,9 +70,9 @@ def read_grib_file_slice_merge_ftype(
    
     print('reading file:')
     print(file_path_cf)   
-    dataopen_cf = xr.open_dataset(file_path_cf,engine='cfgrib').sel(latitude=slice(lat[0],lat[1], longitude=slice(lon[0],lon[1])).to_dataframe() # Picking out a grid point
+    dataopen_cf = xr.open_dataset(file_path_cf,engine='cfgrib').sel(latitude=slice(lat[0],lat[1]), longitude=slice(lon[0],lon[1])).to_dataframe() # Picking out a grid point
     
-    dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
+    dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf andf
     
     if product == 'forecast':
          dataopen = dataopen.set_index('time',append=True)
