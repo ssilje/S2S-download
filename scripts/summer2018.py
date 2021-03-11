@@ -24,8 +24,12 @@ fcyear=2018
 fcmonth=4
 fcday=26
 
-dates_monday = pd.date_range("20180426", periods=20, freq="7D") # forecasts start Monday
-dates_thursday = pd.date_range("20180430", periods=20, freq="7D") # forecasts start Thursday
+#dates_monday = pd.date_range("20180426", periods=20, freq="7D") # forecasts start Monday
+#dates_thursday = pd.date_range("20180430", periods=20, freq="7D") # forecasts start Thursday
+
+dates_monday = pd.date_range("20180503", periods=20, freq="7D") # forecasts start Monday
+dates_thursday = pd.date_range("20180507", periods=20, freq="7D") # forecasts start Thursday
+
 dates_fcycle = dates_monday.union(dates_thursday)   
 
 
