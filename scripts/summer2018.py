@@ -49,15 +49,16 @@ for d in dates_fcycle:
     for product in (
             'forecast',
             'hindcast',
-        ):
-            filecheck = check_file(
+        ):            
+        filecheck = check_file(
             S2S_dirbase=S2S_dirbase,
-            product='forecast',
+            product=product,
             model_version=mdl_vrsn,
             var_name_abbr=var_name_abbr,
             date_str=curr_date,
-            cast_type='cf'
+            cast_type
             )
+            
             if filecheck is True:
                 globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
                 S2S_dirbase=S2S_dirbase,
