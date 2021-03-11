@@ -45,22 +45,27 @@ for d in dates_fcycle:
             'hindcast',
         ):
    
-           # globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
-           # S2S_dirbase=S2S_dirbase,
-           # product=product,
-           # model_version=mdl_vrsn,
-           # var_name_abbr=var_name_abbr,
-           # date_str=curr_date,
-           # lat=[90,50],
-           # lon=[0,5]
-           # )
-           # globals()[f"ds_{product}"] = globals()[f"ds_{product}"].append(globals()[f"ds_{product}"])
-           # print(globals()[f"ds_{product}"])
+            globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
+            S2S_dirbase=S2S_dirbase,
+            product=product,
+            model_version=mdl_vrsn,
+            var_name_abbr=var_name_abbr,
+            date_str=curr_date,
+            lat=[90,50],
+            lon=[0,5]
+            )
+            
+            #print(globals()[f"ds_{product}"])
             print(product)
 
             print(curr_date)
-   # ds_forecast_all = ds_forecast.append(ds_forecast)
-  #  ds_hindcast_all = ds_hindcast.append(ds_hindcast)
+    #globals()[f"ds_{product}"] = globals()[f"ds_{product}"].append(globals()[f"ds_{product}"])
+    if curr_date == dates_fcycle[0].strftime('%Y-%m-%d'):
+        ds_forecast_all = ds_forecast
+        ds_hindcast_all = ds_hindcast
+    else:
+        ds_forecast_all = ds_forecast_all.append(ds_forecast)
+        ds_hindcast_all = ds_hindcast_all.append(ds_hindcast)
     
     
   
