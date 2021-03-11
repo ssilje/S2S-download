@@ -1,22 +1,53 @@
 import xarray as xr
-
+import os
 import pandas as pd
 
 
+def read_grib_file(
+    S2S_dirbase,
+    product,
+    model_version,
+    var_name_abbr,
+    cast_type,
+    date_str,
+):
+    file_name =  '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
+    file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    
+    print('reading file: ' + file_path)    
+    dataopen = xr.open_dataset(file_path, engine='cfgrib')
+
+    return dataopen
 
 
 
-def read_grib(dirbase_S2S,product,ftype,d,lat,lon):
+def read_grib_file_point(
+    dirbase_S2S,
+    product,
+    ftype,
+    d,
+    lat,
+    lon
+):
     dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')
     dS2S = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,ftype,product,'.grb')
-    print('reading file:')
-    print(dS2S)
+    print('reading file:' + dS2S)
+
     dataopen = xr.open_dataset(dS2S,engine='cfgrib').sel(latitude=lat, longitude=lon, method='nearest').to_dataframe() # Picking out a grid point
+
     return dataopen
   
   
 
-def read_grib_cf_pf(dirbase_S2S,product,d,lat,lon,var_short,cycle):
+def read_grib_file_merge_ftype(
+    dirbase_S2S,
+    product,
+    d,
+    lat,
+    lon,
+    var_short,
+    cycle
+):
     dir = '%s/%s/%s/'%(dirbase_S2S,product,'/ECMWF/sfc')  
     dS2S_cf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'cf',product,'.grb')
     dS2S_pf = '%s/%s/%s_%s_%s_%s_%s%s'%(dir,var_short,var_short,cycle,d,'pf',product,'.grb')
