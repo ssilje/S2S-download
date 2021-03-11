@@ -12,7 +12,7 @@ import gridpp
 import json 
 import os
 
-from globals import read_grib_file, read_grib_file_point, read_grib_file_slice_merge_ftype
+from globals import read_grib_file, read_grib_file_point, read_grib_file_slice_merge_ftype, check_file
 
 from settings_directories import DIR
 
@@ -37,6 +37,7 @@ dates_fcycle = dates_monday.union(dates_thursday)
 
 #%% Read in data for a given date
 
+
 var_name_abbr='tp'
 mdl_vrsn='CY43R3_CY45R1'
 S2S_dirbase=DIR['S2S_DIR_summer2018']
@@ -44,32 +45,40 @@ S2S_dirbase=DIR['S2S_DIR_summer2018']
 #curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
 for d in dates_fcycle:
     curr_date=d.strftime('%Y-%m-%d')
+    if not os.path.isfile(file_path_pf):
     for product in (
             'forecast',
             'hindcast',
         ):
-   
-            globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
+            filecheck = check_file(
             S2S_dirbase=S2S_dirbase,
-            product=product,
+            product='forecast',
             model_version=mdl_vrsn,
             var_name_abbr=var_name_abbr,
             date_str=curr_date,
-            lat=[90,50],
-            lon=[0,5]
+            cast_type='cf'
             )
+            if filecheck is True:
+                globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
+                S2S_dirbase=S2S_dirbase,
+                product=product,
+                model_version=mdl_vrsn,
+                var_name_abbr=var_name_abbr,
+                date_str=curr_date,
+                lat=[90,50],
+                lon=[0,5]
+                )
             
-            #print(globals()[f"ds_{product}"])
-            print(product)
+           
+                print(product)
 
-            print(curr_date)
-    #globals()[f"ds_{product}"] = globals()[f"ds_{product}"].append(globals()[f"ds_{product}"])
-    if curr_date == dates_fcycle[0].strftime('%Y-%m-%d'):
-        ds_forecast_all = ds_forecast
-        ds_hindcast_all = ds_hindcast
-    else:
-        ds_forecast_all = ds_forecast_all.append(ds_forecast)
-        ds_hindcast_all = ds_hindcast_all.append(ds_hindcast)
+                print(curr_date)
+            if curr_date == dates_fcycle[0].strftime('%Y-%m-%d'):
+            ds_forecast_all = ds_forecast
+            ds_hindcast_all = ds_hindcast
+        else:
+            ds_forecast_all = ds_forecast_all.append(ds_forecast)
+            ds_hindcast_all = ds_hindcast_all.append(ds_hindcast)
  
 ds_forecast_all.to_csv('ds_forecast_all.csv')
 ds_hindcast_all.to_csv('ds_hindcast_all.csv')
