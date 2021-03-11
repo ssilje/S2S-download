@@ -44,7 +44,7 @@ for product in (
         'hindcast',
     ):
         name = '%s_%s'%('ds',product)
-        name = read_grib_file_merge_ftype(
+        name = read_grib_file_slice_merge_ftype(
         S2S_dirbase=S2S_dirbase,
         product=product,
         model_version=mdl_vrsn,
