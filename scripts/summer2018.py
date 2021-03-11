@@ -38,7 +38,8 @@ mdl_vrsn='CY43R3_CY45R1'
 S2S_dirbase=DIR['S2S_DIR_summer2018']
 #product='forecast'
 #curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
-for curr_dates in dates_fcycle:
+for d in dates_fcycle:
+    curr_date=d.strftime('%Y-%m-%d')
     for product in (
             'forecast',
             'hindcast',
