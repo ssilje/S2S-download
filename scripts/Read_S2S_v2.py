@@ -46,4 +46,5 @@ for product in (
         var_name_abbr=var_name_abbr,
         date_str=curr_date,
         )
-print(ds.head())
+        print(name.head())
+
