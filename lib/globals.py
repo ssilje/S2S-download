@@ -49,9 +49,7 @@ def read_grib_file_merge_ftype(
     product,
     model_version,
     var_name_abbr,
-    date_str,
-    lat,
-    lon
+    date_str
 ):
     file_name_cf =  '_'.join([var_name_abbr, model_version, date_str,'cf', product]) + '.grb'
     file_path_cf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
