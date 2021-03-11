@@ -44,6 +44,50 @@ def read_grib_file_point(
   
   
 
+ def read_grib_file_slice_merge_ftype(
+    S2S_dirbase,
+    product,
+    model_version,
+    var_name_abbr,
+    date_str,
+    lat,
+    lon 
+):
+    file_name_cf =  '_'.join([var_name_abbr, model_version, date_str,'cf', product]) + '.grb'
+    file_path_cf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
+    
+    file_name_pf =  '_'.join([var_name_abbr, model_version, date_str,'pf', product]) + '.grb'
+    file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
+    
+    if not os.path.isfile(file_path_pf):
+        file_name_cf =  '_'.join([var_name_abbr, model_version, date_str,'cf']) + '.grb'
+        file_path_cf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
+    
+        file_name_pf =  '_'.join([var_name_abbr, model_version, date_str,'pf']) + '.grb'
+        file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
+               
+   
+    
+    print('reading file:')
+    print(file_path_pf)   
+    dataopen_pf = xr.open_dataset(file_path_pf,engine='cfgrib').sel(latitude=slice(lat[0],lat[1]), longitude=slice(lon[0],lon[1]).to_dataframe().reset_index(level='number')
+   
+    print('reading file:')
+    print(file_path_cf)   
+    dataopen_cf = xr.open_dataset(file_path_cf,engine='cfgrib').sel(latitude=slice(lat1,lat2), longitude=slice(lon1,lon2).to_dataframe() # Picking out a grid point
+    
+    dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
+    
+    if product == 'forecast':
+         dataopen = dataopen.set_index('time',append=True)
+         dataopen.index = dataopen.index.swaplevel(2,3)
+  
+    return dataopen
+
+       
+       
+       
+   ## Problems with memory    
 def read_grib_file_merge_ftype(
     S2S_dirbase,
     product,
