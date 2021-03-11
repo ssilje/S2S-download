@@ -12,7 +12,7 @@ import gridpp
 import json 
 import os
 
-from load_functions import read_grib_file, read_grib_file_point, read_grib_file_merge_ftype
+from globals import read_grib_file, read_grib_file_point, read_grib_file_merge_ftype
 #from load_functions import read_grib_file
 from local_configuration import config
 
@@ -42,6 +42,17 @@ grid1deg = read_grib_file(
     cast_type='cf',
     date_str=curr_date,
 )
+
+ds = read_grib_file_merge_ftype(
+   ...:     S2S_dirbase=S2S_dirbase,
+   ...:     product=product,
+   ...:     model_version=mdl_vrsn,
+   ...:     var_name_abbr=var_name_abbr,
+   ...:     date_str=curr_date,
+   ...:     lat=60,
+   ...:     lon=1
+   ...: )
+
 
 ds_cf = read_grib_file(
     S2S_dirbase=S2S_dirbase,
