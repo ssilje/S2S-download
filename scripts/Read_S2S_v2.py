@@ -30,7 +30,7 @@ dates_fcycle=pd.date_range(start=f'{fcyear}-{fcmonth}-{fcday}', periods=2, freq=
 
 var_name_abbr='sst'
 mdl_vrsn='CY46R1'
-S2S_dirbase=DIR['S2S_DIR']
+S2S_dirbase=DIR['S2SEUR_DIR']
 #product='forecast'
 curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
 
