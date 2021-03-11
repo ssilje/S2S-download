@@ -27,7 +27,7 @@ dates_fcycle=pd.date_range(start=f'{fcyear}-{fcmonth}-{fcday}', periods=2, freq=
 
 #%% Read in data for a given date
 
-var_name_abbr='sal'
+var_name_abbr='sst'
 mdl_vrsn='CY46R1'
 S2S_dirbase=config['S2S_DIR']
 product='forecast'
@@ -60,7 +60,7 @@ def make_grid(lats, lons):
 ECMWF_grid = make_grid(ds_cf.latitude.data, ds_cf.longitude.data)
 
 
-with open(os.path.join(config['BW_DIR'], "metadata_BW_sites.json")) as json_file:
+with open(os.path.join(config['BW_DIR'], "metadata_BW_sites_sst.json")) as json_file:
     data_BW = pd.DataFrame(json.load(json_file))
 BW_grid = gridpp.Points(data_BW.lat, data_BW.lon)
 
@@ -74,9 +74,9 @@ df_out = pd.DataFrame(
         'locNo', 
         'date',
         'step_fwrd', 
-        'sal_ctrl'
+        'sst_ctrl'
     ] + [
-        'sal_ptrb_%02d'%(i)
+        'sst_ptrb_%02d'%(i)
         for i in ds_pf.get_index('number')
     ])
 )
@@ -87,7 +87,7 @@ for step in ds_cf.get_index('step'):
     cf_values = gridpp.bilinear(
         ECMWF_grid, 
         BW_grid, 
-        gridpp.fill_missing(np.transpose(ds_cf.sav300[step.days - 1,:,:].data)) 
+        gridpp.fill_missing(np.transpose(ds_cf.sst[step.days - 1,:,:].data)) 
     )
   #  cf_values_test = gridpp.bilinear(
   #      ECMWF_grid, 
@@ -104,17 +104,17 @@ for step in ds_cf.get_index('step'):
         pf_values[:, num - 1] = gridpp.bilinear(
             ECMWF_grid, 
             BW_grid, 
-            gridpp.fill_missing(np.transpose(ds_pf.sav300[num - 1, step.days - 1,:,:].data))
+            gridpp.fill_missing(np.transpose(ds_pf.sst[num - 1, step.days - 1,:,:].data))
         )
     for i in range(len(data_BW)):
         row_dict = {
             'locNo' : data_BW['localityNo'][i],
             'step_fwrd' : step.days,
             'date' : curr_date,
-            'sal_ctrl' : cf_values[i],
+            'sst_ctrl' : cf_values[i],
         }
         for num in ds_pf.get_index('number'):
-            row_dict['sal_ptrb_%02d'%(num)] = pf_values[i, num - 1]
+            row_dict['sst_ptrb_%02d'%(num)] = pf_values[i, num - 1]
 
         df_out = df_out.append(pd.Series(row_dict), ignore_index = True)
 df_out.to_csv(file_path)
