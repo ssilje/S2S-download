@@ -43,8 +43,7 @@ def read_grib_file_point(
     return dataopen
   
   
-
- def read_grib_file_slice_merge_ftype(
+def read_grib_file_slice_merge_ftype(
     S2S_dirbase,
     product,
     model_version,
