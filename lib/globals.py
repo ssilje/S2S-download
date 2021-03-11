@@ -64,16 +64,13 @@ def read_grib_file_slice_merge_ftype(
     
         file_name_pf =  '_'.join([var_name_abbr, model_version, date_str,'pf']) + '.grb'
         file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
-               
-   
-    
     print('reading file:')
     print(file_path_pf)   
     dataopen_pf = xr.open_dataset(file_path_pf,engine='cfgrib').sel(latitude=slice(lat[0],lat[1]), longitude=slice(lon[0],lon[1]).to_dataframe().reset_index(level='number')
    
     print('reading file:')
     print(file_path_cf)   
-    dataopen_cf = xr.open_dataset(file_path_cf,engine='cfgrib').sel(latitude=slice(lat1,lat2), longitude=slice(lon1,lon2).to_dataframe() # Picking out a grid point
+    dataopen_cf = xr.open_dataset(file_path_cf,engine='cfgrib').sel(latitude=slice(lat[0],lat[1], longitude=slice(lon[0],lon[1]).to_dataframe() # Picking out a grid point
     
     dataopen = dataopen_cf.append(dataopen_pf).set_index('number',append=True) #merging pf and cf
     
