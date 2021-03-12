@@ -9,7 +9,9 @@ import gridpp
 import json 
 import os
 
-
+config = {
+    'S2S_DIR': '/nird/projects/NS9001K/share/S2S/metno/',
+}
 
 lead_time=np.arange(1,47)
 fcyear=2020
@@ -21,12 +23,10 @@ var_name_abbr='sst'
 mdl_vrsn='CY46R1'
 S2S_dirbase=config['S2S_DIR']
 product='forecast'
-curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
+curr_date=dates_fcycle[0].strftime('%Y-%m-%d')
 
 
-config = {
-    'S2S_DIR': '/nird/projects/NS9001K/share/S2S/metno/',
-}
+
 
 
 
@@ -80,12 +80,12 @@ ECMWF_grid1_5deg = make_grid(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longit
 ECMWF_grid1deg = make_grid(SAL_GRID1deg.latitude.data, SAL_GRID1deg.longitude.data)
 
 
-with open(os.path.join(config['BW_DIR'], "metadata_BW_sites.json")) as json_file:
+with open("metadata_BW_sites.json") as json_file:
     data_BW = pd.DataFrame(json.load(json_file))
 BW_grid = gridpp.Points(data_BW.lat, data_BW.lon)
 
 
-step = ds_cf.get_index('step')[0]
+step = SST_GRID1_5deg.get_index('step')[0]
 #for step in ds_cf.get_index('step'):
 print('Time step: ' + str(step))
 
