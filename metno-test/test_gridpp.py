@@ -13,7 +13,7 @@ config = {
     'S2S_DIR': '/nird/projects/NS9001K/share/S2S/metno/',
 }
 
-lead_time=np.arange(1,47)
+
 fcyear=2020
 fcmonth=5
 fcday=4
@@ -82,7 +82,6 @@ BW_grid = gridpp.Points(data_BW.lat, data_BW.lon)
 
 
 step = SST_GRID1_5deg.get_index('step')[0]
-#for step in ds_cf.get_index('step'):
 print('Time step: ' + str(step))
 
 ### Testing interpolating to 1 deg 
