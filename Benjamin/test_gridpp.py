@@ -85,7 +85,7 @@ step = SST_GRID1_5deg.get_index('step')[0]
 #for step in ds_cf.get_index('step'):
 print('Time step: ' + str(step))
 
-### Interpolating to 1 deg to make it work
+### Testing interpolating to 1 deg 
 SST_grid1deg = gridpp.bilinear(
    ECMWF_grid1_5deg,
    ECMWF_grid1deg,
@@ -98,12 +98,15 @@ SST_1deg2point = gridpp.bilinear(
     gridpp.fill_missing(SST_grid1deg)
 )
 
+### Now it works when going from 1.5 deg to a point
 SST_1_5deg2point = gridpp.bilinear(
     ECMWF_grid1_5deg, 
     BW_grid, 
     gridpp.fill_missing(np.transpose(SST_GRID1_5deg.sst[step.days - 1,:,:].data))
 )
 
+print('SST interpolated to 1 deg before to a point')
 print(SST_1deg2point)
+print('SST downscaled directly to a point')
 print(SST_1_5deg2point)
     
