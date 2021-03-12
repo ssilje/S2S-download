@@ -26,10 +26,6 @@ product='forecast'
 curr_date=dates_fcycle[0].strftime('%Y-%m-%d')
 
 
-
-
-
-
 def read_grib_file(
     S2S_dirbase,
     product,
@@ -46,7 +42,7 @@ def read_grib_file(
 
     return dataopen
   
- def make_grid(lats, lons):
+def make_grid(lats, lons):
     latlats, lonlons = np.meshgrid(
         lats, lons
     )
