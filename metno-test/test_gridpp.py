@@ -72,6 +72,16 @@ SST_GRID1_5deg = read_grib_file(
 )
 
 
+SST_GRID1_5deg_EUR = read_grib_file(
+    S2S_dirbase=S2S_dirbase,
+    product='forecast_EUR',
+    model_version=mdl_vrsn,
+    var_name_abbr=var_name_abbr,
+    cast_type='cf',
+    date_str=curr_date,
+)
+
+ECMWF_grid1_5deg_EUR = make_grid(SST_GRID1_5deg_EUR.latitude.data, SST_GRID1_5deg_EUR.longitude.data)
 ECMWF_grid1_5deg = make_grid(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longitude.data)
 ECMWF_grid1deg = make_grid(SAL_GRID1deg.latitude.data, SAL_GRID1deg.longitude.data)
 
@@ -84,27 +94,30 @@ BW_grid = gridpp.Points(data_BW.lat, data_BW.lon)
 step = SST_GRID1_5deg.get_index('step')[0]
 print('Time step: ' + str(step))
 
-### Testing interpolating to 1 deg 
-SST_grid1deg = gridpp.bilinear(
-   ECMWF_grid1_5deg,
+### Testar interpolering til 1-grader før til punkt. No virkar dette, men om man brukar fila sst_CY46R1_2020-05-04_cf_forecast_EUR.grb
+SST_grid1deg_EUR = gridpp.bilinear(
+   ECMWF_grid1_5deg_EUR,
    ECMWF_grid1deg,
-   np.transpose(SST_GRID1_5deg.sst[step.days - 1,:,:].data)
+   np.transpose(SST_GRID1_5deg_EUR.sst[step.days - 1,:,:].data)
 )
      
-SST_1deg2point = gridpp.bilinear(
+SST_1deg2point_EUR = gridpp.bilinear(
     ECMWF_grid1deg, 
     BW_grid, 
-    gridpp.fill_missing(SST_grid1deg)
+    gridpp.fill_missing(SST_grid1deg_EUR)
 )
 
-### Now it works when going from 1.5 deg to a point
+### 
+## Dette er måten som vi tenker å gjere nedskaleringa på:
 SST_1_5deg2point = gridpp.bilinear(
     ECMWF_grid1_5deg, 
     BW_grid, 
     gridpp.fill_missing(np.transpose(SST_GRID1_5deg.sst[step.days - 1,:,:].data))
 )
 
+
+
 print('SST interpolated to 1 deg before to a point')
-print(SST_1deg2point)
+print(SST_1deg2point_EUR)
 print('SST downscaled directly to a point')
 print(SST_1_5deg2point)
