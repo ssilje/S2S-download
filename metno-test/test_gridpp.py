@@ -108,11 +108,7 @@ SST_1deg2point_EUR = gridpp.bilinear(
 )
 
 
-SST_1_5deg2point_EUR = gridpp.bilinear(
-    ECMWF_grid1_5deg_EUR, 
-    BW_grid, 
-    gridpp.fill_missing(np.transpose(SST_GRID1_5deg_EUR.sst[step.days - 1,:,:].data))
-)
+
 
 ### 
 ## Dette er måten som vi tenker å gjere nedskaleringa på:
@@ -122,6 +118,13 @@ SST_1_5deg2point = gridpp.bilinear(
     gridpp.fill_missing(np.transpose(SST_GRID1_5deg.sst[step.days - 1,:,:].data))
 )
 
+### Dette er den som gir segmentation fault
+
+#SST_1_5deg2point_EUR = gridpp.bilinear(
+#    ECMWF_grid1_5deg_EUR, 
+#    BW_grid, 
+#    gridpp.fill_missing(np.transpose(SST_GRID1_5deg_EUR.sst[step.days - 1,:,:].data))
+#)
 
 
 print('SST interpolated to 1 deg before to a point')
