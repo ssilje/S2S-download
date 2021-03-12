@@ -103,4 +103,7 @@ SST_1_5deg2point = gridpp.bilinear(
     BW_grid, 
     gridpp.fill_missing(np.transpose(SST_GRID1_5deg.sst[step.days - 1,:,:].data))
 )
+
+print(SST_1deg2point)
+print(SST_1_5deg2point)
     
