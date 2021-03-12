@@ -38,7 +38,7 @@ dates_fcycle = dates_monday.union(dates_thursday)
 #%% Read in data for a given date
 
 
-var_name_abbr='tp'
+var_name_abbr='t2m' #tp
 mdl_vrsn='CY43R3_CY45R1'
 S2S_dirbase=DIR['S2S_DIR_summer2018']
 #product='forecast'
@@ -67,8 +67,8 @@ for d in dates_fcycle:
             model_version=mdl_vrsn,
             var_name_abbr=var_name_abbr,
             date_str=curr_date,
-            lat=[90,50],
-            lon=[0,5]
+            lat=[80,45],
+            lon=[0,20]
             )
         else: 
             print('Missing file')
@@ -83,9 +83,11 @@ for d in dates_fcycle:
         ds_forecast_all = ds_forecast_all.append(ds_forecast)
         ds_hindcast_all = ds_hindcast_all.append(ds_hindcast)
         
- 
-ds_forecast_all.to_csv('ds_forecast_all.csv')
-ds_hindcast_all.to_csv('ds_hindcast_all.csv')
+file_name_fc =  '_'.join([var_name_abbr, mdl_vrsn, 'forecast']) + '.csv'
+file_name_hc =  '_'.join([var_name_abbr, mdl_vrsn, 'hindcast']) + '.csv'
+
+ds_forecast_all.to_csv(file_name_fc)
+ds_hindcast_all.to_csv(file_name_hc)
   
     #print(ds_hindcast.head())
 
