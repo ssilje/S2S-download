@@ -106,6 +106,13 @@ for step in ds_cf.get_index('step'):
         BW_grid, 
         gridpp.fill_missing(cf_ovalues_grid1deg)
     )
+    
+ #   cf_nearest= gridpp.nearest(
+ ##      ECMWF_grid,
+  #     BW_grid, 
+   #    np.transpose(ds_cf.sst[step.days - 1,:,:].data)
+   # )
+    
 
     pf_values = np.empty((len(data_BW), len(ds_pf.get_index('number'))), dtype=float)
     for num in ds_pf.get_index('number'):
