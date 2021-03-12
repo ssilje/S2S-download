@@ -2,10 +2,6 @@ import xarray as xr
 import os
 import pandas as pd
 
-
-import xarray as xr
-import matplotlib.pyplot as plt
-import pandas as pd
 import matplotlib.dates as mdates
 import numpy as np
 from calendar import monthrange,  monthcalendar, datetime
