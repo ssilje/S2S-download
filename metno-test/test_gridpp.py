@@ -94,7 +94,7 @@ BW_grid = gridpp.Points(data_BW.lat, data_BW.lon)
 step = SST_GRID1_5deg.get_index('step')[0]
 print('Time step: ' + str(step))
 
-### Testar interpolering til 1-grader før til punkt. No virkar dette, men om man brukar fila sst_CY46R1_2020-05-04_cf_forecast_EUR.grb
+### Testar interpolering til 1-grader før til punkt. No virkar dette
 SST_grid1deg_EUR = gridpp.bilinear(
    ECMWF_grid1_5deg_EUR,
    ECMWF_grid1deg,
@@ -105,6 +105,13 @@ SST_1deg2point_EUR = gridpp.bilinear(
     ECMWF_grid1deg, 
     BW_grid, 
     gridpp.fill_missing(SST_grid1deg_EUR)
+)
+
+
+SST_1_5deg2point_EUR = gridpp.bilinear(
+    ECMWF_grid1_5deg_EUR, 
+    BW_grid, 
+    gridpp.fill_missing(np.transpose(SST_GRID1_5deg_EUR.sst[step.days - 1,:,:].data))
 )
 
 ### 
