@@ -99,17 +99,17 @@ step = SST_GRID1_5deg.get_index('step')[0]
 print('Time step: ' + str(step))
 
 ### Testar interpolering til 1-grader før til punkt. No virkar dette
-SST_grid1deg_EUR = gridpp.bilinear(
-   ECMWF_grid1_5deg_EUR,
-   ECMWF_grid1deg,
-   np.transpose(SST_GRID1_5deg_EUR.sst[step.days - 1,:,:].data)
-)
+#SST_grid1deg_EUR = gridpp.bilinear(
+ #  ECMWF_grid1_5deg_EUR,
+#   ECMWF_grid1deg,
+#   np.transpose(SST_GRID1_5deg_EUR.sst[step.days - 1,:,:].data)
+#)
      
-SST_1deg2point_EUR = gridpp.bilinear(
-    ECMWF_grid1deg, 
-    BW_grid, 
-    gridpp.fill_missing(SST_grid1deg_EUR)
-)
+#SST_1deg2point_EUR = gridpp.bilinear(
+#    ECMWF_grid1deg, 
+#    BW_grid, 
+#    gridpp.fill_missing(SST_grid1deg_EUR)
+#)
 
 
 
@@ -126,8 +126,11 @@ SST_1_5deg2point = gridpp.bilinear(
 
 sst = SST_GRID1_5deg_EUR.sst[step.days - 1,:,:].data.flatten()
 valid_points = np.isnan(sst) == 0  # Ocean points
-ECMWF_points1_5deg_EUR = gridpp.Points(ECMWF_grid1_5deg_EUR.get_lats().flatten()[valid_points],
+
+ECMWF_points1_5deg_EUR = gridpp.Points(
+    ECMWF_grid1_5deg_EUR.get_lats().flatten()[valid_points],
      ECMWF_grid1_5deg_EUR.get_lons().flatten()[valid_points])
+
 SST_1_5deg2point_EUR = gridpp.nearest(ECMWF_points1_5deg_EUR, BW_grid, sst[valid_points])
 
 ### Dette er den som gir segmentation fault
@@ -140,6 +143,6 @@ SST_1_5deg2point_EUR = gridpp.nearest(ECMWF_points1_5deg_EUR, BW_grid, sst[valid
 
 
 print('SST interpolated to 1 deg before to a point')
-print(SST_1deg2point_EUR)
+print(SST_1_5deg2point_EUR)
 print('SST downscaled directly to a point')
 print(SST_1_5deg2point)
