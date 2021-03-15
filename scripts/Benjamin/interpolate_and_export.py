@@ -1,7 +1,3 @@
-#%%
-import sys  
-sys.path.append('/nird/projects/NS9001K/sso102/Python/S2S-download/lib')  
-
 import xarray as xr
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -12,9 +8,8 @@ import gridpp
 import json 
 import os
 
-
-from load_functions import read_grib_file
-from local_configuration import config
+from S2S.file_handling import read_grib_file
+from S2S.local_configuration import config
 
 #%% Dates
 # var_name='sav300' 
