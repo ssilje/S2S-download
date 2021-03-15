@@ -53,6 +53,8 @@ def make_grid(lats, lons):
   
 
 
+
+
 SAL_GRID1deg = read_grib_file(
     S2S_dirbase=S2S_dirbase,
     product=product,
@@ -80,6 +82,8 @@ SST_GRID1_5deg_EUR = read_grib_file(
     cast_type='cf',
     date_str=curr_date,
 )
+
+
 
 ECMWF_grid1_5deg_EUR = make_grid(SST_GRID1_5deg_EUR.latitude.data, SST_GRID1_5deg_EUR.longitude.data)
 ECMWF_grid1_5deg = make_grid(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longitude.data)
@@ -117,6 +121,14 @@ SST_1_5deg2point = gridpp.bilinear(
     BW_grid, 
     gridpp.fill_missing(np.transpose(SST_GRID1_5deg.sst[step.days - 1,:,:].data))
 )
+
+
+
+sst = SST_GRID1_5deg_EUR.sst[step.days - 1,:,:].data.flatten()
+valid_points = np.isnan(sst) == 0  # Ocean points
+ECMWF_points1_5deg_EUR = gridpp.Points(ECMWF_grid1_5deg_EUR.get_lats().flatten()[valid_points],
+     ECMWF_grid1_5deg_EUR.get_lons().flatten()[valid_points])
+SST_1_5deg2point_EUR = gridpp.nearest(ECMWF_points1_5deg_EUR, BW_grid, sst[valid_points])
 
 ### Dette er den som gir segmentation fault
 
