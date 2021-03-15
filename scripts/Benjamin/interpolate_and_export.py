@@ -10,8 +10,9 @@ import os
 
 from S2S.file_handling import read_grib_file
 from S2S.local_configuration import config
+from S2S.gridpp_helpers import make_grid_object
 
-#%% Dates
+# Dates
 # var_name='sav300' 
 
 lead_time=np.arange(1,47)
@@ -21,8 +22,7 @@ fcday=4
 
 dates_fcycle=pd.date_range(start=f'{fcyear}-{fcmonth}-{fcday}', periods=2, freq='7D') # forecasts start Monday
 
-#%% Read in data for a given date
-
+# Read in data for a given date
 var_name_abbr='sst'
 mdl_vrsn='CY46R1'
 S2S_dirbase=config['S2S_DIR']
@@ -55,22 +55,16 @@ ds_pf = read_grib_file(
     date_str=curr_date,
 )
 
-#%% Grid/points for interpolation from/to
-def make_grid(lats, lons):
-    latlats, lonlons = np.meshgrid(
-        lats, lons
-    )
-    ECMWF_grid = gridpp.Grid(latlats, lonlons)
-    return ECMWF_grid
-ECMWF_grid = make_grid(ds_cf.latitude.data, ds_cf.longitude.data)
-ECMWF_grid1deg = make_grid(grid1deg.latitude.data, grid1deg.longitude.data)
+# Grid/points for interpolation from/to
 
+ECMWF_grid = make_grid_object(ds_cf)
+ECMWF_grid1deg = make_grid_object(grid1deg)
 
 with open(os.path.join(config['BW_DIR'], "metadata_BW_sites.json")) as json_file:
     data_BW = pd.DataFrame(json.load(json_file))
 BW_grid = gridpp.Points(data_BW.lat, data_BW.lon)
 
-#%%
+#
 file_path = os.path.join(config['CF_DATA_DIR'], f'{product}_{curr_date}_bilinear_sst.csv')
 
 print('File save location: ' + file_path)
