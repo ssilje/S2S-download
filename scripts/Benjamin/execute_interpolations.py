@@ -1,15 +1,14 @@
-#%%
+
 import pandas as pd
 import numpy as np
 import gridpp
 import json
 import os
 
-from load_functions import read_grib_file, make_grid
-from local_configuration import config
-from interpolate_and_export import interpolate_and_save
+from S2S.file_handling import read_grib_file
+from S2S.local_configuration import config
+from S2S.gridpp_helpers import make_grid_object
 
-#%% Fill in instance data
 
 var_name='sst'
 var_name_abbr='sst'
@@ -32,7 +31,7 @@ fcday=1
 dates_fcycle=pd.date_range(start=f'{fcyear}-{fcmonth}-{fcday}', periods=2, freq='7D') # forecasts start Monday
 date_str=dates_fcycle[0].strftime('%Y-%m-%d')
 
-#%% Read in data for a given date
+
 
 ds_cf = read_grib_file(
     S2S_dirbase=S2S_dirbase,
@@ -52,14 +51,14 @@ ds_pf = read_grib_file(
     date_str=date_str,
 )
 
-#%%
+
 ECMWF_grid = make_grid(ds_cf.latitude.data, ds_cf.longitude.data)
 
 with open(os.path.join(config['BW_DIR'], "metadata_BW_sites.json")) as json_file:
     data_BW = pd.DataFrame(json.load(json_file))
 BW_points = gridpp.Points(data_BW.lat, data_BW.lon)
 
-#%%
+
 interpolate_and_save(
     var_name=var_name,
     product=product,
@@ -71,6 +70,6 @@ interpolate_and_save(
     data_export_dir=config['CF_DATA_DIR'],
     data_BW=data_BW,
 )
-#%%
+
 
 # %%
