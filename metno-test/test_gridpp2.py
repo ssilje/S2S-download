@@ -73,7 +73,6 @@ with open("metadata_BW_sites.json") as json_file:
     data_BW = pd.DataFrame(json.load(json_file))
     
 BW_grid = gridpp.Points(data_BW.lat, data_BW.lon)
-print(data_BW.lat.shape)
 
 ECMWF_grid1_5deg = make_grid(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longitude.data)
 
