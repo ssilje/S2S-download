@@ -57,6 +57,12 @@ def make_points_flatten(lats, lons,valid_points):
     ECMWF_points = gridpp.Points(latlats.flatten()[valid_points], lonlons.flatten()[valid_points])
     return ECMWF_points
 
+def make_grid_flatten(lats, lons,valid_points):
+    latlats, lonlons = np.meshgrid(
+        lats, lons
+    )
+    ECMWF_points = gridpp.Grid(latlats.flatten()[valid_points], lonlons.flatten()[valid_points])
+    return ECMWF_points
 
 SST_GRID1_5deg = read_grib_file(
     S2S_dirbase=S2S_dirbase,
@@ -92,3 +98,7 @@ ECMWF_points = make_points_flatten(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.
 SST_points = gridpp.nearest(ECMWF_points, BW_grid, sst[valid_points])        
 print('test 2 med points2points')
 print(SST_points)
+
+
+ECMWF_grid1_5deg_valid_points = make_grid_flatten(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longitude.data, valid_points)
+SST_grid_points = gridpp.nearest(ECMWF_grid1_5deg_valid_points, BW_grid, sst[valid_points]
