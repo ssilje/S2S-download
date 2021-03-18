@@ -1,5 +1,3 @@
-import xarray as xr
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import gridpp
@@ -7,7 +5,7 @@ import json
 import os
 
 from S2S.file_handling import read_grib_file
-from S2S.local_configuration import config
+from local_configuration import config
 from S2S.gridpp_helpers import make_grid_object
 
 # Dates

@@ -7,7 +7,7 @@ import os
 from S2S.date_helpers import get_forcast_date_cycle
 from S2S.file_handling import read_grib_file
 from S2S.interpolation import interpolate_and_save
-from S2S.local_configuration import config
+from local_configuration import config
 from S2S.gridpp_helpers import make_grid_object
 
 var_name = 'sst'
