@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import gridpp
 import json
+
 from S2S.date_helpers import get_forcast_date_cycle
 from S2S.gridpp_helpers import make_grid_object
 from S2S.file_handling import read_grib_file
@@ -34,7 +35,6 @@ def make_grid_flatten(lats, lons, valid_points):
     )
     ECMWF_points = gridpp.Grid(latlats.flatten()[valid_points], lonlons.flatten()[valid_points])
     return ECMWF_points
-
 
 SST_GRID1_5deg = read_grib_file(
     S2S_dirbase=S2S_dirbase,
