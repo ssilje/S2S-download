@@ -1,9 +1,7 @@
 import xarray as xr
 import matplotlib.pyplot as plt
 import pandas as pd
-import matplotlib.dates as mdates
 import numpy as np
-from calendar import monthrange,  monthcalendar, datetime
 import gridpp
 import json 
 import os
@@ -16,11 +14,11 @@ from S2S.gridpp_helpers import make_grid_object
 # var_name='sav300' 
 
 lead_time=np.arange(1,47)
-fcyear=2020
-fcmonth=5
-fcday=4
+fc_year=2020
+fc_month=5
+fc_day=4
 
-dates_fcycle=pd.date_range(start=f'{fcyear}-{fcmonth}-{fcday}', periods=2, freq='7D') # forecasts start Monday
+dates_fcycle=pd.date_range(start=f'{fc_year}-{fc_month}-{fc_day}', periods=2, freq='7D') # forecasts start Monday
 
 # Read in data for a given date
 var_name_abbr='sst'
