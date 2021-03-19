@@ -101,5 +101,5 @@ print('test 2 med points2points')
 print(SST_points)
 
 
-ECMWF_grid1_5deg_valid_points = make_grid_flatten(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longitude.data, valid_points)
-SST_grid_points = gridpp.nearest(ECMWF_grid1_5deg_valid_points, BW_grid, sst[valid_points]
+#ECMWF_grid1_5deg_valid_points = make_grid_flatten(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longitude.data, valid_points)
+#SST_grid_points = gridpp.nearest(ECMWF_grid1_5deg_valid_points, BW_grid, sst[valid_points])
