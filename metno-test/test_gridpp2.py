@@ -91,6 +91,7 @@ print('test 1 med grid2points')
 print(SST_1_5deg2point)
 
 sst = SST_GRID1_5deg.sst[0,:,:].data.flatten()
+sst = np.transpose(sst)
 valid_points = np.isnan(sst) == 0  # Ocean points
 
 ECMWF_points = make_points_flatten(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longitude.data, valid_points) 
