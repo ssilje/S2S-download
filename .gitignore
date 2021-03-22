@@ -2,3 +2,4 @@ __pycache__
 /.vscode
 /.idea
 /*.egg-info
+/S2S/local_configuration.py
