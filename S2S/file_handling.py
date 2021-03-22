@@ -3,15 +3,15 @@ import os
 import pandas as pd
 
 def read_grib_file(
-        S2S_dirbase,
+        dirbase,
         product,
         model_version,
         var_name_abbr,
         cast_type,
-        date_str,
+        date,
 ):
-    file_name = '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
-    file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    file_name = '_'.join([var_name_abbr, model_version, date.strftime('%Y-%m-%d'), cast_type, product]) + '.grb'
+    file_path = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
 
     print('reading file: ' + file_path)
     dataopen = xr.open_dataset(file_path, engine='cfgrib')
@@ -20,7 +20,7 @@ def read_grib_file(
 
 
 def read_grib_file_point(
-        S2S_dirbase,
+        dirbase,
         product,
         model_version,
         var_name_abbr,
@@ -31,7 +31,7 @@ def read_grib_file_point(
         df_con
 ):
     file_name = '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
-    file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    file_path = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
 
     print('reading file:' + file_path)
     if df_con:
@@ -43,7 +43,7 @@ def read_grib_file_point(
 
 
 def check_file(
-        S2S_dirbase,
+        dirbase,
         product,
         model_version,
         var_name_abbr,
@@ -52,11 +52,11 @@ def check_file(
     cast_type = 'cf'
 
     file_name = '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
-    file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    file_path = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
 
     if not os.path.isfile(file_path):
         file_name = '_'.join([var_name_abbr, model_version, date_str, cast_type]) + '.grb'
-        file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+        file_path = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
         if not os.path.isfile(file_path):
             fileexist_cf = False
         else:
@@ -67,11 +67,11 @@ def check_file(
     cast_type = 'pf'
 
     file_name = '_'.join([var_name_abbr, model_version, date_str, cast_type, product]) + '.grb'
-    file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+    file_path = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
 
     if not os.path.isfile(file_path):
         file_name = '_'.join([var_name_abbr, model_version, date_str, cast_type]) + '.grb'
-        file_path = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
+        file_path = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name)
         if not os.path.isfile(file_path):
             fileexist_pf = False
         else:
@@ -87,7 +87,7 @@ def check_file(
 
 
 def read_grib_file_slice_merge_ftype(
-        S2S_dirbase,
+        dirbase,
         product,
         model_version,
         var_name_abbr,
@@ -96,17 +96,17 @@ def read_grib_file_slice_merge_ftype(
         lon
 ):
     file_name_cf = '_'.join([var_name_abbr, model_version, date_str, 'cf', product]) + '.grb'
-    file_path_cf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
+    file_path_cf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
 
     file_name_pf = '_'.join([var_name_abbr, model_version, date_str, 'pf', product]) + '.grb'
-    file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
+    file_path_pf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
 
     if not os.path.isfile(file_path_pf):
         file_name_cf = '_'.join([var_name_abbr, model_version, date_str, 'cf']) + '.grb'
-        file_path_cf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
+        file_path_cf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
 
         file_name_pf = '_'.join([var_name_abbr, model_version, date_str, 'pf']) + '.grb'
-        file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
+        file_path_pf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
     print('reading file:')
     print(file_path_pf)
     dataopen_pf = xr.open_dataset(file_path_pf, engine='cfgrib').sel(latitude=slice(lat[0], lat[1]),
@@ -130,24 +130,24 @@ def read_grib_file_slice_merge_ftype(
 
 ## Problems with memory
 def read_grib_file_merge_ftype(
-        S2S_dirbase,
+        dirbase,
         product,
         model_version,
         var_name_abbr,
         date_str
 ):
     file_name_cf = '_'.join([var_name_abbr, model_version, date_str, 'cf', product]) + '.grb'
-    file_path_cf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
+    file_path_cf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
 
     file_name_pf = '_'.join([var_name_abbr, model_version, date_str, 'pf', product]) + '.grb'
-    file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
+    file_path_pf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
 
     if not os.path.isfile(file_path_pf):
         file_name_cf = '_'.join([var_name_abbr, model_version, date_str, 'cf']) + '.grb'
-        file_path_cf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
+        file_path_cf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
 
         file_name_pf = '_'.join([var_name_abbr, model_version, date_str, 'pf']) + '.grb'
-        file_path_pf = os.path.join(S2S_dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
+        file_path_pf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
 
     print('reading file:')
     print(file_path_pf)
