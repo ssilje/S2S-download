@@ -77,9 +77,9 @@ meta = {
     }
 }
 
-dates_monday = pd.date_range("20200123", periods=1, freq="7D") # forecasts start Thursday
+dates_monday = pd.date_range("20200123", periods=52, freq="7D") # forecasts start Thursday
 dates_thursday = pd.date_range("20200127", periods=52, freq="7D") # forecasts start Monday
-dates_fcycle = dates_monday 
+dates_fcycle = dates_monday.union(dates_thursday) 
     
    # Program start
 for filename in (
