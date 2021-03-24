@@ -10,7 +10,7 @@ product = 'hindcast' # forecast, hincast
 dirbase = '/nird/projects/nird/NS9001K/sso102/S2S/DATA/grib'
 dir = '%s/%s/%s/'%(dirbase,product,'/ECMWF/sfc')
 
-forcastcycle = 'CY46R1'
+forcastcycle = 'CY46R1_CY47R1'
 
 if product == 'hindcast':
     STREAM =  'enfh', 
@@ -77,15 +77,15 @@ meta = {
     }
 }
 
-dates_monday = pd.date_range("20200504", periods=1, freq="7D") # forecasts start Monday
-#dates_monday = pd.date_range("20190701", periods=52, freq="7D") # forecasts start Monday
-dates_thursday = pd.date_range("20190704", periods=52, freq="7D") # forecasts start Thursday
-#dates_fcycle = dates_monday.union(dates_thursday)   
+dates_monday = pd.date_range("20200123", periods=1, freq="7D") # forecasts start Thursday
+dates_thursday = pd.date_range("20200127", periods=52, freq="7D") # forecasts start Monday
 dates_fcycle = dates_monday 
     
    # Program start
 for filename in (
     'sal',
+    'sst',
+    
 ):
     for prefix in (
         'pf',
