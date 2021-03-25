@@ -49,13 +49,15 @@ S2S_dirbase=config['S2S_DIR_summer2018']
 for d in dates_fcycle:
     curr_date=d.strftime('%Y-%m-%d')
     
+    
+
         
     for product in (
             'forecast',
             'hindcast',
         ):            
         filecheck = check_file(
-        S2S_dirbase=S2S_dirbase,
+        dirbase=S2S_dirbase,
         product=product,
         model_version=mdl_vrsn,
         var_name_abbr=var_name_abbr,
