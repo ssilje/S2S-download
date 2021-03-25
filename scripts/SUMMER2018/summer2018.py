@@ -1,6 +1,4 @@
 #%%
-import sys  
-sys.path.append('/nird/projects/NS9001K/sso102/Python/S2S-download/lib')  
 
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -12,9 +10,14 @@ import gridpp
 import json 
 import os
 
-from globals import read_grib_file, read_grib_file_point, read_grib_file_slice_merge_ftype, check_file
+#from globals import read_grib_file, read_grib_file_point, read_grib_file_slice_merge_ftype, check_file
 
-from settings_directories import DIR
+#from settings_directories import DIR
+
+
+
+from S2S.file_handling import read_grib_file,read_grib_file_point, read_grib_file_slice_merge_ftype, check_file
+from S2S.local_configuration import config
 
 #%% Dates
 # var_name='sav300' 
@@ -40,7 +43,7 @@ dates_fcycle = dates_monday.union(dates_thursday)
 
 var_name_abbr='t2m' #tp
 mdl_vrsn='CY43R3_CY45R1'
-S2S_dirbase=DIR['S2S_DIR_summer2018']
+S2S_dirbase=config['S2S_DIR_summer2018']
 #product='forecast'
 #curr_date=dates_fcycle[1].strftime('%Y-%m-%d')
 for d in dates_fcycle:
