@@ -105,7 +105,7 @@ ECMWF_grid1_5deg = make_grid(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longit
 ECMWF_grid1deg = make_grid(SAL_GRID1deg.latitude.data, SAL_GRID1deg.longitude.data)
 ECMWF_points1_5deg_EUR = make_points(SST_GRID1_5deg_EUR.latitude.data, SST_GRID1_5deg_EUR.longitude.data)
 
-with open("metadata_BW_sites.json") as json_file:
+with open("../data/BW/sites_testing.json") as json_file:
     data_BW = pd.DataFrame(json.load(json_file))
 BW_grid = gridpp.Points(data_BW.lat, data_BW.lon)
 
