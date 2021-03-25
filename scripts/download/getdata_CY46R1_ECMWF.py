@@ -6,7 +6,7 @@ from datetime import datetime
 
 server = ECMWFDataServer()
 
-product = 'hindcast' # forecast, hincast
+product = 'forecast' # forecast, hincast
 dirbase = '/nird/projects/nird/NS9001K/sso102/S2S/DATA/grib'
 dir = '%s/%s/%s/'%(dirbase,product,'/ECMWF/sfc')
 
