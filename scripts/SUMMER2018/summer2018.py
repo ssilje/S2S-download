@@ -67,7 +67,7 @@ for d in dates_fcycle:
         if filecheck is True:
             print('file exist')
             globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
-            S2S_dirbase=S2S_dirbase,
+            dirbase=S2S_dirbase,
             product=product,
             model_version=mdl_vrsn,
             var_name_abbr=var_name_abbr,
