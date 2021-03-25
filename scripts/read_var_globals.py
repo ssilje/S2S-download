@@ -1,6 +1,6 @@
 
 import xarray as xr
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.dates as mdates
 import numpy as np
@@ -44,15 +44,10 @@ for nstep in set(dataopen_hc.index.get_level_values('step').days): # set gets th
 
 f, ax = plt.subplots(1, 1)
 
-ax.plot(lead_time, data_stats_hc.data_mean.loc[(ens,slice(None), year)],color='gray',linewidth=0.2)
-ax.plot(lead_time, dataopen_cf_hc.sav300.loc[((slice(None),d.strftime('%Y%m%d')))],color='gray',linewidth=0.2)
+ax.plot(lead_time, data_stats_hc.data_mean,color='gray',linewidth=0.2)
+plt.fill_between(lead_time, data_stats_hc.data_mean - data_stats_hc.data_std , data_stats_hc.data_mean + data_stats_hc.data_std ,facecolor='b',alpha=0.5)
 
-for ens in range(1,51):
-    ax.plot(lead_time, dataopen_pf.sav300.loc[(ens)] ,color='blue',linewidth=0.5)
-ax.plot(lead_time, dataopen_cf.sav300 ,color='k',linewidth=1)
-ax.plot(lead_time, dataopen_pf.sav300.loc[(ens)] ,color='blue',linewidth=0.5)
 
 ax.set_xlabel('lead time')
 ax.set_ylabel('SALINITY')
-
-plt.show()
+fig.savefig('test.png')

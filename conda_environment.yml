@@ -20,3 +20,8 @@ dependencies:
   - xesmf 
   - seaborn
   - cfgrib
+  - xarray-extras
+
+#installed manually:
+# pip3 install gridpp==0.6.0-dev.1
+
