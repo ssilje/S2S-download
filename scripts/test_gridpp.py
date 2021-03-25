@@ -48,6 +48,21 @@ def make_grid(lats, lons):
     )
     ECMWF_grid = gridpp.Grid(latlats, lonlons)
     return ECMWF_grid 
+
+def make_points(lats, lons,valid_points):
+    #latlats, lonlons = np.meshgrid(
+    #    lats, lons
+    #)
+    #sst = SST_GRID1_5deg_EUR.sst[step.days - 1,:,:].data.flatten()
+    #valid_points = np.isnan(sst) == 0  # Ocean points
+   # SST_GRID1_5deg_EUR.latitude.data, SST_GRID1_5deg_EUR.longitude.data
+    #ECMWF_points1_5deg_EUR = gridpp.Points(ECMWF_grid1_5deg_EUR.get_lats().flatten()[valid_points],
+    # ECMWF_grid1_5deg_EUR.get_lons().flatten()[valid_points])
+#SST_1_5deg2point_EUR = gridpp.nearest(ECMWF_points1_5deg_EUR, BW_grid, sst[valid_points])
+    
+    ECMWF_grid = gridpp.Points(SST_GRID1_5deg_EUR.latitude.data.get_lats().flatten()[valid_points], SST_GRID1_5deg_EUR.longitude.data.get_lats().flatten()[valid_points])
+    #ECMWF_grid = gridpp.points(lats.get_lats().flatten()[valid_points], lon.get_lats().flatten()[valid_points])
+    return ECMWF_points 
   
   
   
@@ -88,7 +103,7 @@ SST_GRID1_5deg_EUR = read_grib_file(
 ECMWF_grid1_5deg_EUR = make_grid(SST_GRID1_5deg_EUR.latitude.data, SST_GRID1_5deg_EUR.longitude.data)
 ECMWF_grid1_5deg = make_grid(SST_GRID1_5deg.latitude.data, SST_GRID1_5deg.longitude.data)
 ECMWF_grid1deg = make_grid(SAL_GRID1deg.latitude.data, SAL_GRID1deg.longitude.data)
-
+ECMWF_points1_5deg_EUR = make_points(SST_GRID1_5deg_EUR.latitude.data, SST_GRID1_5deg_EUR.longitude.data)
 
 with open("../data/BW/sites_testing.json") as json_file:
     data_BW = pd.DataFrame(json.load(json_file))
