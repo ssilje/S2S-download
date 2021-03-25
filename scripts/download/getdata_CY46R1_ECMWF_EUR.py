@@ -24,8 +24,7 @@ basedict = {
     'model': 'glob',
     'origin': 'ecmf',
     'stream': STREAM ,
-    'time': '00:00:00',
-    'area': '70/0/50/15'
+    'time': '00:00:00'
 }
 
 l = range(0,1128,24)
@@ -83,7 +82,6 @@ dates_fcycle = dates_monday.union(dates_thursday)
     
    # Program start
 for filename in (
-    'sal',
     'sst',
     
 ):
