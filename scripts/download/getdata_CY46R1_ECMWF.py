@@ -83,6 +83,7 @@ dates_fcycle = dates_monday.union(dates_thursday)
    # Program start
 for filename in (
     'sst',
+    'sal',
     
 ):
     for prefix in (
