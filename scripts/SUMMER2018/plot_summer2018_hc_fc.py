@@ -70,14 +70,19 @@ ds_hindcast_stat= ds_hindcast.groupby(["step"])[["t2m"]].describe()
 ds_forecast_stat= ds_forecast.groupby(["step"])[["t2m"]].describe()
 
 for w in fc_week:
-    temp = ds_hindcast_stat.loc[fc_week[w]].mean()
-    temp_df=pd.DataFrame([temp],index=[w])
+    temp_hc = ds_hindcast_stat.loc[fc_week[w]].mean()
+    temp_hc_df=pd.DataFrame([temp_hc],index=[w])
      
+    temp_fc = ds_forecast_stat.loc[fc_week[w]].mean()
+    temp_fc_df=pd.DataFrame([temp_fc],index=[w])
+
     if w == "week1":
-        hindcast_stat = temp_df
+        hindcast_stat = temp_hc_df
+        forecast_stat = temp_fc_df
       
     else:
-        hindcast_stat = hindcast_stat.append(temp_df)
+        hindcast_stat = hindcast_stat.append(temp_hc_df)
+        forecast_stat = forecast_stat.append(temp_fc_df)
        
        
 #test.mean
