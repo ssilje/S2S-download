@@ -112,7 +112,7 @@ stats_fc = [{
 fs = 10  # fontsize
 
 fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-axes.bxp(stats_hc)
+axes.bxp(stats_hc,patch_artist=True,)
 axes.bxp(stats_fc)
 axes.set_title('Boxplot for precalculated statistics', fontsize=fs)
 fig.savefig('test.png')
