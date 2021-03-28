@@ -85,35 +85,100 @@ for w in fc_week:
         forecast_stat = forecast_stat.append(temp_fc_df)
        
  
-stats_hc = [{
+
+stats_merge_hc = [
+    {
     "label": 't2m-hc week1',  # not required
     "med": hindcast_stat.t2m["mean"]["week1"], #5.5
     "q1": hindcast_stat.t2m["25%"]["week1"],
     "q3": hindcast_stat.t2m["75%"]["week1"],
-    # "cilo": 5.3 # not required
-    # "cihi": 5.7 # not required
     "whislo": hindcast_stat.t2m["min"]["week1"],  # required
     "whishi": hindcast_stat.t2m["max"]["week1"],  # required
     "fliers": []  # required if showfliers=True
+    },
+    {
+    "label": 't2m-hc week2',  # not required
+    "med": hindcast_stat.t2m["mean"]["week2"], #5.5
+    "q1": hindcast_stat.t2m["25%"]["week2"],
+    "q3": hindcast_stat.t2m["75%"]["week2"],
+    "whislo": hindcast_stat.t2m["min"]["week2"],  # required
+    "whishi": hindcast_stat.t2m["max"]["week2"],  # required
+    "fliers": []  # required if showfliers=True
+    },
+    {
+    "label": 't2m-hc week3',  # not required
+    "med": hindcast_stat.t2m["mean"]["week3"], #5.5
+    "q1": hindcast_stat.t2m["25%"]["week3"],
+    "q3": hindcast_stat.t2m["75%"]["week3"],
+    "whislo": hindcast_stat.t2m["min"]["week3"],  # required
+    "whishi": hindcast_stat.t2m["max"]["week3"],  # required
+    "fliers": []  # required if showfliers=True
+    },
+    {
+    "label": 't2m-hc week4',  # not required
+    "med": hindcast_stat.t2m["mean"]["week4"], #5.5
+    "q1": hindcast_stat.t2m["25%"]["week4"],
+    "q3": hindcast_stat.t2m["75%"]["week4"],
+    "whislo": hindcast_stat.t2m["min"]["week4"],  # required
+    "whishi": hindcast_stat.t2m["max"]["week4"],  # required
+    "fliers": []  # required if showfliers=True
     }]
 
-stats_fc = [{
+
+stats_merge_fc = [
+    {
     "label": 't2m-fc week1',  # not required
     "med": forecast_stat.t2m["mean"]["week1"], #5.5
     "q1": forecast_stat.t2m["25%"]["week1"],
     "q3": forecast_stat.t2m["75%"]["week1"],
-    # "cilo": 5.3 # not required
-    # "cihi": 5.7 # not required
     "whislo": forecast_stat.t2m["min"]["week1"],  # required
     "whishi": forecast_stat.t2m["max"]["week1"],  # required
     "fliers": []  # required if showfliers=True
+    },
+    {
+    "label": 't2m-fc week2',  # not required
+    "med": forecast_stat.t2m["mean"]["week2"], #5.5
+    "q1": forecast_stat.t2m["25%"]["week2"],
+    "q3": forecast_stat.t2m["75%"]["week2"],
+    "whislo": forecast_stat.t2m["min"]["week2"],  # required
+    "whishi": forecast_stat.t2m["max"]["week2"],  # required
+    "fliers": []  # required if showfliers=True
+    },
+    {
+    "label": 't2m-fc week3',  # not required
+    "med": forecast_stat.t2m["mean"]["week3"], #5.5
+    "q1": forecast_stat.t2m["25%"]["week3"],
+    "q3": forecast_stat.t2m["75%"]["week3"],
+    "whislo": forecast_stat.t2m["min"]["week3"],  # required
+    "whishi": forecast_stat.t2m["max"]["week3"],  # required
+    "fliers": []  # required if showfliers=True
+    },
+    {
+    "label": 't2m-fc week4',  # not required
+    "med": forecast_stat.t2m["mean"]["week4"], #5.5
+    "q1": forecast_stat.t2m["25%"]["week4"],
+    "q3": forecast_stat.t2m["75%"]["week4"],
+    "whislo": forecast_stat.t2m["min"]["week4"],  # required
+    "whishi": forecast_stat.t2m["max"]["week4"],  # required
+    "fliers": []  # required if showfliers=True
     }]
 
-fs = 10  # fontsize
 
+fs = 10  # fontsize
+boxprops = dict(linestyle='--', linewidth=1, color='darkgoldenrod')
+medianprops = dict(linestyle='-.', linewidth=1, color='darkgoldenrod')
+flierprops = dict(linestyle='-.', linewidth=1, color='darkgoldenrod')
+capprops = dict(linestyle='-.', linewidth=1, color='darkgoldenrod')
+whiskerprops = dict(linestyle='-.', linewidth=1, color='darkgoldenrod')
 fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-axes.bxp(stats_hc,patch_artist=True, positions=1)
-axes.bxp(stats_fc, positions=2)
+axes.bxp(stats_merge_hc, 
+         boxprops=boxprops, 
+         medianprops=medianprops,
+         flierprops=flierprops, 
+         capprops = capprops, 
+         whiskerprops = whiskerprops)
+axes.bxp(stats_merge_fc)#,patch_artist=True
+#axes.bxp(stats_fc, positions=2)
 axes.set_title('Boxplot for precalculated statistics', fontsize=fs)
 fig.savefig('test.png')
 
