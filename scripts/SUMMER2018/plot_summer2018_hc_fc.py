@@ -76,6 +76,11 @@ df_pf_hc.t2m[(slice(None),'1 days','1998-05-03')] # tar med alle ens
 ds_hindcast.t2m[(slice(None),slice(None),'1 days','1998-05-03',slice(None))]
 ds_hindcast.t2m[(slice(None),slice(None),'1 days',slice(None),slice(None))]
 a.reset_index(level='time', drop=True)
+a=ds_hindcast.t2m[(slice(None),slice(None),'1 days',slice(None),slice(None))]
+a.reset_index(level='time', drop=True)
+b=a.reset_index(level='time', drop=True)
+
+h_dd[h_dd["step"].isin(['7 days','8 days'])]
 
 for w in fc_week:
     temp_hc = ds_hindcast_stat.loc[fc_week[w]].mean()
