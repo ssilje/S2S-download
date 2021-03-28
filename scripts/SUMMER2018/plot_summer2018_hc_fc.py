@@ -85,7 +85,7 @@ for w in fc_week:
         forecast_stat = forecast_stat.append(temp_fc_df)
        
  
-stats = [{
+stats_hc = [{
     "label": 't2m week1',  # not required
     "med": hindcast_stat.t2m["mean"]["week1"], #5.5
     "q1": hindcast_stat.t2m["25%"]["week1"],
@@ -97,10 +97,23 @@ stats = [{
     "fliers": []  # required if showfliers=True
     }]
 
+stats_fc = [{
+    "label": 't2m week1',  # not required
+    "med": forecast_stat.t2m["mean"]["week1"], #5.5
+    "q1": forecast_stat.t2m["25%"]["week1"],
+    "q3": forecast_stat.t2m["75%"]["week1"],
+    # "cilo": 5.3 # not required
+    # "cihi": 5.7 # not required
+    "whislo": forecast_stat.t2m["min"]["week1"],  # required
+    "whishi": forecast_stat.t2m["max"]["week1"],  # required
+    "fliers": []  # required if showfliers=True
+    }]
+
 fs = 10  # fontsize
 
 fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-axes.bxp(stats)
+axes.bxp(stats_hc)
+axes.bxp(stats_fc)
 axes.set_title('Boxplot for precalculated statistics', fontsize=fs)
 fig.savefig('test.png')
 
