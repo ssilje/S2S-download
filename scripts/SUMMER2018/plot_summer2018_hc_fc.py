@@ -70,7 +70,12 @@ ds_hindcast_stat= ds_hindcast.groupby(["step"])[["t2m"]].describe()
 ds_forecast_stat= ds_forecast.groupby(["step"])[["t2m"]].describe()
 
 ds_hindcast_stat2= ds_hindcast.groupby(["step","time",'number'])[["t2m"]] # mean, er mean over området trur eg
+df_pf_hc.t2m[(1,'1 days','1998-05-03')]
+df_pf_hc.t2m[(slice(None),'1 days','1998-05-03')] # tar med alle ens
 
+ds_hindcast.t2m[(slice(None),slice(None),'1 days','1998-05-03',slice(None))]
+ds_hindcast.t2m[(slice(None),slice(None),'1 days',slice(None),slice(None))]
+a.reset_index(level='time', drop=True)
 
 for w in fc_week:
     temp_hc = ds_hindcast_stat.loc[fc_week[w]].mean()
