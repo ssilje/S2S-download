@@ -19,6 +19,14 @@ dates_monday = pd.date_range("20180503", periods=18, freq="7D") # forecasts star
 dates_thursday = pd.date_range("20180507", periods=18, freq="7D") # forecasts start Thursday
 dates_fcycle = dates_monday.union(dates_thursday)   
 
+fc_week = {
+        "week1" : ['1 days', '2 days','3 days','4 days','5 days','6 days','7 days' ],
+        "week2" : ['8 days', '9 days','10 days','11 days','12 days','13 days','14 days'],
+        "week3" : ['15 days', '16 days','17 days','18 days','19 days','20 days','21 days'],
+        "week4" : ['22 days', '23 days','24 days','25 days','26 days','27 days','28 days']     
+}
+        
+
 
 var_name_abbr='t2m' #tp
 mdl_vrsn='CY43R3_CY45R1'
@@ -57,6 +65,25 @@ for product in (
         print(curr_date)
     
 
+
+ds_hindcast_stat= ds_hindcast.groupby(["step"])[["t2m"]].describe()
+ds_forecast_stat= ds_forecast.groupby(["step"])[["t2m"]].describe()
+
+for w in fc_week:
+    temp = ds_hindcast_stat.loc[fc_week[w]].mean()
+    temp_df=pd.DataFrame([temp],index=[w])
+     
+    if w == "week1":
+        hindcast_stat = temp_df
+      
+    else:
+        hindcast_stat = hindcast_stat.append(temp_df)
+       
+       
+#test.mean
+##test.t2m('mean')
+#test.t2m['mean']
+#test.t2m['25%']
 
 
 d = curr_date
