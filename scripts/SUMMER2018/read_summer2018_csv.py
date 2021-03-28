@@ -26,8 +26,8 @@ var_name_abbr='t2m' #tp
 dirbase=config['csv_DIR']
 
 
-file_hc =  '_'.join([dirbase]) + 't2m_CY43R3_CY45R1_hindcast.csv'
-file_fc =  '_'.join([dirbase]) + 't2m_CY43R3_CY45R1_hindcast.csv'
+file_hc =  '_'.join([dirbase]) + '/t2m_CY43R3_CY45R1_hindcast.csv'
+file_fc =  '_'.join([dirbase]) + '/t2m_CY43R3_CY45R1_hindcast.csv'
 
 print(file_hc)
 
