@@ -86,7 +86,7 @@ for w in fc_week:
        
  
 stats_hc = [{
-    "label": 't2m week1',  # not required
+    "label": 't2m-hc week1',  # not required
     "med": hindcast_stat.t2m["mean"]["week1"], #5.5
     "q1": hindcast_stat.t2m["25%"]["week1"],
     "q3": hindcast_stat.t2m["75%"]["week1"],
@@ -98,7 +98,7 @@ stats_hc = [{
     }]
 
 stats_fc = [{
-    "label": 't2m week1',  # not required
+    "label": 't2m-fc week1',  # not required
     "med": forecast_stat.t2m["mean"]["week1"], #5.5
     "q1": forecast_stat.t2m["25%"]["week1"],
     "q3": forecast_stat.t2m["75%"]["week1"],
