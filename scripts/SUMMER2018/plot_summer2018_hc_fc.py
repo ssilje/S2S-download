@@ -69,6 +69,9 @@ for product in (
 ds_hindcast_stat= ds_hindcast.groupby(["step"])[["t2m"]].describe()
 ds_forecast_stat= ds_forecast.groupby(["step"])[["t2m"]].describe()
 
+ds_hindcast_stat2= ds_hindcast.groupby(["step","time",'number'])[["t2m"]] # mean, er mean over området trur eg
+
+
 for w in fc_week:
     temp_hc = ds_hindcast_stat.loc[fc_week[w]].mean()
     temp_hc_df=pd.DataFrame([temp_hc],index=[w])
