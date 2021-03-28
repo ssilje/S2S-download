@@ -84,20 +84,39 @@ for w in fc_week:
         hindcast_stat = hindcast_stat.append(temp_hc_df)
         forecast_stat = forecast_stat.append(temp_fc_df)
        
-       
+ 
+stats = [{
+    "label": 't2m week1',  # not required
+    "med": hindcast_stat.t2m["mean"]["week1"], #5.5
+    "q1": hindcast_stat.t2m["25%"]["week1"],
+    "q3": hindcast_stat.t2m["75%"]["week1"],
+    # "cilo": 5.3 # not required
+    # "cihi": 5.7 # not required
+    "whislo": hindcast_stat.t2m["min"]["week1"],  # required
+    "whishi": hindcast_stat.t2m["max"]["week1"],  # required
+    "fliers": []  # required if showfliers=True
+    }]
+
+fs = 10  # fontsize
+
+fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
+axes.bxp(stats)
+axes.set_title('Boxplot for precalculated statistics', fontsize=fs)
+fig.savefig('test.png')
+
 #test.mean
 ##test.t2m('mean')
 #test.t2m['mean']
 #test.t2m['25%']
 
 
-d = curr_date
+#d = curr_date
 
-refyear = int(d[:4])
-for i in range(refyear-20,refyear):
-  hdate = d.replace('%i'%refyear,'%i'%i) 
-  print(hdate)
-  h_dd = hindcast[(hindcast["time"] ==hdate)]
+#refyear = int(d[:4])
+#for i in range(refyear-20,refyear):
+ # hdate = d.replace('%i'%refyear,'%i'%i) 
+ # print(hdate)
+ # h_dd = hindcast[(hindcast["time"] ==hdate)]
  
  # h_dd[(h_dd["step"] =='7 days')] samme som h_dd[h_dd["step"].isin(['7 days','8 days'])]
-  week2 = h_dd[h_dd["step"].isin(['7 days','8 days','9 days','10 days','11 days','12 days','13 days'])]
+ # week2 = h_dd[h_dd["step"].isin(['7 days','8 days','9 days','10 days','11 days','12 days','13 days'])]
