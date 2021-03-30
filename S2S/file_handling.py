@@ -166,7 +166,7 @@ def read_grib_slice_mft_xarray(
     if product == 'forecast':
         dataopen_df = dataopen_df.set_index('time', append=True)
         dataopen_df.index = dataopen_df.index.swaplevel(2, 3)
-    dataopen=dataopen.to_xarray() 
+    dataopen=dataopen_df.to_xarray() 
     return dataopen
 
 
