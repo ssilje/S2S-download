@@ -49,7 +49,7 @@ for product in (
         
     if filecheck is True:
         print('file exist')
-        globals()[f"ds_{product}"] = read_grib_file_slice_merge_ftype(
+        globals()[f"xs_{product}"] = read_grib_slice_mft_xarray(
         dirbase=S2S_dirbase,
         product=product,
         model_version=mdl_vrsn,
