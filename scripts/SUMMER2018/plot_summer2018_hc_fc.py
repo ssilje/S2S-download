@@ -63,138 +63,79 @@ for product in (
            
         print(product)
         print(curr_date)
-    
+## de_hindcast multiindex: latitude, longitude, step, time, number    
+idx_name=ds_hindcast.index.names
+idx_values=ds_hindcast.index.values
+# to access: idx_name[1]
+ds_hindcast = ds_hindcast.drop(columns=['heightAboveGround'])
+ds_forecast = ds_forecast.drop(columns=['heightAboveGround'])
+
+LAT_unique=ds_hindcast.index.get_level_values(idx_name[0]).unique()
+LON_unique=ds_hindcast.index.get_level_values(idx_name[1]).unique()
+
+df_out_step = pd.DataFrame(
+    columns = tuple([
+        'data_mean', 
+        'data_std',
+        'step',
+        'latitude', 
+        'longitude' 
+        
+    ])
+)
+#df_out2.multiindex.name = ["latitude", "longitude"] #'hdate'
+for ll in LAT_unique:
+    for lo in LON_unique:
+        for w in fc_week:
+            for ww in fc_week[w]:
+                data_mean=ds_hindcast.t2m[(ll,lo,ww, slice(None),slice(None))].reset_index(level='time', drop=True).mean() #mean is mean over all ens members
+                data_std=ds_hindcast.t2m[(ll,lo,ww, slice(None),slice(None))].reset_index(level='time', drop=True).std() #mean is mean over all ens members
+                row_dict = {
+                'data_mean' : data_mean,
+                'data_std' : data_std,
+                'step' : ww,
+                'latitude' : ll,
+                'longitude' : lo,
+                }
+                df_out_step = df_out_step.append(pd.Series(row_dict),ignore_index=True)        
+            # df_out = pd.DataFrame({"data_mean": [data_mean], "data_std": [data_std]}, index=[hdate])
+           # df_out.index.name = 'hdate'
+
+clim_hc=df_out_step.set_index('step')
+clim_hc=clim_hc.set_index('latitude', append=True)
+clim_hc=clim_hc.set_index('longitude', append=True)
 
 
-ds_hindcast_stat= ds_hindcast.groupby(["step"])[["t2m"]].describe()
-ds_forecast_stat= ds_forecast.groupby(["step"])[["t2m"]].describe()
-
-for w in fc_week:
-    temp_hc = ds_hindcast_stat.loc[fc_week[w]].mean()
-    temp_hc_df=pd.DataFrame([temp_hc],index=[w])
-     
-    temp_fc = ds_forecast_stat.loc[fc_week[w]].mean()
-    temp_fc_df=pd.DataFrame([temp_fc],index=[w])
-
-    if w == "week1":
-        hindcast_stat = temp_hc_df
-        forecast_stat = temp_fc_df
-      
-    else:
-        hindcast_stat = hindcast_stat.append(temp_hc_df)
-        forecast_stat = forecast_stat.append(temp_fc_df)
-       
- 
-
-stats_merge_hc = [
-    {
-    "label": 't2m-hc week1',  # not required
-    "med": hindcast_stat.t2m["mean"]["week1"], #5.5
-    "q1": hindcast_stat.t2m["25%"]["week1"],
-    "q3": hindcast_stat.t2m["75%"]["week1"],
-    "whislo": hindcast_stat.t2m["min"]["week1"],  # required
-    "whishi": hindcast_stat.t2m["max"]["week1"],  # required
-    "fliers": []  # required if showfliers=True
-    },
-    {
-    "label": 't2m-hc week2',  # not required
-    "med": hindcast_stat.t2m["mean"]["week2"], #5.5
-    "q1": hindcast_stat.t2m["25%"]["week2"],
-    "q3": hindcast_stat.t2m["75%"]["week2"],
-    "whislo": hindcast_stat.t2m["min"]["week2"],  # required
-    "whishi": hindcast_stat.t2m["max"]["week2"],  # required
-    "fliers": []  # required if showfliers=True
-    },
-    {
-    "label": 't2m-hc week3',  # not required
-    "med": hindcast_stat.t2m["mean"]["week3"], #5.5
-    "q1": hindcast_stat.t2m["25%"]["week3"],
-    "q3": hindcast_stat.t2m["75%"]["week3"],
-    "whislo": hindcast_stat.t2m["min"]["week3"],  # required
-    "whishi": hindcast_stat.t2m["max"]["week3"],  # required
-    "fliers": []  # required if showfliers=True
-    },
-    {
-    "label": 't2m-hc week4',  # not required
-    "med": hindcast_stat.t2m["mean"]["week4"], #5.5
-    "q1": hindcast_stat.t2m["25%"]["week4"],
-    "q3": hindcast_stat.t2m["75%"]["week4"],
-    "whislo": hindcast_stat.t2m["min"]["week4"],  # required
-    "whishi": hindcast_stat.t2m["max"]["week4"],  # required
-    "fliers": []  # required if showfliers=True
-    }]
-
-
-stats_merge_fc = [
-    {
-    "label": 't2m-fc week1',  # not required
-    "med": forecast_stat.t2m["mean"]["week1"], #5.5
-    "q1": forecast_stat.t2m["25%"]["week1"],
-    "q3": forecast_stat.t2m["75%"]["week1"],
-    "whislo": forecast_stat.t2m["min"]["week1"],  # required
-    "whishi": forecast_stat.t2m["max"]["week1"],  # required
-    "fliers": []  # required if showfliers=True
-    },
-    {
-    "label": 't2m-fc week2',  # not required
-    "med": forecast_stat.t2m["mean"]["week2"], #5.5
-    "q1": forecast_stat.t2m["25%"]["week2"],
-    "q3": forecast_stat.t2m["75%"]["week2"],
-    "whislo": forecast_stat.t2m["min"]["week2"],  # required
-    "whishi": forecast_stat.t2m["max"]["week2"],  # required
-    "fliers": []  # required if showfliers=True
-    },
-    {
-    "label": 't2m-fc week3',  # not required
-    "med": forecast_stat.t2m["mean"]["week3"], #5.5
-    "q1": forecast_stat.t2m["25%"]["week3"],
-    "q3": forecast_stat.t2m["75%"]["week3"],
-    "whislo": forecast_stat.t2m["min"]["week3"],  # required
-    "whishi": forecast_stat.t2m["max"]["week3"],  # required
-    "fliers": []  # required if showfliers=True
-    },
-    {
-    "label": 't2m-fc week4',  # not required
-    "med": forecast_stat.t2m["mean"]["week4"], #5.5
-    "q1": forecast_stat.t2m["25%"]["week4"],
-    "q3": forecast_stat.t2m["75%"]["week4"],
-    "whislo": forecast_stat.t2m["min"]["week4"],  # required
-    "whishi": forecast_stat.t2m["max"]["week4"],  # required
-    "fliers": []  # required if showfliers=True
-    }]
-
-
-fs = 10  # fontsize
-boxprops = dict(linestyle='--', linewidth=1, color='darkgoldenrod')
-medianprops = dict(linestyle='-.', linewidth=1, color='darkgoldenrod')
-flierprops = dict(linestyle='-.', linewidth=1, color='darkgoldenrod')
-capprops = dict(linestyle='-.', linewidth=1, color='darkgoldenrod')
-whiskerprops = dict(linestyle='-.', linewidth=1, color='darkgoldenrod')
-fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-axes.bxp(stats_merge_hc, 
-         boxprops=boxprops, 
-         medianprops=medianprops,
-         flierprops=flierprops, 
-         capprops = capprops, 
-         whiskerprops = whiskerprops)
-axes.bxp(stats_merge_fc)#,patch_artist=True
-#axes.bxp(stats_fc, positions=2)
-axes.set_title('Boxplot for precalculated statistics', fontsize=fs)
-fig.savefig('test.png')
-
-#test.mean
-##test.t2m('mean')
-#test.t2m['mean']
-#test.t2m['25%']
-
-
-#d = curr_date
-
-#refyear = int(d[:4])
-#for i in range(refyear-20,refyear):
- # hdate = d.replace('%i'%refyear,'%i'%i) 
- # print(hdate)
- # h_dd = hindcast[(hindcast["time"] ==hdate)]
- 
- # h_dd[(h_dd["step"] =='7 days')] samme som h_dd[h_dd["step"].isin(['7 days','8 days'])]
- # week2 = h_dd[h_dd["step"].isin(['7 days','8 days','9 days','10 days','11 days','12 days','13 days'])]
+df_out_anom = pd.DataFrame(
+    columns = tuple([
+        'data_anom', 
+        'step',
+        'latitude', 
+        'longitude',
+        'time',
+        'number',
+        'valid_time'
+        
+    ])
+)
+for ll in LAT_unique:
+    for lo in LON_unique:
+        for w in fc_week:
+            for ww in fc_week[w]:
+                 refyear = int(curr_date[:4]) 
+                 for i in range(refyear-20,refyear): 
+                     hdate = curr_date.replace('%i'%refyear,'%i'%i) 
+                     for ens in range(1,11):  
+                         data_anom=ds_hindcast.t2m[(ll,lo,ww, hdate,ens)]-clim_hc.data_mean[(ww,ll,lo)]
+                         data_valid_time=ds_hindcast.valid_time[(ll,lo,ww, hdate,ens)]
+                         row_dict = {
+                              'data_anom' : data_anom,
+                              'step' : ww,
+                              'latitude' : ll,
+                              'longitude' : lo,
+                              'time' : hdate,
+                              'number' : ens,
+                              'valid_time':data_valid_time,
+                              } 
+                         df_out_anom = df_out_anom.append(pd.Series(row_dict),ignore_index=True)        
+            
