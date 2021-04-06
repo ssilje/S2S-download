@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 30 14:21:52 2021
-
-@author: siljesorland
-"""
 
 import xarray as xr
 #import matplotlib.pyplot as plt
@@ -110,14 +105,14 @@ data_week4_fc = pd.DataFrame(anom_week4_fc.t2m.reset_index(level='time', drop=Tr
 week_data = pd.concat([data_week1_hc, data_week1_fc, data_week2_hc,data_week2_fc,data_week3_hc,data_week3_fc,data_week4_hc,data_week4_fc])
 #fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
 #boxplot = week_data.boxplot(column=['t2m-week1-hc',
-                                    't2m-week1-fc',
-                                    't2m-week2-hc',
-                                    't2m-week2-fc',
-                                    't2m-week3-hc',
-                                    't2m-week3-fc',
-                                    't2m-week4-hc',
-                                    't2m-week4-fc']
-                            ,rot=90, fontsize=15)
+ #                                   't2m-week1-fc',
+ #                                   't2m-week2-hc',
+ ##                                   't2m-week2-fc',
+ #                                   't2m-week3-hc',
+ #                                   't2m-week3-fc',
+ #                                   't2m-week4-hc',
+ #                                   't2m-week4-fc']
+ #                           ,rot=90, fontsize=15)
 
 
 
