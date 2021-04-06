@@ -17,6 +17,7 @@ import os
 
 from S2S.file_handling import read_grib_file,read_grib_file_point, read_grib_file_slice_merge_ftype, check_file,read_grib_slice_mft_xarray
 from S2S.local_configuration import config
+#from S2S.file_handeling_ERA import read_ERA5_clim_anom
 
 dates_monday = pd.date_range("20180503", periods=18, freq="7D") # forecasts start Monday
 dates_thursday = pd.date_range("20180507", periods=18, freq="7D") # forecasts start Thursday
@@ -74,21 +75,35 @@ for product in (
 ## reading ERA
 #xs_hindcast.valid_time.sel(number=0).to_dataframe().sort_values(by='valid_time') Kan kanskje bruke denne til å få dei forskjellige datoane frå s2s
 
-        
-ERA5 = read_ERA5_timeseries(
-        dirbase=config['ERA5_daily_DIR'],
-        var_long='2m_temperature',
-        start_date='19980501',
-        end_date='20181001',
-        lat=[80,45],
-        lon=[0,20],
-        daymean=True,
-)
-
-
-
-
-
+dates = pd.date_range("20180503", periods=28) # forecasts start Thursday
+for d in dates:
+        ERA5 = read_ERA5_clim_anom(
+                dirbase=config['ERA5_daily_DIR'],
+                var_long='2m_temperature',
+                date=d,
+                lat=[80,45],
+                lon=[0,20],
+        )
+        ERA5_anom = ERA5.mean(dim='latitude').mean(dim='longitude').to_dataframe()
+        print(ERA5_anom)
+        if d == dates[0]:
+            ERA5_anom_df = ERA5_anom
+        else: 
+            ERA5_anom_df= ERA5_anom_df.append(ERA5_anom)
+    
+date_step=xs_forecast.sel(
+        step=slice('1 days', '7 days'),
+        number=0
+).valid_time.mean(
+        dim='latitude'
+).mean(
+        dim='longitude'
+).to_dataframe().drop(
+        columns=['number']
+).reset_index(
+        level=1, drop=True
+)               
+ERA5_anom_df.index.get_level_values('time')
 
 clim_mean = xs_hindcast.mean(dim='number').mean(dim='time')      # does this give mean over all years?
 clim_std = xs_hindcast.std(dim='number').std(dim='time')      # does this give mean over all years?
