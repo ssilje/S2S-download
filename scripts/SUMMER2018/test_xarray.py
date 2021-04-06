@@ -150,6 +150,18 @@ mean_ERA5_week3=ERA5_anom_df.loc[date_step_week3.valid_time[0].strftime('%Y%m%d'
 mean_ERA5_week4=ERA5_anom_df.loc[date_step_week4.valid_time[0].strftime('%Y%m%d'):date_step_week4.valid_time[-1].strftime('%Y%m%d')].mean()
 
 mean_ERA5_df = pd.DataFrame({"t2m-mean":[mean_ERA5_week1.t2m,mean_ERA5_week2.t2m,mean_ERA5_week3.t2m,mean_ERA5_week4.t2m]},index=['week1','week2','week3','week4'])
+mean_ERA5_df = pd.DataFrame({
+        "t2m-week1-hc":np.nan,
+        "t2m-week1-fc":mean_ERA5_week1.t2m,
+        "t2m-week12-hc":np.nan,
+        "t2m-week2-fc":mean_ERA5_week2.t2m,
+        "t2m-week3-hc":np.nan,
+        't2m-week3-fc':mean_ERA5_week3.t2m,
+        "t2m-week4-hc":np.nan,
+        't2m-week4-fc':mean_ERA5_week4.t2m
+}, index = ['t2m'])
+mean_ERA5_df.to_csv('era5_anom.csv')
+
 
 clim_mean = xs_hindcast.mean(dim='number').mean(dim='time')      # does this give mean over all years?
 clim_std = xs_hindcast.std(dim='number').std(dim='time')      # does this give mean over all years?
