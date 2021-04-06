@@ -149,6 +149,7 @@ mean_ERA5_week2=ERA5_anom_df.loc[date_step_week2.valid_time[0].strftime('%Y%m%d'
 mean_ERA5_week3=ERA5_anom_df.loc[date_step_week3.valid_time[0].strftime('%Y%m%d'):date_step_week3.valid_time[-1].strftime('%Y%m%d')].mean()
 mean_ERA5_week4=ERA5_anom_df.loc[date_step_week4.valid_time[0].strftime('%Y%m%d'):date_step_week4.valid_time[-1].strftime('%Y%m%d')].mean()
 
+mean_ERA5_df = pd.DataFrame({"t2m-mean":[mean_ERA5_week1.t2m,mean_ERA5_week2.t2m,mean_ERA5_week3.t2m,mean_ERA5_week4.t2m]},index=['week1','week2','week3','week4'])
 
 clim_mean = xs_hindcast.mean(dim='number').mean(dim='time')      # does this give mean over all years?
 clim_std = xs_hindcast.std(dim='number').std(dim='time')      # does this give mean over all years?
