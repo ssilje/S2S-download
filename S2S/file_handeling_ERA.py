@@ -43,17 +43,19 @@ def read_ERA5_clim_anom(
     lat,
     lon,
 ):
+    global ERA5_hc,ERA5_hc_df
     for i in range(1,21):
-        curr_date=dates_fcycle[0] - pd.DateOffset(years=i)
+        curr_date=date[0] - pd.DateOffset(years=i)
+        print(curr_date)
         file = '%s/%s_%s%s'%(dirbase,var_long,curr_date.strftime('%Y%m%d'),'.nc')
         dataopen = xr.open_dataset(file)
         data_df = dataopen.sel(latitude=slice(lat[0],lat[1]),longitude=slice(lon[0],lon[1])).resample(time='D').mean().to_dataframe()
-        if i == 1:
-            ERA5_hc_df = data_df
-        else: 
-            ERA5_hc_df=ERA5_hc_df.append(data_df)
-        ERA5_hc=ERA5_hc_df.to_xarray() 
-        
-        return ERA5
+    if i == 1:
+        ERA5_hc_df = data_df
+    else: 
+        ERA5_hc_df=ERA5_hc_df.append(data_df)
+    
+    ERA5_hc=ERA5_hc_df.to_xarray() 
+    return ERA5_hc
         
     
