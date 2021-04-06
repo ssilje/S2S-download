@@ -71,6 +71,28 @@ for product in (
 #t2m = xs_hindcast.sel(step=slice('1 days', '2 days')).mean(dim='step').t2m
 
 
+## reading ERA
+read_ERA5_timeseries(
+    dirbase=config['ERA5_daily_DIR'],
+    var_long='2m_temperature',
+    start_date=xs_hindcast.time.to_dataframe().time[0].strftime('%Y%m%d'),
+    end_date=xs_hindcast.time.to_dataframe().time[-1].strftime('%Y%m%d'),
+    lat=[80,45],
+    lon=[0,20],
+    daymean=True,
+)
+xs_hindcast.time.to_dataframe().time[-1].strftime('%Y%m%d')
+xs_hindcast
+xs_hindcast.time
+xs_hindcast.valid_time
+xs_hindcast.valid_time[0]
+xs_hindcast.valid_time.shape
+xs_hindcast.valid_time.sel(number=1)
+a=xs_hindcast.valid_time.sel(number=1)
+
+
+
+
 
 clim_mean = xs_hindcast.mean(dim='number').mean(dim='time')      # does this give mean over all years?
 clim_std = xs_hindcast.std(dim='number').std(dim='time')      # does this give mean over all years?
