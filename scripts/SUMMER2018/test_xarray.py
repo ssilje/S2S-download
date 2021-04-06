@@ -72,23 +72,19 @@ for product in (
 
 
 ## reading ERA
-read_ERA5_timeseries(
-    dirbase=config['ERA5_daily_DIR'],
-    var_long='2m_temperature',
-    start_date=xs_hindcast.time.to_dataframe().time[0].strftime('%Y%m%d'),
-    end_date=xs_hindcast.time.to_dataframe().time[-1].strftime('%Y%m%d'),
-    lat=[80,45],
-    lon=[0,20],
-    daymean=True,
+#xs_hindcast.valid_time.sel(number=0).to_dataframe().sort_values(by='valid_time') Kan kanskje bruke denne til å få dei forskjellige datoane frå s2s
+
+        
+ERA5 = read_ERA5_timeseries(
+        dirbase=config['ERA5_daily_DIR'],
+        var_long='2m_temperature',
+        start_date='19980501',
+        end_date='20181001',
+        lat=[80,45],
+        lon=[0,20],
+        daymean=True,
 )
-xs_hindcast.time.to_dataframe().time[-1].strftime('%Y%m%d')
-xs_hindcast
-xs_hindcast.time
-xs_hindcast.valid_time
-xs_hindcast.valid_time[0]
-xs_hindcast.valid_time.shape
-xs_hindcast.valid_time.sel(number=1)
-a=xs_hindcast.valid_time.sel(number=1)
+
 
 
 
