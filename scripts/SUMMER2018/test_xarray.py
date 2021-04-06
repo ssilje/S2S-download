@@ -91,7 +91,7 @@ for d in dates:
         else: 
             ERA5_anom_df= ERA5_anom_df.append(ERA5_anom)
     
-date_step=xs_forecast.sel(
+date_step_week1=xs_forecast.sel(
         step=slice('1 days', '7 days'),
         number=0
 ).valid_time.mean(
@@ -102,8 +102,53 @@ date_step=xs_forecast.sel(
         columns=['number']
 ).reset_index(
         level=1, drop=True
-)               
-ERA5_anom_df.index.get_level_values('time')
+) 
+
+
+date_step_week2=xs_forecast.sel(
+        step=slice('8 days', '14 days'),
+        number=0
+).valid_time.mean(
+        dim='latitude'
+).mean(
+        dim='longitude'
+).to_dataframe().drop(
+        columns=['number']
+).reset_index(
+        level=1, drop=True
+) 
+
+date_step_week3=xs_forecast.sel(
+        step=slice('15 days', '21 days'),
+        number=0
+).valid_time.mean(
+        dim='latitude'
+).mean(
+        dim='longitude'
+).to_dataframe().drop(
+        columns=['number']
+).reset_index(
+        level=1, drop=True
+) 
+
+date_step_week4=xs_forecast.sel(
+        step=slice('22 days', '28 days'),
+        number=0
+).valid_time.mean(
+        dim='latitude'
+).mean(
+        dim='longitude'
+).to_dataframe().drop(
+        columns=['number']
+).reset_index(
+        level=1, drop=True
+) 
+
+mean_ERA5_week1=ERA5_anom_df.loc[date_step_week1.valid_time[0].strftime('%Y%m%d'):date_step_week1.valid_time[-1].strftime('%Y%m%d')].mean()
+mean_ERA5_week2=ERA5_anom_df.loc[date_step_week2.valid_time[0].strftime('%Y%m%d'):date_step_week2.valid_time[-1].strftime('%Y%m%d')].mean()
+mean_ERA5_week3=ERA5_anom_df.loc[date_step_week3.valid_time[0].strftime('%Y%m%d'):date_step_week3.valid_time[-1].strftime('%Y%m%d')].mean()
+mean_ERA5_week4=ERA5_anom_df.loc[date_step_week4.valid_time[0].strftime('%Y%m%d'):date_step_week4.valid_time[-1].strftime('%Y%m%d')].mean()
+
 
 clim_mean = xs_hindcast.mean(dim='number').mean(dim='time')      # does this give mean over all years?
 clim_std = xs_hindcast.std(dim='number').std(dim='time')      # does this give mean over all years?
