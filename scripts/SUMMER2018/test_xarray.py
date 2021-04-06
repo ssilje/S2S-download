@@ -7,7 +7,7 @@ Created on Tue Mar 30 14:21:52 2021
 """
 
 import xarray as xr
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.dates as mdates
 import numpy as np
@@ -108,8 +108,8 @@ data_week3_fc = pd.DataFrame(anom_week3_fc.t2m.reset_index(level='time', drop=Tr
 data_week4_fc = pd.DataFrame(anom_week4_fc.t2m.reset_index(level='time', drop=True).reset_index(level='number', drop=True)).rename(columns={"t2m":"t2m-week4-fc"})
 
 week_data = pd.concat([data_week1_hc, data_week1_fc, data_week2_hc,data_week2_fc,data_week3_hc,data_week3_fc,data_week4_hc,data_week4_fc])
-fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-bocplot = week_data.boxplot(column=['t2m-week1-hc',
+#fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
+#boxplot = week_data.boxplot(column=['t2m-week1-hc',
                                     't2m-week1-fc',
                                     't2m-week2-hc',
                                     't2m-week2-fc',
@@ -119,7 +119,13 @@ bocplot = week_data.boxplot(column=['t2m-week1-hc',
                                     't2m-week4-fc']
                             ,rot=90, fontsize=15)
 
-#data_anome_weeks = data_anome_weeks.append(pd.Series(row_dict), ignore_index = True)
+
+
+#fig.savefig('test.png')    
+ 
+        
+        
+        #data_anome_weeks = data_anome_weeks.append(pd.Series(row_dict), ignore_index = True)
 #data_anome_weeks = data_anome_weeks.concat([pd.Series(row_dict)], ignore_index = True, axis=1)
 #data_anome_weeks = data_anome_weeks.append(row_dict, ignore_index = True)
         
@@ -132,9 +138,6 @@ bocplot = week_data.boxplot(column=['t2m-week1-hc',
 #                                         't2m-week3-fc',
 #                                         't2m-week4-hc',
 #                                         't2m-week4-fc']) 
-
-fig.savefig('test.png')    
- 
 
 
 
