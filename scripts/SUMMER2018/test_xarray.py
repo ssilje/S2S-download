@@ -196,14 +196,14 @@ data_week4_fc = pd.DataFrame(anom_week4_fc.t2m.reset_index(level='time', drop=Tr
 
 week_data = pd.concat([data_week1_hc, data_week1_fc, data_week2_hc,data_week2_fc,data_week3_hc,data_week3_fc,data_week4_hc,data_week4_fc])
 
-era_anom=mean_ERA5_df.iloc[:,1:9]
+#era_anom=mean_ERA5_df.iloc[:,1:9]
 
 fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
 bplot=sns.boxplot(data=week_data, 
                  width=0.5,
                  palette="colorblind",ax=axes)
  
-bplot=sns.stripplot(data=era_anom, 
+bplot=sns.stripplot(data=mean_ERA5_df, 
                    jitter=True, 
                    size=20, 
                    marker="D",
