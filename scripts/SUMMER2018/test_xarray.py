@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import xarray as xr
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.dates as mdates
 import numpy as np
 from calendar import monthrange,  monthcalendar, datetime
 from datetime import timedelta
+import seaborn as sns
 
 import json 
 import os
@@ -194,43 +195,21 @@ data_week3_fc = pd.DataFrame(anom_week3_fc.t2m.reset_index(level='time', drop=Tr
 data_week4_fc = pd.DataFrame(anom_week4_fc.t2m.reset_index(level='time', drop=True).reset_index(level='number', drop=True)).rename(columns={"t2m":"t2m-week4-fc"})
 
 week_data = pd.concat([data_week1_hc, data_week1_fc, data_week2_hc,data_week2_fc,data_week3_hc,data_week3_fc,data_week4_hc,data_week4_fc])
-#fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-#boxplot = week_data.boxplot(column=['t2m-week1-hc',
- #                                   't2m-week1-fc',
- #                                   't2m-week2-hc',
- ##                                   't2m-week2-fc',
- #                                   't2m-week3-hc',
- #                                   't2m-week3-fc',
- #                                   't2m-week4-hc',
- #                                   't2m-week4-fc']
- #                           ,rot=90, fontsize=15)
 
+era_anom=mean_ERA5_df.iloc[:,1:9]
 
-
-#fig.savefig('test.png')    
+fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
+bplot=sns.boxplot(data=week_data, 
+                 width=0.5,
+                 palette="colorblind",ax=axes)
  
-        
-        
-        #data_anome_weeks = data_anome_weeks.append(pd.Series(row_dict), ignore_index = True)
-#data_anome_weeks = data_anome_weeks.concat([pd.Series(row_dict)], ignore_index = True, axis=1)
-#data_anome_weeks = data_anome_weeks.append(row_dict, ignore_index = True)
-        
-#boxplot = anom_week1_hc.boxplot(column=['t2m'])
-#boxplot = data_anome_weeks.boxplot(column=['t2m-week1-hc',
-#                                         't2m-week1-fc',
-#                                         't2m-week2-hc',
-#                                         't2m-week2-fc',
-#                                         't2m-week3-hc',
-#                                         't2m-week3-fc',
-#                                         't2m-week4-hc',
-#                                         't2m-week4-fc']) 
+bplot=sns.stripplot(data=era_anom, 
+                   jitter=True, 
+                   size=20, 
+                   marker="D",
+                   alpha=0.5,
+                   color='black',ax=axes)
+bplot.set_xticklabels(['HC w1','FC w1','HC w2','FC w2','HC w3','FC w3','HC w4','HC w4'],rotation=90)
+fig.savefig('test.png')    
+ 
 
-
-
-#data_anom_hc=xs_hindcast.sel(step=ww,time=hdate,number=ens)-clim_mean.sel(step=ww)
-#data_anom_hc.sel(latitude=slice(65,60),longitude=slice(5,10))
-                
-                                    
-                       
-                         
-   
