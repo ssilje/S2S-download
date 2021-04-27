@@ -6,6 +6,7 @@ import pandas as pd
 
 # local dependencies
 from S2S.local_configuration_H import config
+from .create_domain_file import make_dir
 
 def to_pandas(array,time,lon=[None],lat=[None]):
     """
@@ -61,6 +62,7 @@ def qq_plot(fc_anom,obs_anom,domainID):
         ax.set_ylabel('Model')
         ax.set_xlabel('Observations')
 
+    make_dir(config['SAVEFIG'])
     fig.suptitle(domainID)
     plt.savefig(config['SAVEFIG']+'test_qq.png')
     plt.close()

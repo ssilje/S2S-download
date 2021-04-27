@@ -9,6 +9,7 @@ from S2S.local_configuration_H import config
 import scripts.Henrik.handle_datetime as dt
 import scripts.Henrik.figure_receipts as fr
 from .acc import ACC
+from .create_domain_file import make_dir
 
 domainID      = 'NVS'
 
@@ -39,7 +40,7 @@ while True:
                                 domainID,
                                 '.nc'
                                 )
-
+        make_dir('/'.join(obspath.split('/')[:-1]))
         observations.ERA5.transpose('time','lon','lat').to_netcdf(obspath)
 
         get_observations = 0
@@ -92,6 +93,7 @@ while True:
                                 '.nc'
                                 )
 
+        make_dir('/'.join(hc_filepath.split('/')[:-1]))
         hc_anom.to_netcdf(hc_filepath)
 
         compute_anomalies = 0
@@ -142,8 +144,6 @@ weights         = np.cos(
                     )
                 )
 
-
-
 # continous ranked probability score
 crps_fc   = ps.crps_ensemble(
                 observations=sst_obs,
@@ -156,6 +156,9 @@ acc = ACC(sst_hc,sst_obs,weights)
 
 # quantile plot
 fr.qq_plot(sst_hc,sst_obs,domainID)
+
+print(sst_hc.shape,sst_obs.shape)
+exit()
 
 crps_fc = fr.to_pandas(crps_fc,np.transpose(validation_time),hc_anom.lon,hc_anom.lat)
 

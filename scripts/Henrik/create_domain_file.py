@@ -1,8 +1,18 @@
 import json
+import os
 
 # local dependencies
-from .nird2local import make_dir
 from S2S.local_configuration_H import config
+
+def make_dir(path):
+    """
+    Creates directory if it does not exist.
+
+    args:
+        path: str
+    """
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 def site2domain(site):
     return {
