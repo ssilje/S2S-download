@@ -10,6 +10,7 @@ import scripts.Henrik.handle_datetime as dt
 import scripts.Henrik.figure_receipts as fr
 from .acc import ACC
 from .create_domain_file import make_dir
+import scripts.Henrik.build_a_bear as build_a_bear
 
 domainID      = 'NVS'
 
@@ -115,6 +116,8 @@ while True:
         break
 
 
+lon = np.array(hc_anom.lon)
+lat = np.array(hc_anom.lat)
 validation_time = np.array(
                         [ct+np.array(hc_anom.step)
                             for ct in np.array(hc_anom.time)]
@@ -154,12 +157,14 @@ crps_fc   = ps.crps_ensemble(
 # anomaly correlation coefficients
 acc = ACC(sst_hc,sst_obs,weights)
 
+# convert to pandas dataframe
+time = np.transpose(validation_time)
+
+anomalies = build_a_bear.anom_to_pandas(sst_hc,sst_obs,time,lon,lat)
+crps      = build_a_bear.score_to_pandas(crps_fc,time,lon,lat)
+acc       = build_a_bear.score_to_pandas(acc,time,name='ACC')
+
+fr.qq_plot(anomalies[anomalies['lead_time']<=4],domainID)
+fr.line_plot(acc[acc['lead_time']<=4],domainID,var_name='ACC')
 # quantile plot
-fr.qq_plot(sst_hc,sst_obs,domainID)
-
-print(sst_hc.shape,sst_obs.shape)
-exit()
-
-crps_fc = fr.to_pandas(crps_fc,np.transpose(validation_time),hc_anom.lon,hc_anom.lat)
-
-print(crps_fc.to_xarray().groupby('time.month').mean().to_dataframe())
+# fr.qq_plot(sst_hc,sst_obs,domainID)
