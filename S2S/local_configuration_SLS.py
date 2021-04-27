@@ -8,5 +8,8 @@ config = {
     "ERA5_monthly_DIR": '', # "/nird/projects/NS9853K/DATA/SFE/ERA_monthly_nc/",
     "S2S_DIR_summer2018": '/nird/projects/NS9001K/sso102/S2S/DATA/SUMMER2018', # "/Users/siljesorland/Python/SUMMER2018",
     "SAVEFIG": '', # " /nird/projects/NS9001K/sso102/FIGUERS"
-    "csv_DIR": '/nird/projects/NS9001K/sso102/Python/TOOLS/S2S-download/data/SUMMER2018/'
+    "csv_DIR": '/nird/projects/NS9001K/sso102/Python/TOOLS/S2S-download/data/SUMMER2018/',
+    "S2SF": '/nird/projects/NS9853K/DATA/S2S/Benjamin/forecast/ECMWF/sfc/sst/',
+    "S2SH":'/nird/projects/NS9853K/DATA/S2S/Benjamin/hindcast/ECMWF/sfc/sst/',
+    'ERA5':'/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/grid_15'
 }
