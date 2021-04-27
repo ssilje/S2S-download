@@ -85,7 +85,46 @@ def check_file(
 
     return fileexist
 
+def read_grib_slice_mft_xarray(
+        dirbase,
+        product,
+        model_version,
+        var_name_abbr,
+        date_str,
+        lat,
+        lon
+):
+    file_name_cf = '_'.join([var_name_abbr, model_version, date_str, 'cf', product]) + '.grb'
+    file_path_cf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
 
+    file_name_pf = '_'.join([var_name_abbr, model_version, date_str, 'pf', product]) + '.grb'
+    file_path_pf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
+
+    if not os.path.isfile(file_path_pf):
+        file_name_cf = '_'.join([var_name_abbr, model_version, date_str, 'cf']) + '.grb'
+        file_path_cf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_cf)
+
+        file_name_pf = '_'.join([var_name_abbr, model_version, date_str, 'pf']) + '.grb'
+        file_path_pf = os.path.join(dirbase, product, 'ECMWF', 'sfc', var_name_abbr, file_name_pf)
+    print('reading file:')
+    print(file_path_pf)
+    dataopen_pf = xr.open_dataset(file_path_pf, engine='cfgrib').sel(latitude=slice(lat[0], lat[1]),
+                                                                     longitude=slice(lon[0], lon[
+                                                                         1])).to_dataframe().reset_index(level='number')
+
+    print('reading file:')
+    print(file_path_cf)
+    dataopen_cf = xr.open_dataset(file_path_cf, engine='cfgrib').sel(latitude=slice(lat[0], lat[1]),
+                                                                     longitude=slice(lon[0], lon[
+                                                                         1])).to_dataframe()  # Picking out a grid point
+
+    dataopen_df = dataopen_cf.append(dataopen_pf).set_index('number', append=True)  # merging pf andf
+
+    if product == 'forecast':
+        dataopen_df = dataopen_df.set_index('time', append=True)
+        dataopen_df.index = dataopen_df.index.swaplevel(2, 3)
+    dataopen=dataopen_df.to_xarray() 
+    return dataopen
 def read_grib_file_slice_merge_ftype(
         dirbase,
         product,
@@ -126,6 +165,7 @@ def read_grib_file_slice_merge_ftype(
         dataopen.index = dataopen.index.swaplevel(2, 3)
 
     return dataopen
+
 
 
 ## Problems with memory

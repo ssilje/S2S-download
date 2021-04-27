@@ -4,8 +4,9 @@ config = {
     "S2S_DIR": '/nird/projects/NS9853K/DATA/S2S', # "/nird/projects/NS9853K/DATA/S2S",
     "S2SEUR_DIR": '', # "/nird/projects/NS9001K/sso102/S2S/DATA/grib/",
     "SFE_DIR": '', # "/nird/projects/NS9853K/DATA/SFE/Systems_daily_grib/",
-    "ERA5_daily_DIR": '', # "/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/",
+    "ERA5_daily_DIR": '/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/', # "/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/",
     "ERA5_monthly_DIR": '', # "/nird/projects/NS9853K/DATA/SFE/ERA_monthly_nc/",
-    "S2S_DIR_summer2018": '', # "/nird/projects/NS9001K/sso102/S2S/DATA/SUMMER2018",
-    "SAVEFIG": '' # " /nird/projects/NS9001K/sso102/FIGUERS"
+    "S2S_DIR_summer2018": '/nird/projects/NS9001K/sso102/S2S/DATA/SUMMER2018', # "/Users/siljesorland/Python/SUMMER2018",
+    "SAVEFIG": '', # " /nird/projects/NS9001K/sso102/FIGUERS"
+    "csv_DIR": '/nird/projects/NS9001K/sso102/Python/TOOLS/S2S-download/data/SUMMER2018/'
 }
