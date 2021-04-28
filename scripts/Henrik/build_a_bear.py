@@ -45,7 +45,7 @@ def fit_frame(array,position,shape):
     return array
 
 
-def anom_to_pandas(fc_anom,obs_anom,time,lon,lat):
+def anom_to_pandas(fc_anom,obs_anom,time,lon,lat,step0=1):
     """
     args:
         fc_anom:   np.array, dim (step,time,...)
@@ -67,8 +67,8 @@ def anom_to_pandas(fc_anom,obs_anom,time,lon,lat):
     df_base = dict.fromkeys(index)
 
     df_base['ensemble_member']  = fit_frame(np.arange(1,en+1),[0],shape)
-    df_base['lead_time']        = fit_frame(np.arange(1,st+1),[1],shape)
-    df_base['time']             = fit_frame(time[0],[2],shape)
+    df_base['lead_time']        = fit_frame(np.arange(step0,step0+st),[1],shape)
+    df_base['time']             = fit_frame(time,[1,2],shape)
     df_base['lon']              = fit_frame(lon,[3],shape)
     df_base['lat']              = fit_frame(lat,[4],shape)
 
@@ -85,7 +85,7 @@ def anom_to_pandas(fc_anom,obs_anom,time,lon,lat):
 
     return df
 
-def score_to_pandas(array,time,lon=[None],lat=[None],name='values'):
+def score_to_pandas(array,time,lon=[None],lat=[None],name='values',step0=1):
     """
     args:
         array: np.array, dim (step,time,...)
@@ -106,8 +106,8 @@ def score_to_pandas(array,time,lon=[None],lat=[None],name='values'):
 
     df_base = dict.fromkeys(index)
 
-    df_base['lead_time']        = fit_frame(np.arange(1,shape[0]+1),[0],shape)
-    df_base['time']             = fit_frame(time[0],[1],shape)
+    df_base['lead_time']        = fit_frame(np.arange(step0,step0+shape[0]),[0],shape)
+    df_base['time']             = fit_frame(time,[0,1],shape)
 
     if lon[0]:
         df_base['lon']          = fit_frame(lon,[2],shape)

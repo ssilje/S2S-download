@@ -2,7 +2,7 @@ import json
 import os
 
 # local dependencies
-from S2S.local_configuration_H import config
+from S2S.local_configuration import config
 
 def make_dir(path):
     """
@@ -13,6 +13,16 @@ def make_dir(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+
+def bump2map(domain):
+    map_domain = domain.copy()
+    map_domain['bounds'] = (
+                        map_domain['bounds'][0]-3,map_domain['bounds'][1]+3,
+                        map_domain['bounds'][2]-1,map_domain['bounds'][3]+1
+                        )
+    map_domain['name'] = map_domain['name']+'_map'
+    return map_domain
+
 
 def site2domain(site):
     return {
@@ -39,6 +49,9 @@ domain_dict = {
                 'bounds_fmt':'(min lon, max lon, min lat, max lat)'
                     }
                 }
+
+for domainID in list(domain_dict):
+    domain_dict[domainID+'_map'] = bump2map(domain_dict[domainID])
 
 with open(config['SITES'],'r') as file:
     sites = json.load(file)

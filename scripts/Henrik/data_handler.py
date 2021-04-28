@@ -4,7 +4,7 @@ import xarray as xr
 import pandas as pd
 
 # local dependencies
-from S2S.local_configuration_H import config
+from S2S.local_configuration import config
 from .handle_domain import get_bounds
 import scripts.Henrik.handle_datetime as dt
 

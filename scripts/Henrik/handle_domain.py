@@ -1,6 +1,6 @@
 import json
 
-from S2S.local_configuration_H import config
+from S2S.local_configuration import config
 
 def get_bounds(domainID):
     with open(config['DOMAINS'], 'r') as file:
