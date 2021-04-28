@@ -113,7 +113,7 @@ class SST:
 
             if data_label=='S2SH':
 
-                self.S2SH = xr.concat(chunk,'time') # new dimension
+                self.S2SH = xr.concat(chunk,'time') # existing dimension
 
             else:
 
