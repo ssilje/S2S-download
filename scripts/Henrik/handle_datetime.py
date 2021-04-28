@@ -80,6 +80,6 @@ def days_from(t_start,t_end,match_fc=False):
                     freq='D'
                     )
     else:
-        start = to_datetime(t_start) + pd.Timedelta(value=1,unit='D')
+        start = to_datetime(t_start)
         end   = to_datetime(t_end) + pd.Timedelta(value=6,unit='W')
         return pd.date_range(start=start,end=end,freq='D')
