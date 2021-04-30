@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - anaconda
   - defaults
-dependencies: 
+dependencies:
   - matplotlib
   - numpy
   - xarray
@@ -17,11 +17,11 @@ dependencies:
   - properscoring
   - scipy
   - cdo
-  - xesmf 
+  - xesmf
   - seaborn
   - cfgrib
   - xarray-extras
 
 #installed manually:
 # pip3 install gridpp==0.6.0-dev.1
-
+# conda install -c conda-forge xskillscore
