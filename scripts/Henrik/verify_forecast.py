@@ -22,8 +22,8 @@ clim_t_end    = (2021,1,4)
 
 from .data_handler import SST
 
-get_observations = 0
-get_hindcast = 0
+get_observations = 1
+get_hindcast = 1
 
 while True:
 
