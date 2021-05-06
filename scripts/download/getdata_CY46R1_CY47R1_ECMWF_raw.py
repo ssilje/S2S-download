@@ -51,7 +51,8 @@ meta = {
      'sst': {
         'param': '34.128',  
         'levtype': 'sfc',
-        'step': '/'.join([final]) 
+        'step': '0/to/1104/by/24'
+       # 'step': '/'.join([final]) 
     },
     
      'u10': {
