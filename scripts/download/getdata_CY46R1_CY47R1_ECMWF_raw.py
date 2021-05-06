@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-from ecmwfapi import ECMWFDataServer
+from ecmwfapi import *
 import os,sys
 import pandas as pd
 from datetime import datetime
 
-server = ECMWFDataServer()
+
+server = ECMWFService("mars")
 
 product = 'forecast' # forecast, hincast
 dirbase = '/nird/projects/nird/NS9001K/sso102/S2S/DATA/grib'
@@ -12,15 +13,19 @@ dir = '%s/%s/%s/'%(dirbase,product,'/ECMWF/sfc')
 
 forcastcycle = 'CY46R1_CY47R1_raw'
 
+
+
 if product == 'hindcast':
     STREAM =  'enfh', 
 if product == 'forecast':
     STREAM = 'enfo', 
-        
+  
+
+
+
 basedict = {
     'class': 'od',
     'expver': '1',
-    'model': 'glob',
     'stream': STREAM ,
     'time': '00:00:00'
 }
@@ -44,7 +49,7 @@ meta = {
     },
     
      'sst': {
-        'param': '34',  
+        'param': '34.128',  
         'levtype': 'sfc',
         'step': '/'.join([final]) 
     },
@@ -81,7 +86,6 @@ dates_fcycle = dates_monday.union(dates_thursday)
    # Program start
 for filename in (
     'sst',
-    'sal',
     
 ):
     for prefix in (
@@ -112,6 +116,6 @@ for filename in (
                dic['target'] = target    
                print(dic)
                if server is not None:
-                   server.retrieve(dic)
+                   server.execute(dic)
                     
 print('DONE')
