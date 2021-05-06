@@ -113,7 +113,7 @@ for filename in (
                if ( product == 'forecast' ):
                    if prefix == 'pf':
                        dic['number'] =  '1/to/50'
-               out = '%s,%s=%s'%(dic, 'target',target)     
+               out = '%s,%s=%s'%(dic, '"target"',target)     
                print(out)
                if server is not None:
                    server.execute(out)
