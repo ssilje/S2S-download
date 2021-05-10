@@ -27,8 +27,8 @@ basedict = {
     'class': 'od',
     'expver': '1',
     'stream': STREAM ,
-    'time': '00:00:00'
-    'grid': '0.38/0.38', 
+    'time': '00:00:00',
+    'grid': '0.38/0.38, 
 }
 
 l = range(0,1128,24)
