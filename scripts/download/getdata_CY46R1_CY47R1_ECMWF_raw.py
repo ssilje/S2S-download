@@ -16,9 +16,9 @@ forcastcycle = 'CY46R1_CY47R1_raw'
 
 
 if product == 'hindcast':
-    STREAM =  'enfh', 
+    STREAM =  'enfh' 
 if product == 'forecast':
-    STREAM = 'enfo', 
+    STREAM = 'enfo' 
   
 
 
@@ -28,7 +28,7 @@ basedict = {
     'expver': '1',
     'stream': STREAM ,
     'time': '00:00:00'
-    'grid' : '0.38/0.38', 
+    'grid': '0.38/0.38', 
 }
 
 l = range(0,1128,24)
