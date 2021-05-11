@@ -116,9 +116,10 @@ for filename in (
                    if prefix == 'pf':
                        dic['number'] =  '1/to/50'
               # out = '%s,%s=%s'%(dic, '"target"',target)
-               out= '%s=%s'%('target', target) 
+              # out= '%s=%s'%('target', target) 
+               out= '%s%s%s'%('"', target,'"')
                print(out)
                if server is not None:
-                   server.execute(dic,out)
+                   server.execute(dic,target)
                     
 print('DONE')
