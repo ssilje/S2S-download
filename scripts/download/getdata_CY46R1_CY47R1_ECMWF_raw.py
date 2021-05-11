@@ -7,7 +7,7 @@ from datetime import datetime
 
 server = ECMWFService("mars")
 
-product = 'forecast' # forecast, hincast
+product = 'hindcast' # forecast, hincast
 dirbase = '/nird/projects/nird/NS9001K/sso102/S2S/DATA/grib'
 dir = '%s/%s/%s/'%(dirbase,product,'/ECMWF/sfc')
 
@@ -28,7 +28,9 @@ basedict = {
     'expver': '1',
     'stream': STREAM ,
     'time': '00:00:00',
-    'grid': '0.38/0.38' 
+    'grid': '0.38/0.38',
+    'area': '88/-45/20/45'
+    
 }
 
 l = range(0,1128,24)
