@@ -28,7 +28,7 @@ basedict = {
     'expver': '1',
     'stream': STREAM ,
     'time': '00:00:00',
-    'grid': '0.38/0.38',
+    'grid': '0.5/0.5',
     'area': '88/-45/20/45'
     
 }
