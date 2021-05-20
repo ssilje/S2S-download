@@ -10,8 +10,10 @@ import scripts.Henrik.figure_receipts as fr
 from .acc import ACC
 from .create_domain_file import make_dir
 import scripts.Henrik.build_a_bear as build_a_bear
+import scripts.Henrik.compute_reliability as cr
+from scripts.Henrik.prepare_data import get_observations, get_hindcast
 
-domainID      = 'NVS'
+domainID = 'NVK'
 
 t_start  = (2020,1,23)
 t_end    = (2021,1,14)
@@ -19,98 +21,12 @@ t_end    = (2021,1,14)
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
-from .data_handler import SST
-
-get_observations = 0
-get_hindcast = 0
-
-while True:
-
-    if get_observations:
-
-        observations = SST()
-        observations.load('ERA5',clim_t_start,clim_t_end,domainID)
-
-        obspath = '%s%s_%s-%s_%s_%s%s'%(
-                                config['VALID_DB'],
-                                'sst',
-                                dt.to_datetime(clim_t_start).strftime('%Y-%m-%d'),
-                                dt.to_datetime(clim_t_end).strftime('%Y-%m-%d'),
-                                'reanalysis',
-                                domainID,
-                                '.nc'
-                                )
-        make_dir('/'.join(obspath.split('/')[:-1]))
-        observations.ERA5.transpose('time','lon','lat').to_netcdf(obspath)
-
-        get_observations = 0
-
-    else:
-
-        obspath = '%s%s_%s-%s_%s_%s%s'%(
-                                config['VALID_DB'],
-                                'sst',
-                                dt.to_datetime(clim_t_start).strftime('%Y-%m-%d'),
-                                dt.to_datetime(clim_t_end).strftime('%Y-%m-%d'),
-                                'reanalysis',
-                                domainID,
-                                '.nc'
-                                )
-
-        observations = xr.open_dataset(obspath)
-
-        break
-
-while True:
-
-    if get_hindcast:
-
-        sst = SST()
-        sst.load('S2SH',t_start,t_end,domainID)
-
-        hindcast = sst.S2SH.transpose(
-                                    'number','step','time',
-                                    'longitude','latitude'
-                                    )
-
-        hindcast = hindcast.rename(
-                                    {
-                                        'number':'ensemble_member',
-                                        'longitude':'lon',
-                                        'latitude':'lat'
-                                        }
-                                    )
-
-        hc_filepath = '%s%s_%s-%s_%s_%s%s'%(
-                                config['VALID_DB'],
-                                'sst',
-                                dt.to_datetime(t_start).strftime('%Y-%m-%d'),
-                                dt.to_datetime(t_end).strftime('%Y-%m-%d'),
-                                'hc',
-                                domainID,
-                                '.nc'
-                                )
-
-        make_dir('/'.join(hc_filepath.split('/')[:-1]))
-        hindcast.to_netcdf(hc_filepath)
-
-        get_hindcast = 0
-
-    else:
-
-        hc_filepath = '%s%s_%s-%s_%s_%s%s'%(
-                                config['VALID_DB'],
-                                'sst',
-                                dt.to_datetime(t_start).strftime('%Y-%m-%d'),
-                                dt.to_datetime(t_end).strftime('%Y-%m-%d'),
-                                'hc',
-                                domainID,
-                                '.nc'
-                                )
-
-        hindcast = xr.open_dataset(hc_filepath)
-
-        break
+###################
+#### Load data ####
+###################
+# observations = get_observations(domainID,clim_t_start,clim_t_end,download=0)
+hindcast = get_hindcast(domainID,t_start,t_end)
+exit()
 
 ####################################################
 #### Cap time of hindcast to match observations ####
@@ -184,18 +100,63 @@ std_obs  = np.stack([obs_std.sst.sel(dayofyear=pd.to_datetime(t).dayofyear)\
                                     for t in time],axis=1)
 sst_hc   = np.array(hc_anom.sst)
 
+###########################################################
+#### Stack to match, but do not convert to numpy array #### Consider this for remaining operations using xarray and xskillscore
+###########################################################
+out = []
+
+for step in hc_anom.step:
+
+    validation_time = hc_anom.sel(ensemble_member=1).sel(step=step).time
+    out.append(obs_anom.sel(time=validation_time).drop('ensemble_member'))
+
+obs_anom_stck = xr.concat(out,'step').transpose('step','time','lon','lat')
+
+##############################################
+#### Include validation time as dimension ####
+##############################################
+validation_time=(obs_anom_stck.step + obs_anom_stck.time)
+
+obs_anom_stck = obs_anom_stck.expand_dims('validation_time')\
+                        .assign_coords(validation_time = validation_time)
+
+hc_anom_stck = hc_anom.expand_dims('validation_time')\
+                        .assign_coords(validation_time = validation_time)
+
+#####################
+#### Reliability ####
+#####################
+thresholds =\
+    obs_anom.sst.mean('lon').mean('lat').groupby('time.season')\
+            .quantile([0.75,0.25])
+
+rel,sns,stp = cr.grouped_reliability_of_forecast(
+                    forecast=hc_anom_stck.sst.mean('lon').mean('lat'),
+                    observations=obs_anom_stck.sst.mean('lon').mean('lat'),
+                    thresholds=thresholds,
+                    direction=1,
+                    dim='time',
+                    group='validation_time.season'
+                    )
+
+fr.reliability_plot(rel,sns,pd.to_timedelta(stp))
+exit()
 #############################
 #### Compute CRPS and SS ####
 #############################
 crps_fc   = ps.crps_ensemble(
                 observations=sst_obs,
-                forecasts=np.moveaxis(sst_hc,0,-1),
-                weights=np.moveaxis(weights,0,-1)
+                forecasts=np.moveaxis(sst_hc,0,-1)
                 )
 
-crps_clim = ps.crps_gaussian(x=sst_obs, mu=0, sig=std_obs) # does not weight with cos(lat), might be problematic in next operation crps_SS
+crps_clim      = ps.crps_gaussian(x=sst_obs, mu=0, sig=std_obs) # does not weight with cos(lat), might be problematic in next operation crps_SS
+crps_clim_stat = ps.crps_ensemble(
+                        observations=sst_obs,
+                        forecasts=np.zeros_like(sst_obs)
+                        )
 
 crps_ss   = 1 - np.nanmean(crps_fc,axis=(-1,-2))/np.nanmean(crps_clim,axis=(-1,-2))
+crps_ss_stat   = 1 - np.nanmean(crps_fc,axis=(-1,-2))/np.nanmean(crps_clim_stat,axis=(-1,-2))
 
 #############
 #### ACC ####
@@ -205,15 +166,64 @@ acc = ACC(sst_hc,sst_obs,weights)
 #################################
 #### Build pandas dataframes ####
 #################################
-time      = np.transpose(time)
-anomalies = build_a_bear.anom_to_pandas(sst_hc,sst_obs,time,lon,lat,step0=step0)
-crps_ss   = build_a_bear.score_to_pandas(crps_ss,time,name='CRPS_SS',step0=step0)
-acc       = build_a_bear.score_to_pandas(acc,time,name='ACC',step0=step0)
+time            = np.transpose(time)
+anomalies       = build_a_bear.anom_to_pandas(
+                                                sst_hc,
+                                                sst_obs,
+                                                time,
+                                                lon,
+                                                lat,
+                                                step0=step0
+                                            )
 
+crps_ss         = build_a_bear.score_to_pandas(
+                                                crps_ss,
+                                                time,
+                                                name='CRPS_SS',
+                                                step0=step0
+                                            )
+crps_ss_stat    = build_a_bear.score_to_pandas(
+                                                crps_ss_stat,
+                                                time,
+                                                name='CRPS_SS',
+                                                step0=step0
+                                            )
+
+acc             = build_a_bear.score_to_pandas(
+                                                acc,
+                                                time,
+                                                name='ACC',
+                                                step0=step0
+                                            )
+# print(
+#     anomalies.set_index(
+#                         [
+#                             'ensemble_member',
+#                             'lead_time',
+#                             'time',
+#                             'month',
+#                             'season',
+#                             'lon',
+#                             'lat'
+#                         ]
+#                     ).to_numpy().shape
+#                 )
+# reliability     =
+# build_a_bear.pandas_reliability(
+#                                                 3,
+#                                                 sst_hc,
+#                                                 sst_obs,
+#                                                 time,
+#                                                 lon,
+#                                                 lat,
+#                                                 step0=step0
+#                                             )
+# exit()
 ##################
 #### Plotting ####
 ##################
 fr.qq_plot(anomalies[anomalies['lead_time'].isin([10,17,24,31])],domainID)
 fr.line_plot(acc,domainID+'_acc',var_name='ACC')
 fr.line_plot(crps_ss,domainID+'_crps',var_name='CRPS_SS')
+fr.line_plot(crps_ss_stat,domainID+'_crps_stat',var_name='CRPS_SS')
 fr.geographic(domainID)

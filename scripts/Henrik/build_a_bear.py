@@ -48,8 +48,8 @@ def fit_frame(array,position,shape):
 def anom_to_pandas(fc_anom,obs_anom,time,lon,lat,step0=1):
     """
     args:
-        fc_anom:   np.array, dim (step,time,...)
-        obs_anom:  np.array, dim (step,time)
+        fc_anom:   np.array, dim (ensemble_member,step,time,lon,lat)
+        obs_anom:  np.array, dim (step,time,lon,lat)
 
     returns
         dataframe: pandas.DataFrame
@@ -126,3 +126,58 @@ def score_to_pandas(array,time,lon=[None],lat=[None],name='values',step0=1):
     df = pd.DataFrame.from_records(df_base)
 
     return df
+
+# def pandas_reliability(threshold,fc_anom,obs_anom,time,lon,lat,step0=1):
+#     """
+#     args:
+#         fc_anom:   np.array, dim (ensemble_member,step,time,lon,lat)
+#         obs_anom:  np.array, dim (step,time,lon,lat)
+#
+#     returns
+#         dataframe: pandas.DataFrame
+#     """
+#
+#     for step_i in range(fc_anom.shape[1]):
+#
+#         time_at_step = pd.to_datetime(time[step_i])
+#
+#         for month in range(1,13):
+#
+#             month_idx = time_at_step.month==month
+#
+#             rel = reliability.compute(
+#                     forecast=fc_anom[:,step_i,month_idx],
+#                     observations=obs_anom[step_i,month_idx],
+#                     threshold=np.full_like(obs_anom[step_i,month_idx],threshold)
+#                 )
+#             print(rel)
+#             exit()
+#     shape = fc_anom.shape
+#     en,st,ti,lo,la = shape
+#     shape = list(shape)
+#
+#     # stack observations to match ensemble
+#     obs_anom = stack(obs_anom,en,0)
+#
+#     index   = ['ensemble_member','lead_time','time','lon','lat']
+#
+#     df_base = dict.fromkeys(index)
+#
+#     df_base['ensemble_member']  = fit_frame(np.arange(1,en+1),[0],shape)
+#     df_base['lead_time']        = fit_frame(np.arange(step0,step0+st),[1],shape)
+#     df_base['time']             = fit_frame(time,[1,2],shape)
+#     df_base['lon']              = fit_frame(lon,[3],shape)
+#     df_base['lat']              = fit_frame(lat,[4],shape)
+#
+#     df_base['observations']     = obs_anom
+#     df_base['model']            = fc_anom
+#
+#     for key in df_base:
+#         df_base[key] = df_base[key].flatten()
+#     df_base['time']  = pd.to_datetime(df_base['time'])
+#     df_base['month'] = df_base['time'].month_name()
+#     df_base['season'] = parse_month2season(df_base['time'].month)
+#
+#     df = pd.DataFrame.from_records(df_base)
+#
+#     return df

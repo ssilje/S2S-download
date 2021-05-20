@@ -7,6 +7,11 @@ def get_bounds(domainID):
         domain_dict = json.load(file)
     return domain_dict[domainID]['bounds']
 
+def get_domain(domainID):
+    with open(config['DOMAINS'], 'r') as file:
+        domain_dict = json.load(file)
+    return domain_dict[domainID]
+
 ### FUNCTIONS NOT IN USE ###
 def try_keys(dictionary,list_of_keys):
     for n,key in enumerate(list_of_keys):

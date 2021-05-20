@@ -1,7 +1,8 @@
 # import scripts.Henrik.create_domain_file
+import scripts.Henrik.organize_barentzwatch
 # import scripts.Henrik.test_domain
 # import scripts.Henrik.geographic_overview
-import scripts.Henrik.verify_forecast
+# import scripts.Henrik.verify_forecast
 # import scripts.Henrik.figure_receipts
 # import scripts.Henrik.s2s2local
 

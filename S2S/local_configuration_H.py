@@ -13,5 +13,7 @@ config = {
     'S2SH':'data/nird_copy/S2S/Benjamin/hindcast/ECMWF/sfc/sst/',
     'ERA5':'data/nird_copy/SFE/ERA_daily_nc/grid_15/',
     'SITES':'data/BW/sites.json',
-    'DOMAINS':'data/EIDE/domains.json'
+    'DOMAINS':'data/EIDE/domains.json',
+    'BW':'/home/heau/Norce/S2S-download/data/BW/BW_temperature/',
+    'IMR':'/home/heau/Norce/S2S-download/data/nird_copy/IMR/fastestasjoner'
 }

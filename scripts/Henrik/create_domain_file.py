@@ -40,7 +40,7 @@ domain_dict = {
                     },
             'NVK':{
                 'name':'NorVestKyst',
-                'bounds':(4,6,58,62),
+                'bounds':(2,6,57,63),
                 'bounds_fmt':'(min lon, max lon, min lat, max lat)'
                     },
             'NVS':{
