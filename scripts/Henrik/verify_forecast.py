@@ -11,8 +11,9 @@ from .acc import ACC
 from .create_domain_file import make_dir
 import scripts.Henrik.build_a_bear as build_a_bear
 import scripts.Henrik.compute_reliability as cr
+from scripts.Henrik.prepare_data import get_observations, get_hindcast
 
-domainID      = 'NVS'
+domainID = 'NVK'
 
 t_start  = (2020,1,23)
 t_end    = (2021,1,14)
@@ -20,98 +21,12 @@ t_end    = (2021,1,14)
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
-from .data_handler import SST
-
-get_observations = 1
-get_hindcast = 1
-
-while True:
-
-    if get_observations:
-
-        observations = SST()
-        observations.load('ERA5',clim_t_start,clim_t_end,domainID)
-
-        obspath = '%s%s_%s-%s_%s_%s%s'%(
-                                config['VALID_DB'],
-                                'sst',
-                                dt.to_datetime(clim_t_start).strftime('%Y-%m-%d'),
-                                dt.to_datetime(clim_t_end).strftime('%Y-%m-%d'),
-                                'reanalysis',
-                                domainID,
-                                '.nc'
-                                )
-        make_dir('/'.join(obspath.split('/')[:-1]))
-        observations.ERA5.transpose('time','lon','lat').to_netcdf(obspath)
-
-        get_observations = 0
-
-    else:
-
-        obspath = '%s%s_%s-%s_%s_%s%s'%(
-                                config['VALID_DB'],
-                                'sst',
-                                dt.to_datetime(clim_t_start).strftime('%Y-%m-%d'),
-                                dt.to_datetime(clim_t_end).strftime('%Y-%m-%d'),
-                                'reanalysis',
-                                domainID,
-                                '.nc'
-                                )
-
-        observations = xr.open_dataset(obspath)
-
-        break
-
-while True:
-
-    if get_hindcast:
-
-        sst = SST()
-        sst.load('S2SH',t_start,t_end,domainID)
-
-        hindcast = sst.S2SH.transpose(
-                                    'number','step','time',
-                                    'longitude','latitude'
-                                    )
-
-        hindcast = hindcast.rename(
-                                    {
-                                        'number':'ensemble_member',
-                                        'longitude':'lon',
-                                        'latitude':'lat'
-                                        }
-                                    )
-
-        hc_filepath = '%s%s_%s-%s_%s_%s%s'%(
-                                config['VALID_DB'],
-                                'sst',
-                                dt.to_datetime(t_start).strftime('%Y-%m-%d'),
-                                dt.to_datetime(t_end).strftime('%Y-%m-%d'),
-                                'hc',
-                                domainID,
-                                '.nc'
-                                )
-
-        make_dir('/'.join(hc_filepath.split('/')[:-1]))
-        hindcast.to_netcdf(hc_filepath)
-
-        get_hindcast = 0
-
-    else:
-
-        hc_filepath = '%s%s_%s-%s_%s_%s%s'%(
-                                config['VALID_DB'],
-                                'sst',
-                                dt.to_datetime(t_start).strftime('%Y-%m-%d'),
-                                dt.to_datetime(t_end).strftime('%Y-%m-%d'),
-                                'hc',
-                                domainID,
-                                '.nc'
-                                )
-
-        hindcast = xr.open_dataset(hc_filepath)
-
-        break
+###################
+#### Load data ####
+###################
+# observations = get_observations(domainID,clim_t_start,clim_t_end,download=0)
+hindcast = get_hindcast(domainID,t_start,t_end)
+exit()
 
 ####################################################
 #### Cap time of hindcast to match observations ####
