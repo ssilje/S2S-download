@@ -2,6 +2,67 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
+def clim_mean(x):
+    result = []
+    for n in range(x.shape[0]):
+        result.append(np.nanmean(np.delete(x,n,axis=0)))
+    return np.array(result)
+
+def clim_std(x):
+    result = []
+    for n in range(x.shape[0]):
+        result.append(np.nanstd(np.delete(x,n,axis=0)))
+    return np.array(result)
+
+def o_climatology(da,dim):
+    print('\t performing xarray_helpers.o_climatology()')
+    dim_name = dim.split('.')[0]
+    mean,std = [],[]
+    for label,data in list(da.groupby(dim)):
+        mean.append(
+                    xr.apply_ufunc(
+                        clim_mean, data,
+                        input_core_dims  = [[dim_name]],
+                        output_core_dims = [[dim_name]],
+                        vectorize=True, dask='parallelized'
+                    ).rename('mean')
+                )
+        std.append(
+                    xr.apply_ufunc(
+                        clim_std, data,
+                        input_core_dims  = [[dim_name]],
+                        output_core_dims = [[dim_name]],
+                        vectorize=True, dask='parallelized'
+                    ).rename('std')
+                )
+
+    return xr.concat(mean,dim_name).sortby(dim_name),\
+                xr.concat(std,dim_name).sortby(dim_name)
+
+def c_climatology(da,dim):
+    print('\t performing xarray_helpers.c_climatology()')
+    dim_name = dim.split('.')[0]
+    mean,std = [],[]
+    for label,data in list(da.groupby(dim)):
+        mean.append(
+                    xr.apply_ufunc(
+                        clim_mean, data,
+                        input_core_dims  = [[dim_name,'member']],
+                        output_core_dims = [[dim_name]],
+                        vectorize=True, dask='parallelized'
+                    ).rename('mean')
+                )
+        std.append(
+                    xr.apply_ufunc(
+                        clim_std, data,
+                        input_core_dims  = [[dim_name,'member']],
+                        output_core_dims = [[dim_name]],
+                        vectorize=True, dask='parallelized'
+                    ).rename('std')
+                )
+    return xr.concat(mean,dim_name).sortby(dim_name).broadcast_like(da),\
+                xr.concat(std,dim_name).sortby(dim_name).broadcast_like(da)
+
 def get_groups(ds,dim,keys):
     dim_name     = dim.split('.')[0]
     groups       = []
@@ -21,7 +82,7 @@ def keep_groups_of(ds,dim,members=5):
             pass
         else:
             groups.append(ds.isel({dim_name:idx}))
-    return xr.concat(groups,dim_name)
+    return xr.concat(groups,dim_name).sortby(dim_name)
 
 def match_times(cast,obs):
     """
@@ -34,6 +95,8 @@ def match_times(cast,obs):
     returns
         obs: xarray.Dataset with time and step dimension
     """
+    print('\t performing xarray_helpers.match_times()')
+
     step  = cast.step.sortby('step').to_pandas()
     obs   = obs.sortby('time')
 
@@ -50,7 +113,7 @@ def match_times(cast,obs):
     obs = obs.reindex(
             time=pd.date_range(
                 start=start,
-                end=end,
+                end=end+step.max(),
                 freq=step[2]-step[1]
             )
         )
@@ -59,30 +122,69 @@ def match_times(cast,obs):
         out_obs.append(obs.sel(time=time+cast.step).drop('time'))
     return cast,xr.concat(out_obs,cast.time)
 
-def stack_climatology(clim,cast):
+def match_core(obs,times,steps):
     """
-    Stack climatology like cast
-
     args:
-        cast: xarray.Dataset with time and step dimension
-        clim: xarray.Dataset with day/month-ofyear dimension
-
+        obs: xarray.Dataset with time dimension
+        times: xarray.DataArray
+        steps: xarray.DataArray
     returns
-        clim: xarray.Dataset with time and step dimension
+        obs: xarray.Dataset with time and step dimension
     """
+    print('\t performing xarray_helpers.match_core()')
+
+    obs     = obs.sortby('time')
+    steps   = steps.sortby(steps)
+    times   = times.sortby('time')
+    times   = times.sel(time=slice(
+                                obs.time.min(),
+                                obs.time.max()-steps.max()
+                                )
+                            )
+    out = []
+    for time in times:
+        out.append(obs.sel(time=time+steps).drop('time'))
+    return xr.concat(out,times).sortby('time')
+
+    #     out.append(obs.reindex(
+    #                         {'time':time+steps}
+    #                         ).drop('time'))
+    # return xr.concat(out,times)
+
+def stack_model(clim,cast):
+    """
+    Stack model like cast
+    """
+    print('\t performing xarray_helpers.stack_model(), an incredibly slow routine')
     clim   = clim.sortby('dayofyear')
     clim   = clim.reindex(dayofyear=np.arange(1,367,1,dtype='int'))
     t_out  = []
     for time in cast.time:
-        s_out = []
-        for step in cast.sel(time=time).step:
-            date = pd.to_datetime(
+        date = pd.to_datetime(
                         xr.DataArray(
-                            time.variable+step.variable
+                            time.variable
                         ).to_pandas()
                     )
+        t_out.append(clim.sel(dayofyear=date.day_of_year))
+    return xr.concat(t_out,cast.time)
 
-            s_out.append(clim.sel(dayofyear=date.day_of_year))
+def stack_clim(clim,cast):
+    """
+    Stack climatology like cast
+    """
+    print('\t performing xarray_helpers.stack_clim(), an incredibly slow routine')
+    clim   = clim.sortby('month')
+    clim   = clim.reindex(month=np.arange(1,13,1,dtype='int'))
+    t_out  = []
+    for time in cast.time:
+        s_out = []
+        for step in cast.step:
+            date = pd.to_datetime(
+                            xr.DataArray(
+                                time.variable+step.variable
+                            ).to_pandas()
+                        )
+            s_out.append(clim.sel(month=date.month))
         t_out.append(xr.concat(s_out,cast.step))
     return xr.concat(t_out,cast.time)
 
@@ -99,32 +201,29 @@ def stack_like(obs,cast):
 
     Difference from match_time() indicated by *
     """
-    cast  = cast.sortby('step')
-    step  = cast.step.sortby('step').to_pandas()
-    obs   = obs.sortby('time')
+    print('\t performing xarray_helpers.stack_like()')
+    obs = obs.sortby('time')
+    cast = cast.sortby('time')
 
-    start = obs.time[0].to_pandas()
-    end   = obs.time[-1].to_pandas()-step.max()
+    step  = cast.step.to_pandas()
+    time  = obs.time.to_pandas()
 
-    cast = cast.sortby('time').sel(
-                                time=slice(
-                                    start,
-                                    end
-                                )
-                            )
-    out_obs  = []
+    start = time.min()
+    end   = time.max()
+
+    cast = cast.sel(time=slice(start,end-step.max()))
+
     obs = obs.reindex(
             time=pd.date_range(
                 start=start,
                 end=end,
-                freq=step[2]-step[1]
+                freq='D'
             )
         )
 
+    out_obs  = []
+    dims  = cast.dims['step']
     steps = cast.sortby('step').step
     for time in cast.time:
-        step_temp = []
-        for s in steps:
-            step_temp.append(obs.sel(time=time).drop('time'))
-        out_obs.append(xr.concat(step_temp,steps)) #*
+        out_obs.append(xr.concat([obs.sel(time=time).drop('time')]*dims,steps))
     return xr.concat(out_obs,cast.time)

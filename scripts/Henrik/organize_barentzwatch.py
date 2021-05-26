@@ -53,7 +53,7 @@ def organize_files():
     with open(f_path,'r') as file:
         data = csv.DictReader(file)
         for line in data:
-
+            
             locNo = str(line['locNo'])
             try:
                 site[locNo]['date'].append(line['date'])
