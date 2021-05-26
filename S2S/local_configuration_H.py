@@ -15,5 +15,8 @@ config = {
     'SITES':'data/BW/sites.json',
     'DOMAINS':'data/EIDE/domains.json',
     'BW':'/home/heau/Norce/S2S-download/data/BW/BW_temperature/',
-    'IMR':'/home/heau/Norce/S2S-download/data/nird_copy/IMR/fastestasjoner'
+    'IMR':'/home/heau/Norce/S2S-download/data/nird_copy/IMR/fastestasjoner',
+    'EIDE':'/home/heau/Norce/S2S-download/projects/SST_oppdrett/',
+    'S2SH_HR':'/nird/projects/NS9853K/DATA/S2S/MARS/hindcast/ECMWF/sfc/sst/',
+    'ERA5_HR':'/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/'
 }

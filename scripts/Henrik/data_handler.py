@@ -50,15 +50,27 @@ class Archive:
         run   = kwargs['run']
         ftype = kwargs['ftype']
 
-        return '_'.join(
-                [
-                    var,
-                    'CY46R1_CY47R1',
-                    date.strftime('%Y-%m-%d'),
-                    run,
-                    ftype
-                ]
-            ) + '.grb'
+        if kwargs['high_res']:
+            return '_'.join(
+                    [
+                        var,
+                        'CY46R1_CY47R1',
+                        '05x05',
+                        date.strftime('%Y-%m-%d'),
+                        run,
+                        ftype
+                    ]
+                ) + '.grb'
+        else:
+            return '_'.join(
+                    [
+                        var,
+                        'CY46R1_CY47R1',
+                        date.strftime('%Y-%m-%d'),
+                        run,
+                        ftype
+                    ]
+                ) + '.grb'
 
     @staticmethod
     def BW_in_filename(**kwargs):
@@ -108,7 +120,8 @@ class LoadLocal:
                                 'resample':         None,
                                 'sort_by':          None,
                                 'control_run':      None,
-                                'engine':           None
+                                'engine':           None,
+                                'high_res':         None
                             }
 
         self.out_path     = ''
@@ -273,41 +286,50 @@ class LoadLocal:
 
 class ERA5(LoadLocal):
 
-    def __init__(self):
+    def __init__(self,high_res=False):
 
         super().__init__()
 
         self.label           = 'ERA5'
-        self.loading_options = {
-                                'load_time':        'daily',
-                                'concat_dimension': 'time',
-                                'resample':         'D',
-                                'sort_by':          'lat',
-                                'control_run':      False,
-                                'engine':           'netcdf4'
-                            }
 
-        self.out_path     = config['VALID_DB']
-        self.in_path      = config[self.label]
+        self.loading_options['load_time']        = 'daily'
+        self.loading_options['concat_dimension'] = 'time'
+        self.loading_options['resample']         = 'D'
+        self.loading_options['sort_by']          = 'lat'
+        self.loading_options['control_run']      = False
+        self.loading_options['engine']           = 'netcdf4'
+
+        if high_res:
+            self.loading_options['high_res']     = True
+            self.in_path                         = config[self.label+'_HR']
+        else:
+            self.in_path                         = config[self.label]
+
+        self.out_path                            = config['VALID_DB']
 
 class ECMWF_S2SH(LoadLocal):
 
-    def __init__(self):
+    def __init__(self,high_res=False):
 
         super().__init__()
 
         self.label           = 'S2SH'
-        self.loading_options = {
-                                'load_time':        'weekly_forecast_cycle',
-                                'concat_dimension': 'time',
-                                'resample':         False,
-                                'sort_by':          'lat',
-                                'control_run':      True,
-                                'engine':           'cfgrib'
-                            }
 
-        self.out_path     = config['VALID_DB']
-        self.in_path      = config[self.label]
+        self.loading_options['load_time']        = 'weekly_forecast_cycle'
+        self.loading_options['concat_dimension'] = 'time'
+        self.loading_options['resample']         = False
+        self.loading_options['sort_by']          = 'lat'
+        self.loading_options['control_run']      = True
+        self.loading_options['engine']           = 'cfgrib'
+
+        if high_res:
+            self.loading_options['high_res']     = True
+            self.in_path                         = config[self.label+'_HR']
+        else:
+            self.in_path                         = config[self.label]
+
+        self.out_path                            = config['VALID_DB']
+
 
 class BarentsWatch:
 
