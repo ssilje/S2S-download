@@ -219,7 +219,7 @@ class LoadLocal:
                                                     filename,engine=engine)
                 except FileNotFoundError:
                     NoFile = True
-                    break
+                    continue
 
                 open_data = self.rename_dimensions(open_data)
 
