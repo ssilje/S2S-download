@@ -122,6 +122,10 @@ def match_times(cast,obs):
         out_obs.append(obs.sel(time=time+cast.step).drop('time'))
     return cast,xr.concat(out_obs,cast.time)
 
+def assign_validation_time(ds):
+    return ds.expand_dims('validation_time')\
+                .assign_coords(validation_time=ds.time+ds.step)
+
 def match_core(obs,times,steps):
     """
     args:
@@ -145,11 +149,6 @@ def match_core(obs,times,steps):
     for time in times:
         out.append(obs.sel(time=time+steps).drop('time'))
     return xr.concat(out,times).sortby('time')
-
-    #     out.append(obs.reindex(
-    #                         {'time':time+steps}
-    #                         ).drop('time'))
-    # return xr.concat(out,times)
 
 def stack_model(clim,cast):
     """

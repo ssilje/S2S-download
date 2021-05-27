@@ -157,13 +157,12 @@ if do_modeling:
         end   = p_obs.time.max()
 
         print('Model: match times')
-        hc              = hindcast.sel(location=loc,time=slice(start,end))
-        p_obs_anom      = p_obs_anom.reindex(
+        hc                   = hindcast.sel(location=loc,time=slice(start,end))
+        p_obs_init_time = p_obs_anom.reindex(
                                     indexers={'time':hc.time},
                                     method='pad',
                                     tolerance=pd.Timedelta(1,'W')
-                                )
-        p_obs_init_time = p_obs_anom.broadcast_like(hc.mean('member'))
+                                ).broadcast_like(hc.mean('member'))
 
         clim_mean = clim_mean.to_dataset(name=var)
         clim_std  = clim_std.to_dataset(name=var)
@@ -173,6 +172,12 @@ if do_modeling:
 
         clim_std  = clim_std.resample(time='1D').nearest(tolerance='12H')
         clim_std  = xh.match_core(clim_std,hc.time,hc.step)
+
+        p_obs = p_obs.resample(time='1D').nearest(tolerance='12H')
+        p_obs = xh.match_core(p_obs,hc.time,hc.step)
+
+        p_obs_anom = p_obs_anom.resample(time='1D').nearest(tolerance='12H')
+        p_obs_anom = xh.match_core(p_obs_anom,hc.time,hc.step)
 
         start = p_obs_init_time.time.min()
         end   = p_obs_init_time.time.max()
@@ -185,10 +190,12 @@ if do_modeling:
                         [
                             (
                                 clim_mean + hc[var]*clim_std
-                            ).rename({var:'absolute'}),
+                            ).rename({var:'absolute'})\
+                                .transpose('member','step','time'),
                             (
                                 hc[var]
-                            ).rename('anomalies')
+                            ).rename('anomalies')\
+                                .transpose('member','step','time')
                         ], compat='override', join='outer'
                     )
 
@@ -199,10 +206,12 @@ if do_modeling:
                                 (
                                 p_mod_l.slope*p_obs_init_time[var]
                                 )*clim_std
-                            ).rename({var:'absolute'}),
+                            ).rename({var:'absolute'})\
+                                .transpose('step','time'),
                             (
                                 p_mod_l.slope*p_obs_init_time[var]
-                            ).rename('anomalies')
+                            ).rename('anomalies')\
+                                .transpose('step','time')
                         ], compat='override', join='outer'
                     )
 
@@ -213,11 +222,13 @@ if do_modeling:
                                 (
                                 c_mod_l.slope_obs*p_obs_init_time[var]+\
                                 c_mod_l.slope_model*hc[var])*clim_std
-                            ).rename({var:'absolute'}),
+                            ).rename({var:'absolute'})\
+                                .transpose('member','step','time'),
                             (
                                 c_mod_l.slope_obs+\
                                 c_mod_l.slope_model*hc[var]
-                            ).rename('anomalies')
+                            ).rename('anomalies')\
+                                .transpose('member','step','time')
                         ], compat='override', join='outer'
                     )
 
@@ -228,15 +239,13 @@ if do_modeling:
         xr.merge(
                         [
                             (
-                                p_obs.reindex(
-                                            indexers={'time':hc.time},
-                                            method='pad',
-                                            tolerance=pd.Timedelta(1,'W')
-                                        )
-                            ).rename({var:'absolute'}),
+                                p_obs
+                            ).rename({var:'absolute'})\
+                                .transpose('step','time'),
                             (
                                 p_obs_anom
-                            ).rename({var:'anomalies'})
+                            ).rename({var:'anomalies'})\
+                                .transpose('step','time')
                         ], compat='override', join='outer'
                     ).to_netcdf(config['VALID_DB']+\
                                 '/processed_observations_'+loc_str+'.nc')
@@ -245,10 +254,12 @@ if do_modeling:
                         [
                             (
                                 clim_mean
-                            ).rename({var:'absolute'}),
+                            ).rename({var:'absolute'})\
+                                .transpose('step','time'),
                             (
                                 clim_std
-                            ).rename({var:'anomalies'})
+                            ).rename({var:'anomalies'})\
+                                .transpose('step','time')
                         ], compat='override', join='outer'
                     ).to_netcdf(config['VALID_DB']+\
                                 '/processed_climatology_'+loc_str+'.nc')
@@ -269,12 +280,12 @@ if plot:
 
         for lt in range(10,30):
 
-            o   = obs.absolute
+            o   = obs.sel(step=pd.Timedelta(lt,'D')).dropna('time')
             m   = model.sel(step=pd.Timedelta(lt,'D')).dropna('time')
             p   = pers.sel(step=pd.Timedelta(lt,'D')).dropna('time')
             c   = combo.sel(step=pd.Timedelta(lt,'D')).dropna('time')
 
-            plt.plot(o.time,o,'k',linewidth=3)
+            plt.plot(o.time,o.absolute,'k',linewidth=3)
             plt.plot(m.time,m.mean('member').absolute,alpha=0.5,label='model')
             plt.plot(p.time,p.absolute,alpha=0.5,label='pers')
             plt.plot(c.time,c.mean('member').absolute,alpha=0.5,label='combo')
@@ -299,12 +310,21 @@ if skill:
         clim        = xr.open_dataset(config['VALID_DB']+\
                                     '/processed_climatology_'+loc_str+'.nc')
 
-        crps_fc   = xs.crps_ensemble(point_observations,point_hindcast,dim=[])
-        crps_fc_g = xs.crps_gaussian(point_observations,point_hindcast.mean('member'),point_hindcast.std('member'),dim=[])
-        crps_fc_g = xs.crps_gaussian(point_observations,point_hindcast.mean('member'),point_hindcast.std('member'),dim=[])
+        obs         = obs.isel(step=slice(10,-1))
+        model       = model.isel(step=slice(10,-1))
+        pers        = pers.isel(step=slice(10,-1))
+        combo       = combo.isel(step=slice(10,-1))
+        clim        = clim.isel(step=slice(10,-1))
 
+        import scripts.Henrik.graphics as gr
 
-        print(observations)
-        print(point_obs_std)
-        print(obs_std)
-        exit()
+        crps_model = xs.crps_ensemble(obs.anomalies,model.anomalies,dim=[])
+        crps_combo = xs.crps_ensemble(obs.anomalies,combo.anomalies,dim=[])
+        crps_clim  = xs.crps_gaussian(obs.anomalies,0,1,dim=[])
+
+        gr.skill_plot(crps_model,crps_clim,title='EC',filename='ECcrpss')
+        gr.skill_plot(crps_combo,crps_clim,title='COMBO',filename='COMBOcrpss')
+
+        gr.qq_plot(obs.anomalies,model.anomalies,title='EC',filename='ECqq')
+        gr.qq_plot(obs.anomalies,pers.anomalies, title='PERS',filename='PERSqq')
+        gr.qq_plot(obs.anomalies,combo.anomalies,title='COMBO',filename='COMBOqq')
