@@ -68,11 +68,11 @@ def qq_plot(dax,day,dim='validation_time.month',
 
     filename = filename+'_'+name_from_loc(str(dax.location.values))
     title    = title + ' ' + \
-                    name_from_loc(str(dax.location.values)) +\
-                    ' leadtime: ' + '-'.join([
-                            str(pd.Timedelta(dax.step.min().to_pandas()).days),
-                            str(pd.Timedelta(dax.step.max().to_pandas()).days)
-                        ]) + ' days'
+                    name_from_loc(str(dax.location.values)) #+\
+                    # ' leadtime: ' + '-'.join([
+                    #         str(pd.Timedelta(dax.step.min().to_pandas()).days),
+                    #         str(pd.Timedelta(dax.step.max().to_pandas()).days)
+                    #     ]) + ' days'
     ###########################
     #### Initialize figure ####
     ###########################
@@ -106,7 +106,7 @@ def qq_plot(dax,day,dim='validation_time.month',
         ax.set_ylabel(y_axlabel)
 
         ax.plot(x,y,'o',alpha=0.4,ms=1)
-        ax.set_aspect('equal', 'box')
+        ax.axis('equal')
 
     fig.suptitle(title)
     save_fig(fig,filename)
@@ -138,8 +138,6 @@ def skill_plot(mod,clim,dim='validation_time.month',
     x_group = list(mod.groupby(dim))
     y_group = list(clim.groupby(dim))
 
-
-    x,y,z = [],[],[]
     for n,(xlabel,xdata) in enumerate(x_group):
 
         ylabel,ydata = y_group[n]
@@ -147,12 +145,13 @@ def skill_plot(mod,clim,dim='validation_time.month',
         # check manually that right groups go together
         print('\t graphics.skill_plot: matched groups ',xlabel,ylabel)
 
-        xdata = xdata.unstack().mean('time',skipna=True)
-        ydata = ydata.unstack().mean('time',skipna=True)
+        xdata = xdata.unstack().sortby(['time','step'])
+        ydata = ydata.unstack().sortby(['time','step'])
 
         xdata,ydata = xr.align(xdata,ydata)
 
-        ss  = 1 - xdata/ydata
+        ss = 1 - xdata/ydata
+        ss = ss.mean('time',skipna=True)
 
         x = np.array([td.days for td in ss.step.to_pandas()])
         z = ss.values[0]
@@ -164,8 +163,9 @@ def skill_plot(mod,clim,dim='validation_time.month',
         ax.set_ylabel('CRPSS')
 
         ax.plot(x,z,'o-',alpha=0.4,ms=1)
-        ax.plot()
-
+        # ax.plot(x,zx,'o-',alpha=0.4,ms=1,label='x')
+        # ax.plot(y,zy,'o-',alpha=0.4,ms=1,label='y')
+        # ax.legend()
         ax.set_ylim((-1,1))
 
     fig.suptitle(title)

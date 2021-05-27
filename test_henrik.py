@@ -7,7 +7,8 @@
 # import scripts.Henrik.get_eide
 
 import scripts.Henrik.verify_point_forecast_clean
-
+import scripts.Henrik.map
+# import scripts.Henrik.verify_point_forecast_onbw
 
 # import scripts.Henrik.test_domain
 # import scripts.Henrik.geographic_overview

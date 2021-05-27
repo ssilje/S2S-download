@@ -6,30 +6,42 @@ import scipy.stats as stats
 import time as time_lib
 
 def regression1D(x,y):
-    result = []
+    res1 = []
+    res2 = []
     for n in range(len(x)):
-        result.append(sm.OLS(np.delete(y,n), np.delete(x,n)).fit().params[0])
-    return np.array(result)
+        X = np.delete(x,n)
+        X = np.stack([np.ones_like(X),X],axis=1)
+        res = sm.OLS(np.delete(y,n),X).fit()
+        res1.append(res.params[0])
+        res2.append(res.params[1])
+    return np.array(res1),np.array(res2)
 
 def regression2D(x1,x2,y):
     res1 = []
     res2 = []
+    res3 = []
     for n in range(y.shape[1]):
+        X1 = np.delete(x1,n,axis=1).flatten()
+        X2 = np.delete(x2,n,axis=1).flatten()
+        X0 = np.ones_like(X1)
         X = np.stack(
                         [
-                            np.delete(x1,n,axis=1).flatten(),
-                            np.delete(x2,n,axis=1).flatten()
+                            X0,
+                            X1,
+                            X2
                         ],axis=1
                     )
         res = sm.OLS(np.delete(y,n,axis=1).flatten(), X).fit()
         res1.append(res.params[0])
         res2.append(res.params[1])
-    return np.array(res1),np.array(res2)
+        res3.append(res.params[2])
+    return np.array(res1),np.array(res2),np.array(res3)
 
-def persistence(predictor,response,var):
+def persistence(predictor,response,var,dim='time.dayofyear'):
     """
     Not very elegant and probably not particularly cheap
     """
+    dim_name = dim.split('.')[0]
     print('\t performing models.persistence()')
     ds = xr.merge(
                     [
@@ -38,23 +50,31 @@ def persistence(predictor,response,var):
                 ],join='inner',compat='override'
             )
     n = 0
-    N = len(list(ds.groupby('time.dayofyear')))
+    N = len(list(ds.groupby(dim)))
     data_out = []
-    for label,data in list(ds.groupby('time.dayofyear')):
+    for label,data in list(ds.groupby(dim)):
 
-        data_out.append(xr.apply_ufunc(
+        tup = xr.apply_ufunc(
                 regression1D, data.predictor, data.response,
-                input_core_dims  = [['time'], ['time']],
-                output_core_dims = [['time']],
-                vectorize=True, dask='parallelized'
-                ).rename('slope')
+                input_core_dims  = [[dim_name], [dim_name]],
+                output_core_dims = [[dim_name], [dim_name]],
+                vectorize=True
+                )
+        data_out.append(xr.merge(
+            [
+                tup[0].rename('intercept'),
+                tup[1].rename('slope')
+                ]
             )
-    return xr.concat(data_out,'time').to_dataset(name='slope').sortby('time')
+        )
 
-def combo(observation,model,response,var):
+    return xr.concat(data_out,dim_name).sortby(dim_name)
+
+def combo(observation,model,response,var,dim='time.dayofyear'):
     """
     Not very elegant and probably not particularly cheap
     """
+    dim_name = dim.split('.')[0]
     print('\t performing models.combo()')
     observation = xr.concat([observation]*model.dims['member'],model.member)
     response    = xr.concat([response]*model.dims['member'],model.member)
@@ -67,10 +87,10 @@ def combo(observation,model,response,var):
                 ],join='inner',compat='override'
             )
     t = time_lib.time()
-    N = len(list(ds.groupby('time.dayofyear')))
+    N = len(list(ds.groupby(dim)))
     n = 0
     date_out,date_label_out = [],[]
-    for date_label,date_group in list(ds.groupby('time.dayofyear')):
+    for date_label,date_group in list(ds.groupby(dim)):
         # n += 1
         # print('\t\t group ',n,' of ',N,
         #         ' total time: ',round(time_lib.time()-t,2))
@@ -79,22 +99,23 @@ def combo(observation,model,response,var):
         tup = xr.apply_ufunc(
                 regression2D, data.observation, data.model, data.response,
                 input_core_dims  = [
-                                    ['member','time'],
-                                    ['member','time'],
-                                    ['member','time']
+                                    ['member',dim_name],
+                                    ['member',dim_name],
+                                    ['member',dim_name]
                                     ],
-                output_core_dims = [['time'],['time']],
+                output_core_dims = [[dim_name],[dim_name],[dim_name]],
                 vectorize=True
                 )
 
         date_out.append(xr.merge(
             [
-                tup[0].rename('slope_obs'),
-                tup[1].rename('slope_model')
+                tup[0].rename('intercept'),
+                tup[1].rename('slope_obs'),
+                tup[2].rename('slope_model')
                 ]
             )
         )
-    return xr.concat(date_out,'time').sortby('time')
+    return xr.concat(date_out,dim_name).sortby(dim_name)
 
 ################################################################################
 ############################# Depricated #######################################
