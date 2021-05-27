@@ -21,6 +21,7 @@ dependencies:
   - seaborn
   - cfgrib
   - xarray-extras
+  - xskillscore
 
 #installed manually:
 # pip3 install gridpp==0.6.0-dev.1
