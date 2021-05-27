@@ -190,6 +190,7 @@ class LoadLocal:
         engine      = self.loading_options['engine']
         dimension   = self.loading_options['concat_dimension']
         control_run = self.loading_options['control_run']
+        high_res    = self.loading_options['high_res']
         ftype       = Archive().ftype[self.label]
 
         filename_func = self.filename(key='in')
@@ -202,17 +203,21 @@ class LoadLocal:
             for n,run in enumerate(runs):
 
                 filename = filename_func(
-                                        var   = self.var,
-                                        date  = time,
-                                        run   = run,
-                                        ftype = ftype
+                                        var      = self.var,
+                                        date     = time,
+                                        run      = run,
+                                        ftype    = ftype,
+                                        high_res = high_res
                                     )
 
                 if n>0:
                     members.append(open_data)
 
-                open_data = xr.open_dataset(self.in_path+filename,engine=engine)
-
+                try:
+                    open_data = xr.open_dataset(self.in_path+filename,engine=engine)
+                except FileNotFoundError:
+                    break
+                    
                 open_data = self.rename_dimensions(open_data)
 
                 if sort_by:
