@@ -197,7 +197,8 @@ class LoadLocal:
 
         for time in self.load_frequency():
 
-            runs = ['pf','cf'] if control_run else [None]
+            NoFile = False
+            runs   = ['pf','cf'] if control_run else [None]
 
             members = []
             for n,run in enumerate(runs):
@@ -214,10 +215,12 @@ class LoadLocal:
                     members.append(open_data)
 
                 try:
-                    open_data = xr.open_dataset(self.in_path+filename,engine=engine)
+                    open_data = xr.open_dataset(self.in_path+\
+                                                    filename,engine=engine)
                 except FileNotFoundError:
+                    NoFile = True
                     break
-                    
+
                 open_data = self.rename_dimensions(open_data)
 
                 if sort_by:
@@ -238,11 +241,14 @@ class LoadLocal:
                 if self.prnt:
                     print(filename)
 
-            if n>0:
-                members.append(open_data)
-                open_data = xr.concat(members,'member')
+            if NoFile:
+                pass
+            else:
+                if n>0:
+                    members.append(open_data)
+                    open_data = xr.concat(members,'member')
 
-            chunk.append(open_data)
+                chunk.append(open_data)
 
         return xr.concat(chunk,dimension)
 
