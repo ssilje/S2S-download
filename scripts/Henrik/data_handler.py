@@ -319,7 +319,7 @@ class ECMWF_S2SH(LoadLocal):
 
         self.label           = 'S2SH'
 
-        self.loading_options['load_time']        = 'weekly'
+        self.loading_options['load_time']        = 'weekly_forecast_cycle'
         self.loading_options['concat_dimension'] = 'time'
         self.loading_options['resample']         = False
         self.loading_options['sort_by']          = 'lat'
@@ -335,7 +335,7 @@ class ECMWF_S2SH(LoadLocal):
         self.out_path                            = config['VALID_DB']
 
 def gets2sh(domainID):
-    return xr.open_mfdataset(config['S2SH']+'*.grb', parallel=True, engine='cfgrib')
+    return xr.open_mfdataset(config['S2SH']+'*01-2020.grb', parallel=True, engine='cfgrib')
 
 class BarentsWatch:
 
