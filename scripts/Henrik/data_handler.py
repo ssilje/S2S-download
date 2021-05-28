@@ -210,8 +210,8 @@ class LoadLocal:
                                         high_res = high_res
                                     )
 
-                OK = os.path.exists(self.in_path+path)
-
+                OK = os.path.exists(self.in_path+filename)
+            
             if OK:
 
                 members = []
