@@ -194,7 +194,7 @@ class LoadLocal:
         ftype       = Archive().ftype[self.label]
 
         filename_func = self.filename(key='in')
-
+        print(self.load_frequency())
         for time in self.load_frequency():
 
             runs   = ['pf','cf'] if control_run else [None]
