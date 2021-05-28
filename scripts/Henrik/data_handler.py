@@ -199,7 +199,7 @@ class LoadLocal:
 
             runs   = ['pf','cf'] if control_run else [None]
 
-            members = []
+            OK = True
             for n,run in enumerate(runs):
 
                 filename = filename_func(
@@ -209,39 +209,52 @@ class LoadLocal:
                                         ftype    = ftype,
                                         high_res = high_res
                                     )
+                OK = os.path.exists(self.in_path+filename)
+
+            if OK:
+                members = []
+                for n,run in enumerate(runs):
+
+                    filename = filename_func(
+                                            var      = self.var,
+                                            date     = time,
+                                            run      = run,
+                                            ftype    = ftype,
+                                            high_res = high_res
+                                        )
+
+                    if n>0:
+                        members.append(open_data)
+
+
+                    open_data = xr.open_dataset(self.in_path+\
+                                                    filename,engine=engine)
+
+                    open_data = self.rename_dimensions(open_data)
+
+                    if sort_by:
+                        open_data = open_data.sortby(sort_by,ascending=True)
+
+                    open_data = open_data.sel(
+                                    lat=slice(self.bounds[2],self.bounds[3]),
+                                    lon=slice(self.bounds[0],self.bounds[1])
+                                    )
+
+                    if resample:
+                        open_data = open_data.resample(time=resample).mean()
+
+                    if run=='cf':
+                        open_data = open_data.expand_dims('member')\
+                                        .assign_coords(member=pd.Index([0]))
+
+                    if self.prnt:
+                        print(filename)
 
                 if n>0:
                     members.append(open_data)
+                    open_data = xr.concat(members,'member')
 
-
-                open_data = xr.open_dataset(self.in_path+\
-                                                filename,engine=engine)
-
-                open_data = self.rename_dimensions(open_data)
-
-                if sort_by:
-                    open_data = open_data.sortby(sort_by,ascending=True)
-
-                open_data = open_data.sel(
-                                lat=slice(self.bounds[2],self.bounds[3]),
-                                lon=slice(self.bounds[0],self.bounds[1])
-                                )
-
-                if resample:
-                    open_data = open_data.resample(time=resample).mean()
-
-                if run=='cf':
-                    open_data = open_data.expand_dims('member')\
-                                    .assign_coords(member=pd.Index([0]))
-
-                if self.prnt:
-                    print(filename)
-
-            if n>0:
-                members.append(open_data)
-                open_data = xr.concat(members,'member')
-
-            chunk.append(open_data)
+                chunk.append(open_data)
 
         return xr.concat(chunk,dimension)
 
@@ -319,7 +332,7 @@ class ECMWF_S2SH(LoadLocal):
 
         self.label           = 'S2SH'
 
-        self.loading_options['load_time']        = 'weekly_forecast_cycle'
+        self.loading_options['load_time']        = 'daily'#'weekly_forecast_cycle'
         self.loading_options['concat_dimension'] = 'time'
         self.loading_options['resample']         = False
         self.loading_options['sort_by']          = 'lat'
@@ -335,7 +348,7 @@ class ECMWF_S2SH(LoadLocal):
         self.out_path                            = config['VALID_DB']
 
 def gets2sh(domainID):
-    return xr.open_mfdataset(config['S2SH']+'*01-2020.grb', parallel=True, engine='cfgrib')
+    return xr.open_mfdataset(config['S2SH']+'*8-2020*.grb', parallel=True, engine='cfgrib')
 
 class BarentsWatch:
 
