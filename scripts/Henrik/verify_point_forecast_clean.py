@@ -18,7 +18,7 @@ domainID = 'NVK'
 var      = 'sst'
 
 t_start  = (2020,1,23)
-t_end    = (2020,1,8)
+t_end    = (2020,6,1)
 
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
