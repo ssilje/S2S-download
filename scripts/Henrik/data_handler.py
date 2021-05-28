@@ -209,7 +209,8 @@ class LoadLocal:
                                         ftype    = ftype,
                                         high_res = high_res
                                     )
-                OK = os.path.exists(self.in_path+filename)
+                if not os.path.exists(self.in_path+filename):
+                    OK = False
 
             if OK:
                 members = []
