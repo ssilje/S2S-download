@@ -211,7 +211,7 @@ class LoadLocal:
                                     )
 
                 OK = os.path.exists(self.in_path+filename)
-            
+
             if OK:
 
                 members = []
@@ -334,7 +334,7 @@ class ECMWF_S2SH(LoadLocal):
 
         self.label           = 'S2SH'
 
-        self.loading_options['load_time']        = 'weekly_forecast_cycle'
+        self.loading_options['load_time']        = 'daily'
         self.loading_options['concat_dimension'] = 'time'
         self.loading_options['resample']         = False
         self.loading_options['sort_by']          = 'lat'
