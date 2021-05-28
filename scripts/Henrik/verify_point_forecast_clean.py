@@ -18,16 +18,16 @@ domainID = 'NVK'
 var      = 'sst'
 
 t_start  = (2020,1,23)
-t_end    = (2021,1,18)
+t_end    = (2020,1,8)
 
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
-process_hindcast_and_training_data   = False
-train_models                         = False
-do_modeling                          = False
+process_hindcast_and_training_data   = True
+train_models                         = True
+do_modeling                          = True
 plot                                 = True
-skill                                = False
+skill                                = True
 
 point_observations = BarentsWatch().load(['Hisdalen','Langøy S']).sortby('time')
 
@@ -38,10 +38,10 @@ if process_hindcast_and_training_data:
     ###################
 
     print('Process model and training data: load ERA5')
-    observations = ERA5().load(var,clim_t_start,clim_t_end,domainID)[var]-272.15
+    observations = ERA5(high_res=True).load(var,clim_t_start,clim_t_end,domainID)[var]-272.15
 
     print('Process model and training data: load hindcast')
-    hindcast     = ECMWF_S2SH().load(var,t_start,t_end,domainID)[var]-272.15
+    hindcast     = ECMWF_S2SH(high_res=True).load(var,t_start,t_end,domainID)[var]-272.15
 
     ############################################################################
     #### Inter/extrapolate NaNs by nearest functioning gridpoint to the west ###
@@ -98,6 +98,9 @@ if process_hindcast_and_training_data:
     print('Process model and training data: compute anomalies')
     observations = (observations-obs_clim_mean)/obs_clim_std
     hindcast     = (hindcast-hin_clim_mean)/hin_clim_std
+
+    # hindcast = xh.c_by_vt(hindcast)
+    # observations.groupby('time.month').map(xh.standard)
 
     observations = observations.to_dataset(name=var)
     hindcast     = hindcast.to_dataset(name=var)
@@ -303,6 +306,42 @@ if plot:
 
         for n,lt in enumerate([25,32,40]):
             ax = axes[n]
+            o   = obs.sel(step=pd.Timedelta(lt,'D')).groupby('time.dayofyear').mean(skipna=True)
+            m   = model.sel(step=pd.Timedelta(lt,'D')).groupby('time.dayofyear').mean(skipna=True)
+            p   = pers.sel(step=pd.Timedelta(lt,'D')).groupby('time.dayofyear').mean(skipna=True)
+            c   = combo.sel(step=pd.Timedelta(lt,'D')).groupby('time.dayofyear').mean(skipna=True)
+
+
+            # plt.plot(m.time,m.mean('member').absolute,alpha=0.5,label='model')
+            # plt.plot(p.time,p.absolute,alpha=0.5,label='pers')
+            ax.plot(c.dayofyear,c.mean('member').absolute,alpha=0.7,
+                            label='combo',linewidth=0.5,zorder=30)
+            ax.fill_between(c.dayofyear,
+                                c.max('member').absolute,
+                                c.min('member').absolute,alpha=0.3,zorder=30)
+
+            ax.plot(m.dayofyear,m.mean('member').absolute,alpha=0.7,label='ec',linewidth=0.5)
+            ax.fill_between(m.dayofyear,
+                                m.max('member').absolute,
+                                m.min('member').absolute,alpha=0.3)
+
+            ax.plot(o.dayofyear,o.absolute,'k',linewidth=0.5,label='barentswatch')
+            # plt.plot(c.time,c.min('member').absolute,'red',alpha=0.5)
+            # plt.plot(c.time,c.max('member').absolute,'red',alpha=0.5)
+            ax.set_title(ob.name_from_loc(loc_str)+' Lead time: '+str(lt)+' days')
+            ax.legend()
+            ax.set_xlabel('day of year')
+            ax.set_xlabel('SST')
+        gr.save_fig(fig,ob.name_from_loc(loc_str)+'_timeseries_mean')
+
+        latex.set_style(style='white')
+        fig,axes = plt.subplots(3,1,
+                        figsize=latex.set_size(width='thesis',
+                            subplots=(1,1))
+                        )
+
+        for n,lt in enumerate([25,32,40]):
+            ax = axes[n]
             o   = obs.sel(step=pd.Timedelta(lt,'D'))
             m   = model.sel(step=pd.Timedelta(lt,'D'))
             p   = pers.sel(step=pd.Timedelta(lt,'D'))
@@ -311,10 +350,11 @@ if plot:
 
             # plt.plot(m.time,m.mean('member').absolute,alpha=0.5,label='model')
             # plt.plot(p.time,p.absolute,alpha=0.5,label='pers')
-            ax.plot(c.time,c.mean('member').absolute,alpha=0.7,label='combo',linewidth=0.5)
+            ax.plot(c.time,c.mean('member').absolute,alpha=0.7,
+                            label='combo',linewidth=0.5,zorder=30)
             ax.fill_between(c.time,
                                 c.max('member').absolute,
-                                c.min('member').absolute,alpha=0.3)
+                                c.min('member').absolute,alpha=0.3,zorder=30)
 
             ax.plot(m.time,m.mean('member').absolute,alpha=0.7,label='ec',linewidth=0.5)
             ax.fill_between(m.time,
@@ -326,6 +366,8 @@ if plot:
             # plt.plot(c.time,c.max('member').absolute,'red',alpha=0.5)
             ax.set_title(ob.name_from_loc(loc_str)+' Lead time: '+str(lt)+' days')
             ax.legend()
+            ax.set_xlabel('time')
+            ax.set_xlabel('SST')
         gr.save_fig(fig,ob.name_from_loc(loc_str)+'_timeseries')
 
 if skill:
@@ -358,9 +400,15 @@ if skill:
                                         clim.std_value,
                                         dim=[]
                                     )
+        crps_mix   = xs.crps_gaussian(obs.absolute,
+                                        combo.absolute.mean('member'),
+                                        clim.std_value,
+                                        dim=[]
+                                    )
 
         gr.skill_plot(crps_model,crps_clim,title='EC',filename='ECcrpss')
         gr.skill_plot(crps_combo,crps_clim,title='COMBO',filename='COMBOcrpss')
+        gr.skill_plot(crps_mix,crps_clim,title='COMBO-MIX',filename='COMBO_MIXcrpss')
 
         po = point_observations.sel(location=loc)[var]
         clim_mean,clim_std = xh.o_climatology(po,'time.month')
@@ -375,3 +423,7 @@ if skill:
         gr.qq_plot(obs.anomalies,model.anomalies,title='EC',filename='ECqq')
         gr.qq_plot(obs.anomalies,pers.anomalies, title='PERS',filename='PERSqq')
         gr.qq_plot(obs.anomalies,combo.anomalies,title='COMBO',filename='COMBOqq')
+
+        gr.qq_plot(obs.anomalies,model.anomalies.mean('member'),title='EC',filename='ECqq_mean')
+        # gr.qq_plot(obs.anomalies,pers.anomalies, title='PERS',filename='PERSqq_mean')
+        gr.qq_plot(obs.anomalies,combo.anomalies.mean('member'),title='COMBO',filename='COMBOqq_mean')

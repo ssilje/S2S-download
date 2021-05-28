@@ -106,6 +106,7 @@ def qq_plot(dax,day,dim='validation_time.month',
         ax.set_ylabel(y_axlabel)
 
         ax.plot(x,y,'o',alpha=0.4,ms=1)
+        ax.plot([0, 1], [0, 1],'k',transform=ax.transAxes,alpha=0.7,linewidth=0.6)
         ax.axis('equal')
 
     fig.suptitle(title)
@@ -167,6 +168,7 @@ def skill_plot(mod,clim,dim='validation_time.month',
         # ax.plot(y,zy,'o-',alpha=0.4,ms=1,label='y')
         # ax.legend()
         ax.set_ylim((-1,1))
+        ax.plot([0, 1], [0.5, 0.5],'k',transform=ax.transAxes,alpha=0.7,linewidth=0.6)
 
     fig.suptitle(title)
     save_fig(fig,filename)

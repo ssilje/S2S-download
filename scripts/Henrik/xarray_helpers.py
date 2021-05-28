@@ -63,6 +63,25 @@ def c_climatology(da,dim):
     return xr.concat(mean,dim_name).sortby(dim_name).broadcast_like(da),\
                 xr.concat(std,dim_name).sortby(dim_name).broadcast_like(da)
 
+def c_by_vt(da):
+    out = []
+    # da.expand_dims('validation_time')\
+    #         .assign_coords(validation_time=da.time+da.step)
+    for label,data in list(da.groupby('time.dayofyear')):
+        out.append(
+                    xr.apply_ufunc(
+                        standard, data.unstack(),
+                        input_core_dims  = [['time','member','step']],
+                        output_core_dims = [['time','member','step']],
+                        vectorize=True
+                    ).rename('mean')
+                )
+
+    return xr.concat(out,'time').sortby(['time','step'])
+
+def standard(x):
+    return (x-np.nanmean(x))/np.nanstd(x)
+
 def get_groups(ds,dim,keys):
     dim_name     = dim.split('.')[0]
     groups       = []

@@ -21,8 +21,8 @@ def regression2D(x1,x2,y):
     res2 = []
     res3 = []
     for n in range(y.shape[1]):
-        X1 = np.delete(x1,n,axis=1).flatten()
-        X2 = np.delete(x2,n,axis=1).flatten()
+        X1 = np.nanmean(np.delete(x1,n,axis=1),axis=0).flatten()
+        X2 = np.nanmean(np.delete(x2,n,axis=1),axis=0).flatten()
         X0 = np.ones_like(X1)
         X = np.stack(
                         [
@@ -31,7 +31,7 @@ def regression2D(x1,x2,y):
                             X2
                         ],axis=1
                     )
-        res = sm.OLS(np.delete(y,n,axis=1).flatten(), X).fit()
+        res = sm.OLS(np.nanmean(np.delete(y,n,axis=1),axis=0).flatten(), X).fit()
         res1.append(res.params[0])
         res2.append(res.params[1])
         res3.append(res.params[2])
