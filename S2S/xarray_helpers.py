@@ -77,7 +77,15 @@ def c_climatology(da,dim):
 
 def climatology_to_validation_time(da,validation_time):
     """
-    TODO: Vectorize
+    TODO: Vectorize, incredibly slow routine but haven't figured out how to do
+    this in a smart way yet...
+
+    args:
+        da:              xr.DataArray with step and month dimension
+        validation_time: xr.DataArray with step + time dimension
+
+    returns:
+        climatology stacked to match validation time: xarray.DataArray
     """
     print('\txarray_helpers.climatology_to_validation_time()')
     time = validation_time.time
@@ -99,8 +107,9 @@ def assign_validation_time(ds):
 def at_validation(obs,vt,ddays=1):
     """
     args:
-        obs: xarray.Dataset with time dimension
-        vt:
+        obs:   xarray.Dataset with time dimension
+        vt:    xarray.DataArray time + step dimension
+        ddays: int, tolerance, in days, for matching times
     returns
         observations: xarray.Dataset with time and step dimension
     """

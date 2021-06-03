@@ -21,6 +21,7 @@ dependencies:
   - seaborn
   - cfgrib
   - xarray-extras
+  - openpyxl
   - xskillscore
 
 #installed manually:

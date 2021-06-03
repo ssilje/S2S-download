@@ -3,11 +3,11 @@ import numpy  as np
 import xarray as xr
 import pandas as pd
 import os
+import json
 
 # local dependencies
 from S2S.local_configuration import config
-from .handle_domain import get_bounds, get_domain
-import scripts.Henrik.handle_datetime as dt
+import S2S.handle_datetime as dt
 import scripts.Henrik.organize_barentzwatch as organize_barentzwatch
 
 class Archive:
@@ -100,6 +100,18 @@ class Archive:
         """
         if not os.path.exists(path):
             os.makedirs(path)
+
+    @staticmethod
+    def get_bounds(domainID):
+        with open(config['DOMAINS'], 'r') as file:
+            domain_dict = json.load(file)
+        return domain_dict[domainID]['bounds']
+
+    @staticmethod
+    def get_domain(domainID):
+        with open(config['DOMAINS'], 'r') as file:
+            domain_dict = json.load(file)
+        return domain_dict[domainID]
 
 class LoadLocal:
     """
@@ -269,7 +281,7 @@ class LoadLocal:
         self.start_time   = start_time
         self.end_time     = end_time
         self.domainID     = domainID
-        self.bounds       = get_bounds(domainID)
+        self.bounds       = archive.get_bounds(domainID)
         self.download     = download
         self.out_filename = archive.out_filename(
                                                 var=var,
@@ -382,7 +394,7 @@ class BarentsWatch:
         location_2 = []
         if isinstance(location[0],str):
             for loc in location:
-                location_2.append(get_domain(loc)['localityNo'])
+                location_2.append(archive.get_domain(loc)['localityNo'])
 
         location = location_2
 
@@ -448,7 +460,7 @@ class SST:
             ):
 
         self.domainID = domainID if domainID else self.domainID
-        self.bounds   = get_bounds(domainID)
+        self.bounds   = Archive().get_bounds(domainID)
 
         # if not self.is_loaded(data_label) or reload:
 
