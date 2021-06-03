@@ -9,15 +9,15 @@ config = {
     "S2S_DIR_summer2018": '', # "/nird/projects/NS9001K/sso102/S2S/DATA/SUMMER2018",
     "SAVEFIG": 'figures/', # " /nird/projects/NS9001K/sso102/FIGUERS"
     'VALID_DB':'data/valid_db/',
-    'S2SF':'data/nird_copy/S2S/Benjamin/forecast/ECMWF/sfc/sst/',
-    'S2SH':'data/nird_copy/S2S/Benjamin/hindcast/ECMWF/sfc/sst/',
+    'S2SF':'data/nird_copy/S2S/Benjamin/forecast/ECMWF/sfc/',
+    'S2SH':'data/nird_copy/S2S/Benjamin/hindcast/ECMWF/sfc/',
     'ERA5':'data/nird_copy/SFE/ERA_daily_nc/grid_15/',
     'SITES':'data/BW/sites.json',
     'DOMAINS':'data/EIDE/domains.json',
     'BW':'./data/BW/BW_temperature/',
     'IMR':'./data/nird_copy/IMR/fastestasjoner',
     'EIDE':'./projects/SST_oppdrett/',
-    'S2SH_HR':'/nird/projects/NS9853K/DATA/S2S/MARS/hindcast/ECMWF/sfc/sst/',
+    'S2SH_HR':'/nird/projects/NS9853K/DATA/S2S/MARS/hindcast/ECMWF/sfc/',
     'ERA5_HR':'/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/',
     'MPL_STYLE':'./S2S/graphics/s2s.mplstyle'
 }

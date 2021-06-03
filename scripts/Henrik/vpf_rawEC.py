@@ -22,9 +22,11 @@ t_end    = (2021,1,4)
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
-process_hindcast     = False
+process_hindcast     = True
 process_observations = False
 verify = True
+
+high_res = False
 
 observations = BarentsWatch().load(['Hisdalen','Langøy S']).sortby('time')
 
@@ -32,7 +34,7 @@ print('Process hindcast')
 if process_hindcast:
 
     print('\tLoad hindcast')
-    hindcast = ECMWF_S2SH(high_res=False)\
+    hindcast = ECMWF_S2SH(high_res=high_res)\
                     .load(var,t_start,t_end,domainID)[var]-272.15
 
     print('\tInterpolate hindcast to point locations')
@@ -95,13 +97,13 @@ if verify:
                     clabs=['clim','rawEC']
                 )
 
-    # crps_mod  = xs.crps_ensemble(val_obs[var],hindcast[var],dim=[])
-    # crps_clim = xs.crps_gaussian(
-    #                             val_obs[var],
-    #                             clim_mean[var],
-    #                             clim_std[var],
-    #                             dim=[]
-    #                             )
-    #
-    # gr.skill_plot(crps_mod,crps_clim,title='rawEC',filename='rawEC')
-    # gr.qq_plot(val_obs[var],hindcast[var],y_axlabel='raw EC',filename='rawEC')
+    crps_mod  = xs.crps_ensemble(val_obs[var],hindcast[var],dim=[])
+    crps_clim = xs.crps_gaussian(
+                                val_obs[var],
+                                clim_mean[var],
+                                clim_std[var],
+                                dim=[]
+                                )
+
+    gr.skill_plot(crps_mod,crps_clim,title='rawEC',filename='rawEC')
+    gr.qq_plot(val_obs[var],hindcast[var],y_axlabel='raw EC',filename='rawEC')

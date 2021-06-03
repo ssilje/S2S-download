@@ -51,7 +51,7 @@ class Archive:
         ftype = kwargs['ftype']
 
         if kwargs['high_res']:
-            return '_'.join(
+            return var+'/'+'_'.join(
                     [
                         var,
                         'CY46R1_CY47R1',
@@ -62,7 +62,7 @@ class Archive:
                     ]
                 ) + '.grb'
         else:
-            return '_'.join(
+            return var+'/'+'_'.join(
                     [
                         var,
                         'CY46R1_CY47R1',
@@ -206,7 +206,7 @@ class LoadLocal:
         ftype       = Archive().ftype[self.label]
 
         filename_func = self.filename(key='in')
-        print(self.load_frequency())
+        
         for time in self.load_frequency():
 
             runs   = ['pf','cf'] if control_run else [None]
@@ -291,7 +291,7 @@ class LoadLocal:
                                                 label=archive.ftype[self.label]
                                                 )
 
-        while not self.download and not os.path.exists(self.out_path
+        while self.download or not os.path.exists(self.out_path
                                                         +self.out_filename):
 
             archive.make_dir(self.out_path)
