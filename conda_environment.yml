@@ -22,7 +22,8 @@ dependencies:
   - cfgrib
   - xarray-extras
   - openpyxl
+  - xskillscore
 
 #installed manually:
 # pip3 install gridpp==0.6.0-dev.1
-# conda install -c conda-forge xskillscore
+
