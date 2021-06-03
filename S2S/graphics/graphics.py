@@ -7,9 +7,10 @@ import xskillscore as xs
 import json
 
 from S2S.local_configuration import config
+import S2S.xarray_helpers as xh
 
-import .latex as latex
-import scripts.Henrik.xarray_helpers as xh
+from . import latex
+
 
 def name_from_loc(loc):
     """

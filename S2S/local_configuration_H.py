@@ -19,5 +19,5 @@ config = {
     'EIDE':'./projects/SST_oppdrett/',
     'S2SH_HR':'/nird/projects/NS9853K/DATA/S2S/MARS/hindcast/ECMWF/sfc/sst/',
     'ERA5_HR':'/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/',
-    'MPL_STYLE':'./scripts/Henrik/s2s.mplstyle'
+    'MPL_STYLE':'./S2S/graphics/s2s.mplstyle'
 }

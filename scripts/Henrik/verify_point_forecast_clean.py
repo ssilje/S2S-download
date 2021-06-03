@@ -18,7 +18,7 @@ domainID = 'NVK'
 var      = 'sst'
 
 t_start  = (2020,1,23)
-t_end    = (2020,9,1)
+t_end    = (2021,1,4)
 
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
@@ -38,10 +38,10 @@ if process_hindcast_and_training_data:
     ###################
 
     print('Process model and training data: load ERA5')
-    observations = ERA5(high_res=True).load(var,clim_t_start,clim_t_end,domainID)[var]-272.15
+    observations = ERA5(high_res=False).load(var,clim_t_start,clim_t_end,domainID)[var]-272.15
 
     print('Process model and training data: load hindcast')
-    hindcast     = ECMWF_S2SH(high_res=True).load(var,t_start,t_end,domainID)[var]-272.15
+    hindcast     = ECMWF_S2SH(high_res=False).load(var,t_start,t_end,domainID)[var]-272.15
 
     ############################################################################
     #### Inter/extrapolate NaNs by nearest functioning gridpoint to the west ###
@@ -331,7 +331,7 @@ if plot:
             ax.set_title(ob.name_from_loc(loc_str)+' Lead time: '+str(lt)+' days')
             ax.legend()
             ax.set_xlabel('day of year')
-            ax.set_xlabel('SST')
+            ax.set_ylabel('SST')
         gr.save_fig(fig,ob.name_from_loc(loc_str)+'_timeseries_mean')
 
         latex.set_style(style='white')
@@ -367,7 +367,7 @@ if plot:
             ax.set_title(ob.name_from_loc(loc_str)+' Lead time: '+str(lt)+' days')
             ax.legend()
             ax.set_xlabel('time')
-            ax.set_xlabel('SST')
+            ax.set_ylabel('SST')
         gr.save_fig(fig,ob.name_from_loc(loc_str)+'_timeseries')
 
 if skill:
