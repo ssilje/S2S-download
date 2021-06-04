@@ -48,14 +48,15 @@ for loc in all_observations.location:
         hindcast = ECMWF_S2SH(high_res=high_res)\
                         .load(var,t_start,t_end,domainID)[var]-272.15
 
-        print('\tInterpolate hindcast to point locations')
+        print('\tExtrapolate landmask')
         hindcast = hindcast.sortby(['time','step'])\
                         .interpolate_na(
                                         dim='lon',
                                         method='nearest',
                                         fill_value="extrapolate"
-                                    )\
-                            .interp(
+                                    )
+        print('\tInterpolate to point locations')
+        hindcast = hindcast.interp(
                                     lon=observations.lon,
                                     lat=observations.lat,
                                     method='linear'
