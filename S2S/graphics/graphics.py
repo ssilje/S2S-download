@@ -11,7 +11,6 @@ import S2S.xarray_helpers as xh
 
 from . import latex
 
-
 def name_from_loc(loc):
     """
     Returns name of Barentswatch location from loc number
@@ -121,7 +120,7 @@ def qq_plot(dax_in,day_in,dim='validation_time.month',
             ylabel,ydata = y_group[n]
             # this approach is not bulletproof
             # check manually that right groups go together
-            print('\t graphics.qq_plot: matched groups ',xlabel,ylabel)
+            print('\tgraphics.qq_plot: matched groups ',xlabel,ylabel)
 
             x,y = xr.align(xdata,ydata)
             x,y = x.values.flatten(),y.values.flatten()
@@ -183,7 +182,7 @@ def skill_plot(in_mod,in_clim,dim='validation_time.month',
             ylabel,ydata = y_group[n]
             # this approach is not bulletproof
             # check manually that right groups go together
-            print('\t graphics.skill_plot: matched groups ',xlabel,ylabel)
+            print('\tgraphics.skill_plot: matched groups ',xlabel,ylabel)
 
             xdata = xdata.unstack().sortby(['time','step'])
             ydata = ydata.unstack().sortby(['time','step'])

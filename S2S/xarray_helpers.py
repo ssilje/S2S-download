@@ -2,6 +2,16 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
+def print_progress(n,N,i='',e=''):
+    """
+    Print progression
+
+    args:
+        n: float or int, current step
+        N: float or int, total number of steps
+    """
+    print('\t\t'+i+str(round((n/N)*100,1))+' % done'+e,end='\r')
+
 def clim_mean(x):
     result = []
     for n in range(x.shape[0]):
@@ -21,7 +31,7 @@ def clim_std_c(x):
     return np.nanstd(x)
 
 def o_climatology(da,dim):
-    print('\t performing xarray_helpers.o_climatology()')
+    print('\t\txarray_helpers.o_climatology()')
     dim_name = dim.split('.')[0]
     mean,std = [],[]
     for label,data in list(da.groupby(dim)):
@@ -46,7 +56,7 @@ def o_climatology(da,dim):
                 xr.concat(std,dim_name).sortby(dim_name)
 
 def c_climatology(da,dim):
-    print('\txarray_helpers.c_climatology()')
+    print('\t\txarray_helpers.c_climatology()')
     dim_name = dim.split('.')[0]
     subgroup = dim.split('.')[1]
     mean,std = [],[]
@@ -87,7 +97,7 @@ def climatology_to_validation_time(da,validation_time):
     returns:
         climatology stacked to match validation time: xarray.DataArray
     """
-    print('\txarray_helpers.climatology_to_validation_time()')
+    print('\t\txarray_helpers.climatology_to_validation_time()')
     time = validation_time.time
     step = validation_time.step
 
@@ -95,10 +105,12 @@ def climatology_to_validation_time(da,validation_time):
     for t in time:
         sout = []
         for s in step:
+            # can switch pd.Timestamp((t+s).values).month with (t+s).dt.month (?)
             sout.append(da.sel(month=pd.Timestamp((t+s).values).month,step=s))
         tout.append(xr.concat(sout,'step').drop('month'))
-        p = 1-((time[-1]-t)/(time[-1]-time[0])).values
-        print(str(round(p*100,1))+' % done',end='\r')
+
+        print_progress((t-(time[0])).values,(time[-1]-time[0]).values)
+
     return xr.concat(tout,time)
 
 def assign_validation_time(ds):

@@ -206,7 +206,7 @@ class LoadLocal:
         ftype       = Archive().ftype[self.label]
 
         filename_func = self.filename(key='in')
-        
+
         for time in self.load_frequency():
 
             runs   = ['pf','cf'] if control_run else [None]
@@ -381,7 +381,10 @@ class BarentsWatch:
 
         self.path['DATA'] = config['BW']
 
-    def load(self,location,data_label='DATA'):
+    def load(self,location,no=400,data_label='DATA'):
+
+        if location=='all':
+            location = self.all_locs(number_of_observations=no)
 
         archive = Archive()
 
@@ -395,8 +398,7 @@ class BarentsWatch:
         if isinstance(location[0],str):
             for loc in location:
                 location_2.append(archive.get_domain(loc)['localityNo'])
-
-        location = location_2
+            location = location_2
 
         if not os.path.exists(self.path['DATA']+\
                                 archive.BW_in_filename(location=location[0])):
@@ -409,6 +411,27 @@ class BarentsWatch:
 
         return xr.concat(chunk,'location')
 
+    @staticmethod
+    def all_locs(number_of_observations=400):
+        with open(config['BW']+'temp_BW.json', 'r') as file:
+            data = json.load(file)
+            out  = []
+            i    = 0
+            for loc,dat in data.items():
+                values = np.array(dat['value'],dtype='float32')
+                if np.count_nonzero(~np.isnan(values))>number_of_observations:
+                    i += 1
+                    print(dat['name'])
+                    out.append(int(dat['localityNo']))
+
+            print(
+                    '\n...',
+                    i,
+                    'locations, with',
+                    number_of_observations,
+                    'observations or more, included\n'
+                )
+        return out
 
     @staticmethod
     def load_barentswatch(path,location):

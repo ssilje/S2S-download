@@ -15,7 +15,7 @@ config = {
     'SITES':'data/BW/sites.json',
     'DOMAINS':'data/EIDE/domains.json',
     'BW':'./data/BW/BW_temperature/',
-    'IMR':'./data/nird_copy/IMR/fastestasjoner',
+    'IMR':'./data/nird_copy/IMR/fastestasjoner/',
     'EIDE':'./projects/SST_oppdrett/',
     'S2SH_HR':'/nird/projects/NS9853K/DATA/S2S/MARS/hindcast/ECMWF/sfc/',
     'ERA5_HR':'/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/',
