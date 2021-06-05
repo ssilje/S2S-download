@@ -18,6 +18,16 @@ filenames  = [
                 'yutsira'
             ]
 
+data = {}
+with open(config['IMR']+'stasjonsdata.txt','rb') as file:
+    for line in file:
+        print(file.decode())
+
+
+# data = xr.open_dataset(config['IMR']+'stasjonsdata.nc')
+# print(data)
+exit()
+
 start = pd.Timestamp('01-01-2000')
 print('With values from',start,'\n')
 out = []

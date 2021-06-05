@@ -263,6 +263,14 @@ class LoadLocal:
                     if self.prnt:
                         print(filename)
 
+                    print('\tExtrapolate landmask')
+                    open_data = open_data.sortby(['lon'])\
+                                                .interpolate_na(
+                                                    dim='lon',
+                                                    method='nearest',
+                                                    fill_value="extrapolate"
+                                                )
+
                 if n>0:
                     members.append(open_data)
                     open_data = xr.concat(members,'member')
