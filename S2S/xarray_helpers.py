@@ -174,8 +174,9 @@ def extrapolate_land_mask(hindcast):
 
 def interp_to_loc(observations,hindcast):
 
-    N   = len(observations.location)
-    out = []
+    N        = len(observations.location)
+    out      = []
+    hindcast = hindcast.sortby('lon')
 
     for n,loc in enumerate(observations.location):
 
@@ -183,8 +184,10 @@ def interp_to_loc(observations,hindcast):
 
         o = observations.sel(location=loc)
 
+        h = hindcast.sel(lon=slice(o.lon-2,o.lon+1),lat=slice(o.lat-1,o.lat+1))
+
         out.append(
-                hindcast.interp(
+                h.interp(
                     lon=o.lon,
                     lat=o.lat,
                     method='nearest'

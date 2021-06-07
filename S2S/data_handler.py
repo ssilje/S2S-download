@@ -302,6 +302,10 @@ class LoadLocal:
                 data.transpose('time','lon','lat').to_netcdf(self.out_path
                                                             +self.out_filename)
             elif self.label=='S2SH':
+
+                print('...extrapolate land mask')
+                data = xh.extrapolate_land_mask(data)
+
                 data.transpose(
                             'member','step','time',
                             'lon','lat'
