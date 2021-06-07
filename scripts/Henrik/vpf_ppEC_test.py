@@ -29,10 +29,11 @@ verify               = True
 high_res             = True
 
 all_observations = BarentsWatch().load('all',no=200).sortby('time')
+di = 5
 
-for loc in all_observations.location:
+for ii in range(di,len(all_observations),di):
 
-    observations = all_observations.sel(location=loc)
+    observations = all_observations.sel(location=slice(ii-di,ii))
 
     print('\nProcess hindcast')
     if process_hindcast:
