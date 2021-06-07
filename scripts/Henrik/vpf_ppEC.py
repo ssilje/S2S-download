@@ -27,7 +27,7 @@ process_observations = True
 calibrate            = True
 verify               = True
 
-observations = BarentsWatch().load(['Hisdalen','Langoy S']).sortby('time')
+observations = BarentsWatch().load(['Hisdalen']).sortby('time')
 
 print('Process hindcast')
 if process_hindcast:

@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 
 from S2S.local_configuration import config
 
-local_path = config['IMR']
 filenames  = [
                 'bud',
                 'eggum',
@@ -17,45 +16,74 @@ filenames  = [
                 'sognesjoen',
                 'yutsira'
             ]
+stations  = [
+                'Bud',
+                'Eggum',
+                'Ingoy',
+                'Indre Utsira',
+                'Lista',
+                'Skrova',
+                'Sognesjoen',
+                'Ytre Utsira'
+            ]
 
-data = {}
+coords = dict.fromkeys(stations)
+for n,filename in enumerate(filenames):
+
+    in_data = xr.open_dataset(config['IMR']+filename+'.nc')
+    lon     = in_data.LONGITUDE.values[0]
+    lat     = in_data.LATITUDE.values[0]
+
+    coords[stations[n]] = {'label':filename,'lon':lon,'lat':lat}
+
+data  = dict.fromkeys(stations)
+for key in data:
+    data[key] = {
+                'sst':[],
+                'time':[],
+                'lon':[],
+                'lat':[]
+                }
 with open(config['IMR']+'stasjonsdata.txt','rb') as file:
-    for line in file:
-        print(file.decode())
+    for n,line in enumerate(file):
+        if n>0:
 
+            try:
+                line = line.decode()
+                line = line.split()
 
-# data = xr.open_dataset(config['IMR']+'stasjonsdata.nc')
-# print(data)
-exit()
+                if len(line)==9:
+                    station = line.pop(0)+' '+line.pop(0)
+                else:
+                    station = line.pop(0)
 
-start = pd.Timestamp('01-01-2000')
-print('With values from',start,'\n')
-out = []
-for filename in filenames:
-    data = xr.open_dataset(local_path+filename+'.nc')
+                try:
+                    coords[station]
 
-    for d in [0]:
+                    date    = line[0]
+                    time    = line[1]
+                    temp    = float(line[3])
 
-        data = data.sel(
-                DEPTH=d,
-                TIME=slice(start,data.TIME.isel(TIME=-1))
-                )
+                    time = pd.Timestamp(date + ' ' + time)
 
-        lon = data.LONGITUDE.values[0]
-        lat = data.LATITUDE.values[0]
+                    data[station]['sst'].append(temp)
+                    data[station]['time'].append(time)
 
-        # Change to adjusted?
-        data = data.TEMP.where(data.TEMP_QC<3)
-        # time = data.TIME.where(data.TIME_QC<3)
+                except KeyError:
+                    pass
 
-        data = data.rename({'TIME':'time'}).rename('sst')
-        data = data.assign_coords(location=filename)
-        data = data.assign_coords(lon=lon)
-        data = data.assign_coords(lat=lat)
+            except UnicodeDecodeError:
+                pass
 
-    out.append(data)
-
-    print('\tProcessing',filename,'-\t',len(data.values),'observations')
-
-xr.concat(out,'location').to_netcdf(local_path+'fastestasjoner.nc')
-print('\n...to',local_path+'fastestasjoner.nc')
+for station in data:
+    ds = xr.DataArray(
+                        data=data[station]['sst'],
+                        dims=['time'],
+                        coords=dict(
+                                location=coords[station]['label'],
+                                time=data[station]['time'],
+                                lon=coords[station]['lon'],
+                                lat=coords[station]['lat']
+                                )
+                        ).rename('sst')
+    ds.to_netcdf(config['IMR']+coords[station]['label']+'_organized.nc')

@@ -2,6 +2,8 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
+from S2S.local_configuration import config
+
 def print_progress(n,N,i='',e=''):
     """
     Print progression
@@ -54,6 +56,8 @@ def o_climatology(da,dim):
 
     return xr.concat(mean,dim_name).sortby(dim_name),\
                 xr.concat(std,dim_name).sortby(dim_name)
+
+# def standardize_o(da):
 
 def c_climatology(da,dim):
     print('\t\txarray_helpers.c_climatology()')
@@ -146,6 +150,105 @@ def at_validation(obs,vt,ddays=1):
 
     out = xr.concat(out,time).sortby(['time','step'])
     return assign_validation_time(out)
+
+def extrapolate_land_mask(hindcast):
+
+    N   = len(hindcast.lat)
+    out = []
+
+    for n,lat in enumerate(hindcast.lat):
+
+        print_progress(n,N)
+
+        h = hindcast.sel(lat=lat)
+        h = h.dropna('lon')
+
+        out.append(
+                h.reindex(
+                    {'lon':hindcast.lon},
+                    method='nearest',
+                    tolerance=20,
+                    )
+                )
+    return xr.concat(out,'lat')
+
+def interp_to_loc(observations,hindcast):
+
+    N   = len(observations.location)
+    out = []
+
+    for n,loc in enumerate(observations.location):
+
+        print_progress(n,N)
+
+        o = observations.sel(location=loc)
+
+        out.append(
+                hindcast.interp(
+                    lon=o.lon,
+                    lat=o.lat,
+                    method='nearest'
+                    )
+                )
+    return xr.concat(out,'location')
+
+def running_mean(hindcast,window):
+
+    N   = len(hindcast.location)
+    out = []
+
+    for n,loc in enumerate(hindcast.location):
+
+        print_progress(n,N)
+
+        h = hindcast.sel(location=loc)
+
+        out.append(h.rolling(step=window,center=True)\
+                .mean().dropna('step'))
+    return xr.concat(out,'location')
+
+def running_mean_o(observations,window):
+
+    N   = len(observations.location)
+    out = []
+
+    for n,loc in enumerate(observations.location):
+
+        print_progress(n,N)
+
+        h = observations.sel(location=loc)
+
+        out.append(h.rolling(time=window,center=True,min_periods=1)\
+                .mean().dropna('time'))
+
+    return xr.concat(out,'location',join='outer')
+
+def store_by_location(da,filename):
+    print('\txarray_helpers.store_by_location()')
+    N   = len(da.location)
+    out = []
+
+    for n,loc in enumerate(da.location.values):
+
+        print_progress(n,N)
+
+        da.sel(location=loc)\
+            .to_netcdf(config['VALID_DB']+'/'+loc+'_'+filename+'.nc')
+
+def load_by_location(location,filename):
+    print('\txarray_helpers.load_by_location()')
+    N   = len(location)
+    out = []
+
+    for n,loc in enumerate(location.values):
+
+        print_progress(n,N)
+
+        out.append(
+            xr.open_dataset(config['VALID_DB']+'/'+loc+'_'+filename+'.nc')
+            )
+
+    return xr.concat(out,'location')
 
 ################################################################################
 #######################  FUNCTIONS BELOW ARE DEPRICATED  #######################

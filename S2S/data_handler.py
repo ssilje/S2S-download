@@ -263,14 +263,6 @@ class LoadLocal:
                     if self.prnt:
                         print(filename)
 
-                    print('\tExtrapolate landmask')
-                    open_data = open_data.sortby(['lon'])\
-                                                .interpolate_na(
-                                                    dim='lon',
-                                                    method='nearest',
-                                                    fill_value="extrapolate"
-                                                )
-
                 if n>0:
                     members.append(open_data)
                     open_data = xr.concat(members,'member')
@@ -449,6 +441,25 @@ class BarentsWatch:
         open_data = xr.open_dataset(path+filename)
 
         return open_data
+
+class IMR:
+
+    def __init__(self):
+
+        self.path = config['IMR']
+
+    def load(self,location):
+
+        chunk = []
+        for loc in location:
+
+            filename = loc+'_organized.nc'
+
+            data = xr.open_dataset(self.path+filename)
+            data = data.sortby('time').resample(time='D',skipna=True).mean()
+            chunk.append(data)
+
+        return xr.concat(chunk,'location',join='outer')
 
 class SST:
     """

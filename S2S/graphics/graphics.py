@@ -5,6 +5,8 @@ import os
 import pandas as pd
 import xskillscore as xs
 import json
+import cartopy.crs as ccrs
+from matplotlib.colors import BoundaryNorm
 
 from S2S.local_configuration import config
 import S2S.xarray_helpers as xh
@@ -15,11 +17,18 @@ def name_from_loc(loc):
     """
     Returns name of Barentswatch location from loc number
     """
-    with open(config['SITES'], 'r') as file:
-        data = json.load(file)
-        for line in data:
-            if line["localityNo"]==int(loc):
-                return line['name']
+    try:
+        _ = int(loc)
+
+        with open(config['SITES'], 'r') as file:
+            data = json.load(file)
+            for line in data:
+                if line["localityNo"]==int(loc):
+                    return line['name']
+
+    except ValueError:
+        return loc
+
 
 def make_dir(path):
     """
@@ -50,11 +59,15 @@ def month(ii):
 
     month string_tools
     """
-    ii = int(ii)
-    return ['JAN','FEB','MAR',\
+    try:
+        ii = int(ii)
+        ii = ['JAN','FEB','MAR',\
             'APR','MAI','JUN',\
             'JUL','AUG','SEP',\
             'OCT','NOV','DES'][ii-1]
+    except (ValueError,IndexError) as error:
+        pass
+    return ii
 
 
 def n2m(n,m=(1,1)):
@@ -146,18 +159,19 @@ def qq_plot(dax_in,day_in,dim='validation_time.month',
 
 def skill_plot(in_mod,in_clim,dim='validation_time.month',
                                 filename='',
-                                title=''):
+                                title='',
+                                ylab=''):
+                                
     for loc in in_mod.location:
 
         mod  = in_mod.sel(location=loc)
         clim = in_clim.sel(location=loc)
 
-        if dim=='validation_time.month':
+        if dim.split('.')[0]=='validation_time':
             mod = xh.assign_validation_time(mod)
             clim = xh.assign_validation_time(clim)
 
-        fname    = 'crpss'+\
-                        '_'+filename+'_'+\
+        fname    = filename+'_'+\
                                 name_from_loc(str(clim.location.values))
         suptitle = title+' '+name_from_loc(str(clim.location.values))
 
@@ -189,8 +203,7 @@ def skill_plot(in_mod,in_clim,dim='validation_time.month',
 
             xdata,ydata = xr.align(xdata,ydata)
 
-            ss = 1 - xdata/ydata
-            ss = ss.mean('time',skipna=True)
+            ss = 1-xdata.mean('time',skipna=True)/ydata.mean('time',skipna=True)
 
             x = np.array([td.days for td in ss.step.to_pandas()])
             z = ss.values
@@ -199,14 +212,18 @@ def skill_plot(in_mod,in_clim,dim='validation_time.month',
 
             ax.set_title(month(xlabel))
             ax.set_xlabel('lead time [D]')
-            ax.set_ylabel('CRPSS')
+            ax.set_ylabel(ylab)
 
             ax.plot(x,z,'o-',alpha=0.4,ms=1)
             # ax.plot(x,zx,'o-',alpha=0.4,ms=1,label='x')
             # ax.plot(y,zy,'o-',alpha=0.4,ms=1,label='y')
             # ax.legend()
             ax.set_ylim((-1,1))
-            ax.plot([0, 1], [0.5, 0.5],'k',transform=ax.transAxes,alpha=0.7,linewidth=0.6)
+            ax.plot(
+                    [0, 1],[0.5, 0.5],'k',
+                    transform=ax.transAxes,alpha=0.7,
+                    linewidth=0.6
+                    )
 
         fig.suptitle(suptitle)
         save_fig(fig,fname)
@@ -295,4 +312,95 @@ def timeseries(
             ax.legend()
 
         fig.suptitle(str(name_from_loc(loc.values))+' '+title)
+        save_fig(fig,fname)
+
+def point_map(da,c='k'):
+
+    latex.set_style(style='white')
+    fig,axes = plt.subplots(1,1,\
+        figsize=latex.set_size(width='thesis',subplots=(1,1),fraction=0.95),\
+        subplot_kw=dict(projection=ccrs.PlateCarree()))
+
+    ax = axes
+
+    ax.coastlines(resolution='50m', color='black',\
+                            linewidth=0.2)
+
+    ax.set_extent((0,25,55,75),crs=ccrs.PlateCarree())
+
+
+    for loc in da.location:
+
+        z = da.sel(location=loc)
+        x = z.lon.values
+        y = z.lat.values
+
+        ax.plot(x, y, marker='o', color=c, markersize=1,
+            alpha=0.7, transform=ccrs.PlateCarree())
+
+    plt.show()
+
+def skill_map(
+              model,
+              climate,
+              dim='validation_time.month',
+              title='SS',
+              lead_time=[7,14,21],
+              filename=''
+             ):
+
+    for lt in lead_time:
+
+        fname = filename+'_'+str(lt)
+        mod  = model.sel(step=pd.Timedelta(lt,'D'))
+        clim = climate.sel(step=pd.Timedelta(lt,'D'))
+
+        subplots = fg(mod,dim)
+        latex.set_style(style='white')
+        fig,axes = plt.subplots(subplots[0],subplots[1],\
+            figsize=latex.set_size(width='thesis',subplots=subplots,fraction=0.95),\
+            subplot_kw=dict(projection=ccrs.PlateCarree()))
+
+        axes = axes.flatten()
+
+        x_group = list(mod.groupby(dim))
+        y_group = list(clim.groupby(dim))
+
+        for n,(xlabel,xdata) in enumerate(x_group):
+
+            ylabel,ydata = y_group[n]
+
+            # this approach is not bulletproof
+            # check manually that right groups go together
+            print('\tgraphics.skill_map: matched groups ',xlabel,ylabel)
+
+            xdata = xdata.unstack().sortby(['time'])
+            ydata = ydata.unstack().sortby(['time'])
+
+            xdata,ydata = xr.align(xdata,ydata)
+
+            ss = 1-xdata.mean('time',skipna=True)/ydata.mean('time',skipna=True)
+
+            x = ss.lon.values
+            y = ss.lat.values
+            c = ss.values
+
+            ax = axes[n]
+
+            ax.coastlines(resolution='10m', color='black',\
+                                    linewidth=0.2)
+
+            ax.set_extent((0,25,55,75),crs=ccrs.PlateCarree())
+
+            cmap   = latex.cm_rgc(c='yellow').reversed()
+            levels = np.arange(0,1.1,0.15)
+            norm   = BoundaryNorm(levels,cmap.N)
+
+            cs = ax.scatter(x, y, marker='o', c=c, s=1, cmap=cmap, norm=norm,
+                alpha=0.7, transform=ccrs.PlateCarree())
+
+            ax.set_title(month(xlabel))
+
+        fig.colorbar(cs,ax=axes)
+        fig.suptitle(title+' for lead time: '+str(lt))
         save_fig(fig,fname)
