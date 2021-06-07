@@ -26,7 +26,7 @@ process_observations = True
 calibrate            = True
 verify               = True
 
-high_res             = True
+high_res             = False
 
 all_observations = BarentsWatch().load('all',no=200).sortby('time')
 di = 5

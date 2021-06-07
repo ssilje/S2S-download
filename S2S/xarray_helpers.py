@@ -176,7 +176,6 @@ def interp_to_loc(observations,hindcast):
 
     N        = len(observations.location)
     out      = []
-    hindcast = hindcast.sortby('lon')
 
     for n,loc in enumerate(observations.location):
 
@@ -184,7 +183,11 @@ def interp_to_loc(observations,hindcast):
 
         o = observations.sel(location=loc)
 
-        h = hindcast.sel(lon=slice(o.lon-2,o.lon+1),lat=slice(o.lat-1,o.lat+1))
+        lon = xr.ufuncs.fabs(hindcast.lon - o.lon)
+        lat = xr.ufuncs.fabs(hindcast.lat - o.lat)
+
+        h = hindcast.where(lon<2,drop=True)
+        h = h.where(lat<2,drop=True)
 
         out.append(
                 h.interp(
