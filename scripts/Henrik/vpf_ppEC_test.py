@@ -44,7 +44,7 @@ for ii in range(di,len(all_observations.location),di):
 
         # print('\tExtrapolate land mask')
         # hindcast = xh.extrapolate_land_mask(hindcast)
-
+        print(observations)
         print('\tInterpolate hindcast to point locations')
         hindcast = xh.interp_to_loc(observations,hindcast)
 
