@@ -33,7 +33,7 @@ di = 5
 
 for ii in range(di,len(all_observations),di):
 
-    observations = all_observations.sel(location=slice(ii-di,ii))
+    observations = all_observations.isel(location=slice(ii-di,ii))
 
     print('\nProcess hindcast')
     if process_hindcast:
