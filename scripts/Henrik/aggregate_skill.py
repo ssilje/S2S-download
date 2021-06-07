@@ -98,16 +98,22 @@ xh.store_by_location(rmse_clim,'rmse_clim_temp')
 rmse_fc = xh.load_by_location(observations.location,'rmse_fc_temp')
 rmse_clim = xh.load_by_location(observations.location,'rmse_clim_temp')
 
-gr.skill_map(rmse_fc[var],rmse_clim[var],title='RMSE SS',filename='RMSEss_map')
-
-gr.skill_plot(
-                rmse_fc[var],
-                rmse_clim[var],
-                title='EC',
-                filename='RMSESS_EC',
-                ylab='RMSESS',
-                dim='validation_time.month'
+gr.skill_map(
+            rmse_fc[var],
+            rmse_clim[var],
+            title='RMSE SS',
+            filename='RMSEss_map',
+            lead_time=[7,14,21,28,35,42]
             )
+
+# gr.skill_plot(
+#                 rmse_fc[var],
+#                 rmse_clim[var],
+#                 title='EC',
+#                 filename='RMSESS_EC',
+#                 ylab='RMSESS',
+#                 dim='validation_time.month'
+#             )
 
 # # probabilistic skill
 # crps_mod  = xs.crps_ensemble(val_obs_a[var],hindcast[var],dim=[])
