@@ -37,7 +37,7 @@ var_name_abbr='t2m' #tp
 mdl_vrsn='CY43R3_CY45R1'
 
 S2S_dirbase=config['S2S_DIR_summer2018']
-
+print(S2S_dirbase)
 #for d in dates_fcycle:
 curr_date=dates_fcycle[0].strftime('%Y-%m-%d')
 for product in (
