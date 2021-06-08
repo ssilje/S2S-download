@@ -20,8 +20,10 @@ from S2S.file_handling import read_grib_file,read_grib_file_point, read_grib_fil
 from S2S.local_configuration import config
 from S2S.file_handeling_ERA import read_ERA5_clim_anom
 
-dates_monday = pd.date_range("20180503", periods=18, freq="7D") # forecasts start Monday
-dates_thursday = pd.date_range("20180507", periods=18, freq="7D") # forecasts start Thursday
+#dates_monday = pd.date_range("20180503", periods=18, freq="7D") # forecasts start Monday
+#dates_thursday = pd.date_range("20180507", periods=18, freq="7D") # forecasts start Thursday
+dates_monday = pd.date_range("20180426", periods=18, freq="7D") # forecasts start Monday
+dates_thursday = pd.date_range("20180430", periods=18, freq="7D") # forecasts start Thursday
 dates_fcycle = dates_monday.union(dates_thursday)   
 
 fc_week = {
