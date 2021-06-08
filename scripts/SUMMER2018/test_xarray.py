@@ -78,7 +78,8 @@ for d in dates_fcycle:
 ## reading ERA
 #xs_hindcast.valid_time.sel(number=0).to_dataframe().sort_values(by='valid_time') Kan kanskje bruke denne til å få dei forskjellige datoane frå s2s
 
-    dates = pd.date_range("20180503", periods=28) # forecasts start Thursday
+    #dates = pd.date_range("20180503", periods=28) # forecasts start Thursday
+    dates = pd.date_range(curr_date, periods=28) # forecasts start Thursday
     for d in dates:
             ERA5 = read_ERA5_clim_anom(
                 #dirbase=config['ERA5_daily_DIR'],
