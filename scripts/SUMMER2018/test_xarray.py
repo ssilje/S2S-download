@@ -215,7 +215,7 @@ for d in dates_fcycle:
                        marker="D",
                        alpha=0.5,
                        color='black',ax=axes)
-    bplot.set_xticklabels(['HC w1','FC w1','HC w2','FC w2','HC w3','FC w3','HC w4','HC w4'],rotation=90)
+    bplot.set_xticklabels(['HC w1','FC w1','HC w2','FC w2','HC w3','FC w3','HC w4','FC w4'],rotation=90)
 
     fig.savefig(curr_date + '_t2manom.png')    
  
