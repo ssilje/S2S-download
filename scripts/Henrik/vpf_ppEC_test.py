@@ -28,7 +28,7 @@ verify               = True
 
 high_res             = False
 
-all_observations = BarentsWatch().load('all',no=200).sortby('time')
+all_observations = BarentsWatch().load('all',no=250).sortby('time')
 di = 5
 
 for ii in range(di,len(all_observations.location),di):

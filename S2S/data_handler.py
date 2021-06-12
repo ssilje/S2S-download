@@ -9,6 +9,7 @@ import json
 from S2S.local_configuration import config
 import S2S.handle_datetime as dt
 import scripts.Henrik.organize_barentzwatch as organize_barentzwatch
+from . import xarray_helpers as xh
 
 class Archive:
     """
@@ -193,7 +194,7 @@ class LoadLocal:
             raise KeyError
             exit()
 
-    def execute_loading_sequence(self):
+    def execute_loading_sequence(self,x_landmask=False):
 
         chunk = []
 
@@ -256,6 +257,9 @@ class LoadLocal:
                     if resample:
                         open_data = open_data.resample(time=resample).mean()
 
+                    if x_landmask:
+                        open_data = xh.extrapolate_land_mask(open_data)
+
                     if run=='cf':
                         open_data = open_data.expand_dims('member')\
                                         .assign_coords(member=pd.Index([0]))
@@ -271,7 +275,16 @@ class LoadLocal:
 
         return xr.concat(chunk,dimension)
 
-    def load(self,var,start_time,end_time,domainID,download=False,prnt=True):
+    def load(
+                self,
+                var,
+                start_time,
+                end_time,
+                domainID,
+                download=False,
+                prnt=True,
+                x_landmask=False
+            ):
 
         archive = Archive()
 
@@ -296,15 +309,12 @@ class LoadLocal:
 
             archive.make_dir(self.out_path)
 
-            data = self.execute_loading_sequence()
+            data = self.execute_loading_sequence(x_landmask=x_landmask)
 
             if self.label=='ERA5':
                 data.transpose('time','lon','lat').to_netcdf(self.out_path
                                                             +self.out_filename)
             elif self.label=='S2SH':
-
-                print('...extrapolate land mask')
-                data = xh.extrapolate_land_mask(data)
 
                 data.transpose(
                             'member','step','time',

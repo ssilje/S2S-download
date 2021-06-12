@@ -9,9 +9,9 @@ config = {
     "S2S_DIR_summer2018": '', # "/nird/projects/NS9001K/sso102/S2S/DATA/SUMMER2018",
     "SAVEFIG": 'figures/', # " /nird/projects/NS9001K/sso102/FIGUERS"
     'VALID_DB':'data/valid_db/',
-    'S2SF':'data/nird_copy/S2S/Benjamin/forecast/ECMWF/sfc/',
-    'S2SH':'data/nird_copy/S2S/Benjamin/hindcast/ECMWF/sfc/',
-    'ERA5':'data/nird_copy/SFE/ERA_daily_nc/grid_15/',
+    'S2SF':'data/nird_copy/S2S/Benjamin/forecast/ECMWF/sfc/', # local to henrik
+    'S2SH':'data/nird_copy/S2S/Benjamin/hindcast/ECMWF/sfc/', # local to henrik
+    'ERA5':'data/nird_copy/SFE/ERA_daily_nc/grid_15/',  # local to henrik
     'SITES':'data/BW/sites.json',
     'DOMAINS':'data/EIDE/domains.json',
     'BW':'./data/BW/BW_temperature/',

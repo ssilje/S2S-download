@@ -50,7 +50,7 @@ domain_dict = {
                     },
             'norwegian_coast':{
                 'name':'Norwegian Coast',
-                'bounds':(0,25,55,75),
+                'bounds':(0,28,55,75),
                 'bounds_fmt':'(min lon, max lon, min lat, max lat)'
                     }
                 }

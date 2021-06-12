@@ -21,13 +21,13 @@ t_end    = (2021,1,4)
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
-# observations = BarentsWatch().load('all',no=350).sortby('time')
-### hindcast     = xh.load_by_location(observations.location,'h_temp')
+observations = BarentsWatch().load('all',no=350).sortby('time')
+
 # val_obs      = xh.load_by_location(observations.location,'v_temp')
 # val_obs_a    = xh.load_by_location(observations.location,'v_a_temp')
-# clim_mean    = xh.load_by_location(observations.location,'clim_mean_temp')
-# clim_std     = xh.load_by_location(observations.location,'clim_std_temp')
-# hindcast     = xh.load_by_location(observations.location,'hp_temp')
+clim_mean    = xh.load_by_location(observations.location,'clim_mean_temp')
+clim_std     = xh.load_by_location(observations.location,'clim_std_temp')
+# hindcast_a     = xh.load_by_location(observations.location,'hp_temp')
 
 def cluster(da,loc,lon_tolerance,lat_tolerance):
 
@@ -47,6 +47,7 @@ def cluster(da,loc,lon_tolerance,lat_tolerance):
 def cluster_dist(
                     hindcast,
                     observations,
+                    clim_m,
                     dim='validation_time.month',
                     dist_func=xs.rmse
                 ):
@@ -63,7 +64,7 @@ def cluster_dist(
         oc = cluster(observations,loc,0.5,0.25)
 
         fc_score   = dist_func(oc,hc.mean('member',skipna=True),dim=[])
-        clim_score = dist_func(oc,xr.full_like(oc,0),dim=[])
+        clim_score = dist_func(oc,clim_mean,dim=[])
 
         fc_score = fc_score.mean('location',skipna=True).assign_coords(
                         {
@@ -85,18 +86,81 @@ def cluster_dist(
 
     return xr.concat(fc,'location'),xr.concat(clim,'location')
 
-observations = BarentsWatch().load('all',no=350).sortby('time')
-val_obs_a    = xh.load_by_location(observations.location,'v_a_temp')
-hindcast     = xh.load_by_location(observations.location,'hp_temp')
-hindcast = hindcast.sel(time=slice(val_obs_a.time.min(),val_obs_a.time.max()))
+def cluster_crps(
+                    hindcast,
+                    observations,
+                    clim_m,
+                    clim_s,
+                    dim='validation_time.month'
+                ):
+    print('\tcluster_mae()')
 
-rmse_fc,rmse_clim = cluster_dist(hindcast,val_obs_a)
+    N   = len(hindcast.location)
+    fc   = []
+    clim = []
+    for n,loc in enumerate(hindcast.location):
+
+        xh.print_progress(n,N)
+
+        hc = cluster(hindcast,loc,0.5,0.25)
+        oc = cluster(observations,loc,0.5,0.25)
+
+        fc_score   = xs.crps_ensemble(oc,hc,dim=[])
+        clim_score = xs.crps_(oc,xr.full_like(oc,0),dim=[])
+
+        fc_score = fc_score.mean('location',skipna=True).assign_coords(
+                        {
+                            'location':loc,
+                            'lon':hindcast.lon.sel(location=loc),
+                            'lat':hindcast.lat.sel(location=loc)
+                        }
+                    )
+        clim_score = clim_score.mean('location',skipna=True).assign_coords(
+                        {
+                            'location':loc,
+                            'lon':hindcast.lon.sel(location=loc),
+                            'lat':hindcast.lat.sel(location=loc)
+                        }
+                    )
+
+        fc.append(fc_score)
+        clim.append(clim_score)
+
+    return xr.concat(fc,'location'),xr.concat(clim,'location')
+
+
+# observations = BarentsWatch().load('all',no=350).sortby('time')
+
+val_obs      = xh.load_by_location(observations.location,'v_temp')
+hindcast_abs = xh.load_by_location(observations.location,'h_temp')
+# val_obs_a    = xh.load_by_location(observations.location,'v_a_temp')
+hindcast     = xh.load_by_location(observations.location,'hp_temp')
+
+hindcast_abs = hindcast_abs.sel(time=slice(val_obs.time.min(),val_obs.time.max()))
+hindcast     = hindcast.sel(time=slice(val_obs.time.min(),val_obs.time.max()))
+
+rmse_fc,rmse_clim = cluster_dist(hindcast*clim_std + clim_mean,val_obs,clim_mean)
+armse_fc,armse_clim = cluster_dist(hindcast_abs,val_obs,clim_mean)
 
 xh.store_by_location(rmse_fc,'rmse_fc_temp')
 xh.store_by_location(rmse_clim,'rmse_clim_temp')
 
+xh.store_by_location(armse_fc,'armse_fc_temp')
+xh.store_by_location(armse_clim,'armse_clim_temp')
+
 rmse_fc = xh.load_by_location(observations.location,'rmse_fc_temp')
 rmse_clim = xh.load_by_location(observations.location,'rmse_clim_temp')
+
+armse_fc = xh.load_by_location(observations.location,'armse_fc_temp')
+armse_clim = xh.load_by_location(observations.location,'armse_clim_temp')
+
+# gr.skill_map(
+#             rmse_fc[var],
+#             rmse_clim[var],
+#             title='RMSE SS',
+#             filename='RMSEss_map',
+#             lead_time=[7,14,21,28,35,42]
+#             )
 
 gr.skill_map(
             rmse_fc[var],
@@ -106,14 +170,31 @@ gr.skill_map(
             lead_time=[7,14,21,28,35,42]
             )
 
-# gr.skill_plot(
-#                 rmse_fc[var],
-#                 rmse_clim[var],
-#                 title='EC',
-#                 filename='RMSESS_EC',
-#                 ylab='RMSESS',
-#                 dim='validation_time.month'
-#             )
+gr.skill_plot(
+                rmse_fc[var],
+                rmse_clim[var],
+                title='EC',
+                filename='RMSESS_EC',
+                ylab='RMSESS',
+                dim='validation_time.month'
+            )
+
+gr.skill_map(
+            armse_fc[var],
+            armse_clim[var],
+            title='RMSE SS',
+            filename='RMSEss_map',
+            lead_time=[7,14,21,28,35,42]
+            )
+
+gr.skill_plot(
+                armse_fc[var],
+                armse_clim[var],
+                title='EC',
+                filename='RMSESS_EC',
+                ylab='RMSESS',
+                dim='validation_time.month'
+            )
 
 # # probabilistic skill
 # crps_mod  = xs.crps_ensemble(val_obs_a[var],hindcast[var],dim=[])

@@ -13,6 +13,24 @@ import S2S.xarray_helpers as xh
 
 from . import latex
 
+def quick_map(da,point=None):
+
+    p = da.isel(member=0,time=0,step=0).transpose('lat','lon').plot(
+            subplot_kws=dict(projection=ccrs.PlateCarree(),
+            facecolor="white"),
+            transform=ccrs.PlateCarree(),
+        )
+    p.axes.coastlines()
+
+    if point:
+        lat = point[1]
+        lon = point[0]
+
+        p.axes.scatter(lon, lat, marker='o',c='k',s=40,
+            alpha=1, transform=ccrs.PlateCarree())
+    plt.show()
+    plt.close()
+
 def name_from_loc(loc):
     """
     Returns name of Barentswatch location from loc number
@@ -161,7 +179,7 @@ def skill_plot(in_mod,in_clim,dim='validation_time.month',
                                 filename='',
                                 title='',
                                 ylab=''):
-                                
+
     for loc in in_mod.location:
 
         mod  = in_mod.sel(location=loc)
@@ -393,7 +411,7 @@ def skill_map(
             ax.set_extent((0,25,55,75),crs=ccrs.PlateCarree())
 
             cmap   = latex.cm_rgc(c='yellow').reversed()
-            levels = np.arange(0,1.1,0.15)
+            levels = np.arange(-1,1.2,0.2)
             norm   = BoundaryNorm(levels,cmap.N)
 
             cs = ax.scatter(x, y, marker='o', c=c, s=1, cmap=cmap, norm=norm,
