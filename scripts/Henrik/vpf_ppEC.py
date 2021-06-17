@@ -13,7 +13,7 @@ import S2S.xarray_helpers    as xh
 import S2S.models            as models
 import S2S.graphics.graphics as gr
 
-domainID = 'NVK'
+domainID = 'norwegian_coast'
 var      = 'sst'
 
 t_start  = (2020,1,23)
@@ -22,12 +22,12 @@ t_end    = (2021,1,4)
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
-process_hindcast     = False
-process_observations = False
+process_hindcast     = True
+process_observations = True
 calibrate            = True
 verify               = True
 
-observations = BarentsWatch().load(['Hisdalen','Langøy S']).sortby('time')
+observations = BarentsWatch().load(['Hisdalen']).sortby('time')
 
 print('Process hindcast')
 if process_hindcast:
@@ -46,7 +46,7 @@ if process_hindcast:
                         .interp(
                                 lon=observations.lon,
                                 lat=observations.lat,
-                                method='linear'
+                                method='nearest'
                             )
     print('\tApply 7D running mean')
     hindcast = hindcast\
@@ -55,6 +55,8 @@ if process_hindcast:
 
     print('\tAssign validation time')
     hindcast = xh.assign_validation_time(hindcast)
+
+    print(hindcast)
 
     hindcast.to_netcdf(config['VALID_DB']+'/h_temp.nc')
 

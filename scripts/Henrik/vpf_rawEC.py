@@ -28,7 +28,7 @@ verify = True
 
 high_res = False
 
-observations = BarentsWatch().load(['Hisdalen','Langøy S']).sortby('time')
+observations = BarentsWatch().load('all',no=400).sortby('time')
 
 print('Process hindcast')
 if process_hindcast:

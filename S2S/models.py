@@ -3,7 +3,46 @@ import pandas as pd
 import xarray as xr
 import statsmodels.api as sm
 import scipy.stats as stats
-import time as time_lib
+
+import S2S.xarray_helpers as xh
+
+def running_regression_CV(x,index,window=30):
+    """
+    dimensions requirements:
+        name            dim
+
+        year            -2
+        dayofyear       -1
+    """
+    mean  = []
+    std   = []
+
+    pad   = window//2
+
+    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+    index = np.pad(index,pad,mode='wrap')
+
+    index[-pad:] += index[-pad-1]
+    index[:pad]  -= index[-pad-1]
+
+    for ii,idx in enumerate(index[pad:-pad]):
+
+        pool = x[...,np.abs(index-idx)<=pad]
+
+        ymean,ystd = [],[]
+        for yy in range(pool.shape[-2]):
+
+            filtered_pool = np.delete(pool,yy,axis=-2)
+            # regression
+
+            ############
+            ymean.append(np.nanmean(filtered_pool))
+            ystd.append(np.nanstd(filtered_pool))
+
+        mean.append(np.array(ymean))
+        std.append(np.array(ystd))
+
+    return np.stack(mean,axis=-1),np.stack(std,axis=-1)
 
 def regression1D(x,y):
     """
@@ -30,12 +69,26 @@ def regression1D(x,y):
     return np.array(res1),np.array(res2)
 
 def regression2D(x1,x2,y):
+    """
+    Returns fitted coeffs by OLS for model
+        y = intercept +slope1*x1 + slope2*x2 + residuals
+
+    Keeps the
+
+    args:
+        x1: np.array dim: (n,)
+        x2: np.array dim: (n,)
+        y : np.array dim: (n,)
+
+    returns:
+        intercept,slope1,slope2: np.array,np.array dim: (n,),(n,)
+    """
     res1 = []
     res2 = []
     res3 = []
-    for n in range(y.shape[1]):
-        X1 = np.nanmean(np.delete(x1,n,axis=1),axis=0).flatten()
-        X2 = np.nanmean(np.delete(x2,n,axis=1),axis=0).flatten()
+    for n in range(y.shape[0]):
+        X1 = np.delete(x1,n,axis=0).flatten()
+        X2 = np.delete(x2,n,axis=0).flatten()
         X0 = np.ones_like(X1)
         X = np.stack(
                         [
@@ -44,12 +97,107 @@ def regression2D(x1,x2,y):
                             X2
                         ],axis=1
                     )
-        res = sm.OLS(np.nanmean(np.delete(y,n,axis=1),axis=0).flatten(), X).fit()
+        Y = np.delete(y,n,axis=0).flatten()
+        res = sm.OLS(Y, X, missing='drop').fit()
         res1.append(res.params[0])
         res2.append(res.params[1])
         res3.append(res.params[2])
     return np.array(res1),np.array(res2),np.array(res3)
 
+def combo(obs_t0,model_t,obs_t,dim='validation_time.month'):
+    """
+    Not very elegant and not particularly cheap,
+    TODO: RE-DO
+
+    args:
+        obs_t0:  xarray.DataArray
+        model_t: xarray.DataArray
+        obs_t:   xarray.DataArray
+
+    returns:
+
+
+    """
+    print('\tmodels.combo()')
+
+    dim_name = dim.split('.')[0]
+    subgroup = dim.split('.')[1]
+
+    model    = model_t
+    model_t  = model.mean('member',skipna=True)
+
+    if obs_t0.dims != model.dims:
+        obs_t0 = obs_t0.broadcast_like(model_t)
+
+    if obs_t.dims != model.dims:
+        obs_t  = obs_t.broadcast_like(model_t)
+
+    ds = xr.merge(
+                    [
+                        obs_t0.rename('obs_t0'),
+                        model_t.rename('model_t'),
+                        obs_t.rename('obs_t')
+                ],join='inner',compat='override'
+            )
+
+    groups = list(ds.groupby(dim))
+
+    n = 0
+    N = len(groups)
+
+    xh.print_progress(n,N)
+    e1,e2 = ' s','sl'
+
+    stacked_dim = list(groups[0][1].dims)[-1]
+    stack_dim_1 = stacked_dim.split('_')[-2]
+    stack_dim_2 = stacked_dim.split('_')[-1]
+
+    subgroup_data,subgroup_label = [],[]
+    for n,(label,data) in enumerate(groups):
+
+        data = data.unstack()
+
+        tup = xr.apply_ufunc(
+                regression2D, data.obs_t0, data.model_t, data.obs_t,
+                input_core_dims  = [['time'],['time'],['time']],
+                output_core_dims = [['time'],['time'],['time']],
+                vectorize=True
+                )
+
+        subgroup_data.append(xr.merge(
+            [
+                tup[0].rename('intercept'),
+                tup[1].rename('model_t'),
+                tup[2].rename('obs_t0')
+                ]
+            ).stack({stacked_dim:(stack_dim_1,stack_dim_2)})
+        )
+
+        e1 += 'o'
+        e2 += 'o'
+        xh.print_progress(n+1,N,e=e1+' '+e2+'w')
+
+    return xr.concat(subgroup_data,stacked_dim).unstack()
+
+
+def clim_fc(mean,std,r=1,number_of_members=11):
+    """
+    Combines mean and std along a member dimension
+
+    args:
+        mean: xarray.DataArray
+        std:  xarray.DataArray
+    returns:
+        clim_fc: xarray.DataArray with additional member dimension
+    """
+    mean = mean.expand_dims('member')
+    std  = std.expand_dims('member')
+
+    return xr.concat([mean-r*std,mean+r*std],'member')
+
+################################################################################
+############################# Depricated #######################################
+################################################################################
 def persistence(predictor,response,var,dim='time.dayofyear'):
     """
     Not very elegant and probably not particularly cheap
@@ -83,71 +231,6 @@ def persistence(predictor,response,var,dim='time.dayofyear'):
 
     return xr.concat(data_out,dim_name).sortby(dim_name)
 
-def combo(observation,model,response,var,dim='time.dayofyear'):
-    """
-    Not very elegant and probably not particularly cheap
-    """
-    dim_name = dim.split('.')[0]
-    print('\t performing models.combo()')
-    observation = xr.concat([observation]*model.dims['member'],model.member)
-    response    = xr.concat([response]*model.dims['member'],model.member)
-
-    ds = xr.merge(
-                    [
-                        observation.rename({var:'observation'}),
-                        model.rename({var:'model'}),
-                        response.rename({var:'response'})
-                ],join='inner',compat='override'
-            )
-    t = time_lib.time()
-    N = len(list(ds.groupby(dim)))
-    n = 0
-    date_out,date_label_out = [],[]
-    for date_label,date_group in list(ds.groupby(dim)):
-        # n += 1
-        # print('\t\t group ',n,' of ',N,
-        #         ' total time: ',round(time_lib.time()-t,2))
-
-        data = date_group
-        tup = xr.apply_ufunc(
-                regression2D, data.observation, data.model, data.response,
-                input_core_dims  = [
-                                    ['member',dim_name],
-                                    ['member',dim_name],
-                                    ['member',dim_name]
-                                    ],
-                output_core_dims = [[dim_name],[dim_name],[dim_name]],
-                vectorize=True
-                )
-
-        date_out.append(xr.merge(
-            [
-                tup[0].rename('intercept'),
-                tup[1].rename('slope_obs'),
-                tup[2].rename('slope_model')
-                ]
-            )
-        )
-    return xr.concat(date_out,dim_name).sortby(dim_name)
-
-def clim_fc(mean,std,r=1,number_of_members=11):
-    """
-    Combines mean and std along a member dimension
-
-    args:
-        mean: xarray.DataArray
-        std:  xarray.DataArray
-    returns:
-        clim_fc: xarray.DataArray with additional member dimension
-    """
-    mean = mean.expand_dims('member')
-    std  = std.expand_dims('member')
-
-    return xr.concat([mean-r*std,mean+r*std],'member')
-
-################################################################################
-############################# Depricated #######################################
-################################################################################
 def persistence2(predictor,response,var):
     """
     Not very elegant and probably not particularly cheap
