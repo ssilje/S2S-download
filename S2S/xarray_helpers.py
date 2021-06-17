@@ -16,73 +16,22 @@ def print_progress(n,N,i='',e=''):
     """
     print('\t\t'+i+str(round((n/N)*100,1))+' % done'+e,end='\r')
 
-def running_clim_CV(x,index,window=30):
-    """
-    Like runing_clim() but leaves out current year in computation for
-    cross validation
-
-    dimensions requirements:
-        name            dim
-
-        year            -2
-        dayofyear       -1
-    """
-    mean  = []
-    std   = []
-
-    pad   = window//2
-
-    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
-    index = np.pad(index,pad,mode='wrap')
-
-    index[-pad:] += index[-pad-1]
-    index[:pad]  -= index[-pad-1]
-
-    for ii,idx in enumerate(index[pad:-pad]):
-
-        pool = x[...,np.abs(index-idx)<=pad]
-
-        ymean,ystd = [],[]
-        for yy in range(pool.shape[-2]):
-
-            filtered_pool = np.delete(pool,yy,axis=-2)
-            ymean.append(np.nanmean(filtered_pool))
-            ystd.append(np.nanstd(filtered_pool))
-
-        mean.append(np.array(ymean))
-        std.append(np.array(ystd))
-
-    return np.stack(mean,axis=-1),np.stack(std,axis=-1)
-
-def o_climatology(da):
-    """
-    Climatology with centered initialization time, using cross validation
-    """
-
-    print('\t\txarray_helpers.o_climatology()')
-
-    da   = da.sortby('time')
-    time = da.time
-    stacked_time = pd.MultiIndex.from_arrays(
-                                            [
-                                                da.time.dt.year.to_pandas(),
-                                                da.time.dt.dayofyear.to_pandas()
-                                            ],names=('year','dayofyear')
-                                        )
-
-    da = da.assign_coords(time=stacked_time).unstack('time')
-
-    mean,std = xr.apply_ufunc(
-            running_clim_CV, da, da.dayofyear,
-            input_core_dims  = [['year','dayofyear'],['dayofyear']],
-            output_core_dims = [['year','dayofyear'],['year','dayofyear']],
-            vectorize=True
-        )
-
-    return stack_time(mean),stack_time(std)
-
 def running_clim(x,index,window=30):
     """
+    Computes mean and standard deviation over x keeping dim -1. Dim -1 must be
+    'dayofyear', with the corresponding days given in index.
+
+    args:
+        x:      np.array of float, with day of year as index -1
+        index:  np.array of int, 1-dimensional holding dayofyear corresponding
+                to dim -1 of x
+
+    returns
+        mean:   np.array of float, with day of year as index -1 and year as
+                dim -2
+        std:   np.array of float, with day of year as index -1 and year as
+                dim -2
+
     dimensions requirements:
         name            dim
 
@@ -103,12 +52,113 @@ def running_clim(x,index,window=30):
 
     for ii,idx in enumerate(index[pad:-pad]):
 
+        # pool all values that falls within window
         pool = x[...,np.abs(index-idx)<=pad]
 
         mean.append(np.full_like(pool[0][...,0],np.nanmean(pool)))
         std.append(np.full_like(pool[0][...,0],np.nanstd(pool)))
 
     return np.stack(mean,axis=-1),np.stack(std,axis=-1)
+
+def running_clim_CV(x,index,window=30):
+    """
+    Like running_clim() but leaves out current year in computation for
+    cross validation
+
+    Computes mean and standard deviation over x keeping dim -1 and -2.
+    Dim -1 must be 'dayofyear', with the corresponding days given in index.
+    Dim -2 must be 'year'.
+
+    args:
+        x:      np.array of float, with day of year as index -1 and year as
+                index -2
+        index:  np.array of int, 1-dimensional holding dayofyear corresponding
+                to dim -1 of x
+
+    returns
+        mean:   np.array of float, with day of year as index -1 and year as
+                dim -2
+        std:   np.array of float, with day of year as index -1 and year as
+                dim -2
+
+    dimensions requirements:
+        name            dim
+
+        year            -2
+        dayofyear       -1
+    """
+    mean  = []
+    std   = []
+
+    pad   = window//2
+
+    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+    index = np.pad(index,pad,mode='wrap')
+
+    index[-pad:] += index[-pad-1]
+    index[:pad]  -= index[-pad-1]
+
+    for ii,idx in enumerate(index[pad:-pad]):
+
+        # pool all values that falls within window
+        pool = x[...,np.abs(index-idx)<=pad]
+
+        ymean,ystd = [],[]
+        for yy in range(pool.shape[-2]):
+
+            # delete the relevant year from pool (for cross validation)
+            filtered_pool = np.delete(pool,yy,axis=-2)
+
+            ymean.append(np.nanmean(filtered_pool))
+            ystd.append(np.nanstd(filtered_pool))
+
+        mean.append(np.array(ymean))
+        std.append(np.array(ystd))
+
+    return np.stack(mean,axis=-1),np.stack(std,axis=-1)
+
+def o_climatology(da):
+    """
+    Climatology with centered initialization time, using cross validation
+    using a 30-day window.
+
+    args:
+        da: xarray.DataArray with 'time' dimension
+
+    returns:
+        mean: xarray.DataArray, like da
+        std: xarray.DataArray, like da
+
+    time: datetime-like
+    """
+
+    print('\t\txarray_helpers.o_climatology()')
+
+    da   = da.sortby('time')
+    time = da.time
+
+    # create an mulitindex mapping time -> (year,dayofyear)
+    stacked_time = pd.MultiIndex.from_arrays(
+                                            [
+                                                da.time.dt.year.to_pandas(),
+                                                da.time.dt.dayofyear.to_pandas()
+                                            ],names=('year','dayofyear')
+                                        )
+
+    # re-assing time from datetime like to multiindex (year,dayofyear) and
+    # and split mutliindex into year and dauofyear dimension
+    da = da.assign_coords(time=stacked_time).unstack('time')
+
+    # to all year,dayofyear matrices in da, apply runnning_clim_CV
+    mean,std = xr.apply_ufunc(
+            running_clim_CV, da, da.dayofyear,
+            input_core_dims  = [['year','dayofyear'],['dayofyear']],
+            output_core_dims = [['year','dayofyear'],['year','dayofyear']],
+            vectorize=True
+        )
+
+    # re-assing time dimension to da from year,dayofyear
+    return stack_time(mean),stack_time(std)
 
 def c_climatology(da):
     """
@@ -119,6 +169,8 @@ def c_climatology(da):
 
     da   = da.sortby('time')
     time = da.time
+
+    # create an mulitindex mapping time -> (year,dayofyear)
     stacked_time = pd.MultiIndex.from_arrays(
                                             [
                                                 da.time.dt.year.to_pandas(),
@@ -126,8 +178,11 @@ def c_climatology(da):
                                             ],names=('year','dayofyear')
                                         )
 
+    # re-assing time from datetime like to multiindex (year,dayofyear) and
+    # and split mutliindex into year and dauofyear dimension
     da = da.assign_coords(time=stacked_time).unstack('time')
 
+    # to all year,dayofyear matrices in da, apply runnning_clim
     mean,std = xr.apply_ufunc(
             running_clim, da, da.dayofyear,
             input_core_dims  = [['member','year','dayofyear'],['dayofyear']],
@@ -135,9 +190,20 @@ def c_climatology(da):
             vectorize=True
         )
 
+    # re-assing time dimension to da from year,dayofyear
     return stack_time(mean),stack_time(std)
 
 def stack_time(da):
+    """
+    Stacks 'year' and 'dayofyear' dimensions in a xarray.DataArray to a 'time'
+    dimension.
+
+    args:
+        da: xarray.DataArray, requires dims: year and dayofyear
+
+    returns:
+        da: xarray.DataArray, new dimension: time
+    """
 
     da = da.stack(time=('year','dayofyear'))
 
@@ -152,6 +218,21 @@ def stack_time(da):
     return da
 
 def assign_validation_time(ds):
+    """
+    Add validation_time coordinates to xarray.Dataset/DataArray with 'time' and
+    'step' dimensions.
+
+    validation_time = time + step
+
+    time: datetime-like
+    step: pd.Timedelta
+
+    args:
+        ds: xarray.Dataset/DataArray with 'time' and 'step' dimensions
+
+    returns:
+        ds: xarray.Dataset/DataArray with 'validation_time' dimension
+    """
     return ds.assign_coords(validation_time=ds.time+ds.step)
 
 def store_by_location(da,filename):
@@ -211,7 +292,22 @@ def xtrapolate_NAN(x):
     """
     Underfunction of extrapolate_land_mask
 
-    TODO: comment
+    Inter/extrapolate NaN values by meaning over the sorrounding grid points
+    ignoring NaN values.
+
+    if x at grid point [i,j] equals NaN, if x[i,j] == NaN, then
+
+        x[i,j] = np.nanmean( x[i-1,j], x[i+1,j], x[i,j-1], x[i,j+1] )
+
+    if all x[i-1,j], x[i+1,j], x[i,j-1], x[i,j+1] are NaN values, then
+    x[i,j] = NaN
+
+    args:
+        x: np.array 2-dimensional
+
+    returns:
+        x: np.array 2-dimensional
+
     """
 
     x = np.pad(x,pad_width=1,mode='constant',constant_values=np.nan)
@@ -321,6 +417,46 @@ def at_validation(obs,vt,ddays=1):
     out = xr.concat(out,time).sortby(['time','step'])
     return assign_validation_time(out)
 
+def running_mean(hindcast,window):
+    """
+    Apply runnning mean on hindcast per location. Labels centered in the window.
+
+    args:
+        hindcast: xarray.DataArray with step dimension
+        window:   number of steps included in window
+
+    returns:
+        hindcast: xarray.DataArray
+    """
+
+    N   = len(hindcast.location)
+    out = []
+
+    for n,loc in enumerate(hindcast.location):
+
+        print_progress(n,N)
+
+        h = hindcast.sel(location=loc)
+
+        out.append(h.rolling(step=window,center=True)\
+                .mean().dropna('step'))
+    return xr.concat(out,'location')
+
+def absolute(u,v):
+    """
+    Compute the absoulte value of two horizontal components.
+
+    U = sqrt( u**2 + v**2 )
+    
+    args:
+        u: np.array n-dimensional
+        v: np.array n-dimensional
+
+    returns:
+        U: np.array n-dimensional
+    """
+    return np.sqrt( u**2 + v**2 )
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -351,21 +487,6 @@ def climatology_to_validation_time(da,validation_time):
         print_progress((t-(time[0])).values,(time[-1]-time[0]).values)
 
     return xr.concat(tout,time)
-
-def running_mean(hindcast,window):
-
-    N   = len(hindcast.location)
-    out = []
-
-    for n,loc in enumerate(hindcast.location):
-
-        print_progress(n,N)
-
-        h = hindcast.sel(location=loc)
-
-        out.append(h.rolling(step=window,center=True)\
-                .mean().dropna('step'))
-    return xr.concat(out,'location')
 
 def running_mean_o(observations,window):
 

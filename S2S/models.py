@@ -195,6 +195,26 @@ def clim_fc(mean,std,r=1,number_of_members=11):
 
     return xr.concat([mean-r*std,mean+r*std],'member')
 
+def deterministic_gaussian_forecast(mean,std):
+    """
+    Generate random deterministic forecast of same dimensions as mean and std.
+    Mean and std must have identical shape/dims.
+
+    args:
+        mean: xarray.DataArray
+        std: xarray.DataArray
+
+    returns:
+        forecast: xarray.DataArray
+    """
+
+    return xr.apply_ufunc(
+            np.random.normal, mean, std,
+            input_core_dims  = [[],[]],
+            output_core_dims = [[]],
+            vectorize=True,dask='parallelized'
+            )
+
 ################################################################################
 ############################# Depricated #######################################
 ################################################################################

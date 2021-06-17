@@ -349,8 +349,13 @@ def timeseries(
             ):
 
 
+    if observations.location.values.ndim==0:
+        locations = [observations.location]
 
-    for loc in observations.location:
+    else:
+        locations = observations.location
+
+    for loc in locations:
 
         latex.set_style(style='white')
         fig,axes = plt.subplots(len(lead_time),1,
@@ -375,9 +380,14 @@ def timeseries(
             ax.set_xlabel('Forecasted time')
             ax.set_ylabel('')
 
-            o   = observations\
-                    .sel(step=pd.Timedelta(lt,'D'),location=loc)\
-                        .sortby('time')
+            try:
+                o   = observations\
+                        .sel(step=pd.Timedelta(lt,'D'),location=loc)\
+                            .sortby('time')
+            except ValueError:
+                o   = observations\
+                        .sel(step=pd.Timedelta(lt,'D'))\
+                            .sortby('time')
 
             ax.plot(
                     o.validation_time.squeeze(),
@@ -392,30 +402,51 @@ def timeseries(
             subtitle = '    MAE:'
             for cn,c in enumerate(cast):
 
-                c = c\
-                        .sel(step=pd.Timedelta(lt,'D'),location=loc)\
-                            .sortby('time')
+                try:
+                    c = c\
+                            .sel(step=pd.Timedelta(lt,'D'),location=loc)\
+                                .sortby('time')
+                except ValueError:
+                    c = c\
+                            .sel(step=pd.Timedelta(lt,'D'))\
+                                .sortby('time')
+
                 c = c.sel(time=slice(o.time.min(),o.time.max()))
 
-                ax.plot(
-                        c.validation_time.squeeze(),
-                        c.mean('member').squeeze(),
-                        alpha=0.7,
-                        label=clabs[cn],
-                        linewidth=0.5,
-                        zorder=30
-                    )
-                std = c.std('member').squeeze()
-                ax.fill_between(
-                        c.validation_time.squeeze(),
-                        c.mean('member').squeeze()+std,
-                        c.mean('member').squeeze()-std,
-                        alpha=0.3,
-                        zorder=30
-                    )
+                try:
+                    ax.plot(
+                            c.validation_time.squeeze(),
+                            c.mean('member').squeeze(),
+                            alpha=0.7,
+                            label=clabs[cn],
+                            linewidth=0.5,
+                            zorder=30
+                        )
+                    std = c.std('member').squeeze()
+                    ax.fill_between(
+                            c.validation_time.squeeze(),
+                            c.mean('member').squeeze()+std,
+                            c.mean('member').squeeze()-std,
+                            alpha=0.3,
+                            zorder=30
+                        )
 
-                score = xs.mae(o,c.mean('member'),dim=[])\
-                            .mean('time',skipna=True)
+                    score = xs.mae(o,c.mean('member'),dim=[])\
+                                .mean('time',skipna=True)
+
+                except ValueError:
+
+                    ax.plot(
+                            c.validation_time.squeeze(),
+                            c.squeeze(),
+                            alpha=0.7,
+                            label=clabs[cn],
+                            linewidth=0.5,
+                            zorder=30
+                        )
+
+                    score = xs.mae(o,c,dim=[])\
+                                .mean('time',skipna=True)
 
                 subtitle += ' '+clabs[cn]+' '+str(round(float(score.values),2))
 
