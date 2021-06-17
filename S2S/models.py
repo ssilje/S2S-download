@@ -6,6 +6,44 @@ import scipy.stats as stats
 
 import S2S.xarray_helpers as xh
 
+def running_regression_CV(x,index,window=30):
+    """
+    dimensions requirements:
+        name            dim
+
+        year            -2
+        dayofyear       -1
+    """
+    mean  = []
+    std   = []
+
+    pad   = window//2
+
+    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+    index = np.pad(index,pad,mode='wrap')
+
+    index[-pad:] += index[-pad-1]
+    index[:pad]  -= index[-pad-1]
+
+    for ii,idx in enumerate(index[pad:-pad]):
+
+        pool = x[...,np.abs(index-idx)<=pad]
+
+        ymean,ystd = [],[]
+        for yy in range(pool.shape[-2]):
+
+            filtered_pool = np.delete(pool,yy,axis=-2)
+            # regression
+
+            ############
+            ymean.append(np.nanmean(filtered_pool))
+            ystd.append(np.nanstd(filtered_pool))
+
+        mean.append(np.array(ymean))
+        std.append(np.array(ystd))
+
+    return np.stack(mean,axis=-1),np.stack(std,axis=-1)
+
 def regression1D(x,y):
     """
     Returns fitted coeffs by OLS for model

@@ -46,8 +46,7 @@ def crps_ensemble(obs,fc,fair=True):
     A xarray wrapper for CRPS_ensemble()
     """
 
-    # give member dimension to obs
-    obs = obs.broadcast_like(fc)
+    obs = obs.broadcast_like(fc.mean('member'))
 
     return xr.apply_ufunc(
             CRPS_ensemble, obs, fc,
@@ -55,3 +54,13 @@ def crps_ensemble(obs,fc,fair=True):
             output_core_dims = [['time']],
             vectorize=True
         )
+
+def fair_brier_score(observations,forecasts):
+
+    M = forecasts['member'].size
+    e = (forecasts == 1).sum('member')
+    o = observations
+    return (e / M - o) ** 2 - e * (M - e) / (M ** 2 * (M - 1))
+
+def fair_factor(ensemble_size):
+    return ensemble_size/(ensemble_size+1)

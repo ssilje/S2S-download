@@ -31,6 +31,21 @@ def quick_map(da,point=None):
     plt.show()
     plt.close()
 
+def loc_from_name(loc):
+    """
+    Returns name of Barentswatch location from loc number
+    """
+    try:
+
+        with open(config['SITES'], 'r') as file:
+            data = json.load(file)
+            for line in data:
+                if line['name']==loc:
+                    return line["localityNo"]
+
+    except ValueError:
+        return loc
+
 def name_from_loc(loc):
     """
     Returns name of Barentswatch location from loc number
@@ -62,7 +77,8 @@ def save_fig(fig,filename):
     """
     Save figure as pdf and png
     """
-    make_dir(config['SAVEFIG'])
+    path = filename.split('/')[0]
+    make_dir(config['SAVEFIG']+'/'+path)
     # file,converge = latex.save_figure(fig,config['SAVEFIG']+filename)
     plt.savefig(config['SAVEFIG']+\
                     filename+'.png',dpi='figure',bbox_inches='tight')
@@ -189,7 +205,7 @@ def skill_plot(in_mod,in_clim,dim='validation_time.month',
             mod = xh.assign_validation_time(mod)
             clim = xh.assign_validation_time(clim)
 
-        fname    = filename+'_'+\
+        fname    = 'skill/'+filename+'_'+\
                                 name_from_loc(str(clim.location.values))
         suptitle = title+' '+name_from_loc(str(clim.location.values))
 
@@ -221,7 +237,10 @@ def skill_plot(in_mod,in_clim,dim='validation_time.month',
 
             xdata,ydata = xr.align(xdata,ydata)
 
-            ss = 1-xdata.mean('time',skipna=True)/ydata.mean('time',skipna=True)
+            ss = 1-(xdata/ydata).mean('time',skipna=True)
+
+            zx = xdata.mean('time',skipna=True)
+            zy = ydata.mean('time',skipna=True)
 
             x = np.array([td.days for td in ss.step.to_pandas()])
             z = ss.values
@@ -232,11 +251,11 @@ def skill_plot(in_mod,in_clim,dim='validation_time.month',
             ax.set_xlabel('lead time [D]')
             ax.set_ylabel(ylab)
 
-            ax.plot(x,z,'o-',alpha=0.4,ms=1)
-            # ax.plot(x,zx,'o-',alpha=0.4,ms=1,label='x')
-            # ax.plot(y,zy,'o-',alpha=0.4,ms=1,label='y')
-            # ax.legend()
-            ax.set_ylim((-1,1))
+            ax.plot(x,z,'o-',alpha=0.4,ms=1,label='ss')
+            ax.plot(x,zx,'o-',alpha=0.4,ms=1,label='fc')
+            ax.plot(x,zy,'o-',alpha=0.4,ms=1,label='clim')
+            ax.legend()
+            # ax.set_ylim((-1,1))
             ax.plot(
                     [0, 1],[0.5, 0.5],'k',
                     transform=ax.transAxes,alpha=0.7,
@@ -246,10 +265,83 @@ def skill_plot(in_mod,in_clim,dim='validation_time.month',
         fig.suptitle(suptitle)
         save_fig(fig,fname)
 
+def residual_plot(in_mod,in_clim,dim='validation_time.month',
+                                filename='',
+                                title='',
+                                ylab=''):
+
+    for loc in in_mod.location:
+
+        mod  = in_mod.sel(location=loc)
+        clim = in_clim.sel(location=loc)
+
+        if dim.split('.')[0]=='validation_time':
+            mod = xh.assign_validation_time(mod)
+            clim = xh.assign_validation_time(clim)
+
+        fname    = 'residuals/'+filename+'_'+\
+                                name_from_loc(str(clim.location.values))
+        suptitle = title+' '+name_from_loc(str(clim.location.values))
+
+        dim_name = dim.split('.')[0]
+        ###########################
+        #### Initialize figure ####
+        ###########################
+        latex.set_style(style='white')
+        subplots = fg(mod,dim)
+        fig,axes = plt.subplots(subplots[0],subplots[1],
+                        figsize=latex.set_size(width='thesis',
+                            subplots=(subplots[0],subplots[1]))
+                        )
+        axes = axes.flatten()
+        ###########################
+
+        x_group = list(mod.groupby(dim))
+        y_group = list(clim.groupby(dim))
+
+        for n,(xlabel,xdata) in enumerate(x_group):
+
+            ylabel,ydata = y_group[n]
+            # this approach is not bulletproof
+            # check manually that right groups go together
+            print('\tgraphics.skill_plot: matched groups ',xlabel,ylabel)
+
+            xdata = xdata.unstack().sortby(['time','step'])
+            ydata = ydata.unstack().sortby(['time','step'])
+
+            xdata,ydata = xr.align(xdata,ydata)
+
+            xx = xdata
+            yy = ydata
+
+            x = np.array([td.days for td in xx.step.to_pandas()])
+            xx = xx.values.transpose()
+            yy = yy.values.transpose()
+
+            ax = axes[n]
+
+            ax.set_title(month(xlabel))
+            ax.set_xlabel('lead time [D]')
+            ax.set_ylabel(ylab)
+
+            ax.plot(x,z,'o',color='k',alpha=0.4,ms=1)
+            # ax.plot(x,zx,'o-',alpha=0.4,ms=1,label='fc')
+            # ax.plot(x,zy,'o-',alpha=0.4,ms=1,label='clim')
+            # ax.legend()
+            # ax.set_ylim((-1,1))
+            ax.plot(
+                    x,np.full_like(x,0),'k',
+                    alpha=0.7,
+                    linewidth=0.6
+                    )
+
+        fig.suptitle(suptitle)
+        save_fig(fig,fname)
+
 def timeseries(
             observations,
             cast,
-            lead_time=[7,14,21],
+            lead_time=[9,16,23],
             olab='obs',
             clabs=['forecast'],
             filename='',
@@ -267,7 +359,8 @@ def timeseries(
                         )
         clabs = clabs*len(cast)
 
-        fname = 'timeseries_'+filename+'_'+str(name_from_loc(loc.values))
+        fname = 'timeseries/timeseries_'+\
+                    filename+'_'+str(name_from_loc(loc.values))
 
         for n,lt in enumerate(lead_time):
 
@@ -332,7 +425,9 @@ def timeseries(
         fig.suptitle(str(name_from_loc(loc.values))+' '+title)
         save_fig(fig,fname)
 
-def point_map(da,c='k'):
+def point_map(da,c='r',poi=None):
+
+    name = poi
 
     latex.set_style(style='white')
     fig,axes = plt.subplots(1,1,\
@@ -341,7 +436,7 @@ def point_map(da,c='k'):
 
     ax = axes
 
-    ax.coastlines(resolution='50m', color='black',\
+    ax.coastlines(resolution='10m', color='black',\
                             linewidth=0.2)
 
     ax.set_extent((0,25,55,75),crs=ccrs.PlateCarree())
@@ -353,9 +448,21 @@ def point_map(da,c='k'):
         x = z.lon.values
         y = z.lat.values
 
-        ax.plot(x, y, marker='o', color=c, markersize=1,
-            alpha=0.7, transform=ccrs.PlateCarree())
+        ax.plot(x, y, marker='o', color='k', markersize=1,
+            alpha=0.6, transform=ccrs.PlateCarree())
+    if poi:
+        poi = loc_from_name(poi)
+        z = da.sel(location=str(poi))
+        x = z.lon.values
+        y = z.lat.values
 
+        ax.plot(x, y, marker='o', color=c, markersize=1,
+            alpha=1, transform=ccrs.PlateCarree())
+
+        ax.text(x+1., y, name,
+            verticalalignment='center', horizontalalignment='left',
+            transform=ccrs.PlateCarree(),
+            bbox=dict(facecolor='red', alpha=0.5, boxstyle='round'))
     plt.show()
 
 def skill_map(
@@ -363,7 +470,7 @@ def skill_map(
               climate,
               dim='validation_time.month',
               title='SS',
-              lead_time=[7,14,21],
+              lead_time=[9,16,23],
               filename=''
              ):
 

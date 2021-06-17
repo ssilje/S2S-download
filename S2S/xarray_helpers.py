@@ -198,9 +198,12 @@ def load_by_location(location,filename):
 
         print_progress(n,N)
 
-        out.append(
-            xr.open_dataset(config['VALID_DB']+'/'+loc+'_'+filename+'.nc')
-            )
+        try:
+            out.append(
+                xr.open_dataset(config['VALID_DB']+'/'+loc+'_'+filename+'.nc')
+                )
+        except FileNotFoundError:
+            pass
 
     return xr.concat(out,'location')
 
@@ -287,39 +290,6 @@ def interp_to_loc(observations,hindcast):
                 )
     return xr.concat(out,'location')
 
-################################################################################
-################################################################################
-################################################################################
-def climatology_to_validation_time(da,validation_time):
-    """
-    TODO: Vectorize, incredibly slow routine but haven't figured out how to do
-    this in a smart way yet...
-
-    args:
-        da:              xr.DataArray with step and month dimension
-        validation_time: xr.DataArray with step + time dimension
-
-    returns:
-        climatology stacked to match validation time: xarray.DataArray
-    """
-    print('\t\txarray_helpers.climatology_to_validation_time()')
-    time = validation_time.time
-    step = validation_time.step
-
-    tout = []
-    for t in time:
-        sout = []
-        for s in step:
-            # can switch pd.Timestamp((t+s).values).month with (t+s).dt.month (?)
-            sout.append(da.sel(month=pd.Timestamp((t+s).values).month,step=s))
-        tout.append(xr.concat(sout,'step').drop('month'))
-
-        print_progress((t-(time[0])).values,(time[-1]-time[0]).values)
-
-    return xr.concat(tout,time)
-
-
-
 def at_validation(obs,vt,ddays=1):
     """
     args:
@@ -351,7 +321,36 @@ def at_validation(obs,vt,ddays=1):
     out = xr.concat(out,time).sortby(['time','step'])
     return assign_validation_time(out)
 
+################################################################################
+################################################################################
+################################################################################
+def climatology_to_validation_time(da,validation_time):
+    """
+    TODO: Vectorize, incredibly slow routine but haven't figured out how to do
+    this in a smart way yet...
 
+    args:
+        da:              xr.DataArray with step and month dimension
+        validation_time: xr.DataArray with step + time dimension
+
+    returns:
+        climatology stacked to match validation time: xarray.DataArray
+    """
+    print('\t\txarray_helpers.climatology_to_validation_time()')
+    time = validation_time.time
+    step = validation_time.step
+
+    tout = []
+    for t in time:
+        sout = []
+        for s in step:
+            # can switch pd.Timestamp((t+s).values).month with (t+s).dt.month (?)
+            sout.append(da.sel(month=pd.Timestamp((t+s).values).month,step=s))
+        tout.append(xr.concat(sout,'step').drop('month'))
+
+        print_progress((t-(time[0])).values,(time[-1]-time[0]).values)
+
+    return xr.concat(tout,time)
 
 def running_mean(hindcast,window):
 
