@@ -39,7 +39,9 @@ class Archive:
         date = kwargs['date']
 
         var = {
-                'sst':'sea_surface_temperature'
+                'sst':'sea_surface_temperature',
+                'u10':'10m_u_component_of_wind',
+                'v10':'10m_v_component_of_wind'
             }[var]
         return '_'.join([var,date.strftime('%Y%m%d')])+'.nc'
 
@@ -51,27 +53,41 @@ class Archive:
         run   = kwargs['run']
         ftype = kwargs['ftype']
 
-        if kwargs['high_res']:
+        if var=='sst':
+
+            if kwargs['high_res']:
+                return var+'/'+'_'.join(
+                        [
+                            var,
+                            'CY46R1_CY47R1',
+                            '05x05',
+                            date.strftime('%Y-%m-%d'),
+                            run,
+                            ftype
+                        ]
+                    ) + '.grb'
+            else:
+                return var+'/'+'_'.join(
+                        [
+                            var,
+                            'CY46R1_CY47R1',
+                            date.strftime('%Y-%m-%d'),
+                            run,
+                            ftype
+                        ]
+                    ) + '.grb'
+
+        elif var[1:]=='10':
+
             return var+'/'+'_'.join(
                     [
                         var,
-                        'CY46R1_CY47R1',
-                        '05x05',
+                        'CY46R1',
                         date.strftime('%Y-%m-%d'),
-                        run,
-                        ftype
+                        run
                     ]
                 ) + '.grb'
-        else:
-            return var+'/'+'_'.join(
-                    [
-                        var,
-                        'CY46R1_CY47R1',
-                        date.strftime('%Y-%m-%d'),
-                        run,
-                        ftype
-                    ]
-                ) + '.grb'
+
 
     @staticmethod
     def BW_in_filename(**kwargs):
@@ -224,7 +240,7 @@ class LoadLocal:
                                     )
                 if not os.path.exists(self.in_path+filename):
                     OK = False
-
+            
             if OK:
                 members = []
                 for n,run in enumerate(runs):
