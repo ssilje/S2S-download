@@ -14,14 +14,15 @@ import S2S.models            as models
 import S2S.graphics.graphics as gr
 
 path_e = 'wind10m/'
-
+long_name = 'absolute_t2m'
 Archive().make_dir(config['VALID_DB']+path_e)
 
 domainID = 'norwegian_coast'
 
-var      = 'abs_wind'
-var1     = 'u10'
-var2     = 'v10'
+var      = 't2m'
+
+var1     = False
+var2     = False
 
 t_start  = (2019,7,1)
 t_end    = (2020,6,26)
@@ -40,59 +41,84 @@ high_res             = False
 # steps = pd.to_timedelta([7,14,23,30,37,44],'D')
 steps = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
 
+
+    
+    
 print('\nProcess hindcast')
 if process_hindcast:
 
-    print('\tLoad hindcast')
-    hindcast_u = ECMWF_S2SH(high_res=high_res)\
-                    .load(
-                            var1,
-                            t_start,
-                            t_end,
-                            domainID,
-                            download=False,
-                            x_landmask=False
-                        )[var1]
+    if var1 is False:
+        
+        print('\tLoad hindcast')
+        hindcast = ECMWF_S2SH(high_res=high_res)\
+                        .load(
+                                var1,
+                                t_start,
+                                t_end,
+                                domainID,
+                                download=False,
+                                x_landmask=False
+                            )[var1]
 
-    hindcast_u = hindcast_u.sortby(['time','step'])
+        hindcast = hindcast.sortby(['time','step'])
 
-    print('\tApply 7D running mean along lead time dimension')
-    hindcast_u = hindcast_u.rolling(step=7,center=True)\
-                                    .mean().dropna('step')
+        print('\tApply 7D running mean along lead time dimension')
+        hindcast = hindcast.rolling(step=7,center=True)\
+                                        .mean().dropna('step')
 
-    print('\tKeep only lead times of interest')
-    hindcast_u = hindcast_u.where(hindcast_u.step.isin(steps),drop=True)
+        print('\tKeep only lead times of interest')
+        hindcast = hindcast.where(hindcast.step.isin(steps),drop=True)
+    else:     
+        print('\tLoad hindcast')
+        hindcast_u = ECMWF_S2SH(high_res=high_res)\
+                        .load(
+                                var1,
+                                t_start,
+                                t_end,
+                                domainID,
+                                download=False,
+                                x_landmask=False
+                            )[var1]
 
-    print('\tLoad hindcast')
-    hindcast_v = ECMWF_S2SH(high_res=high_res)\
-                    .load(
-                            var2,
-                            t_start,
-                            t_end,
-                            domainID,
-                            download=False,
-                            x_landmask=False
-                        )[var2]
+        hindcast_u = hindcast_u.sortby(['time','step'])
 
-    hindcast_v = hindcast_v.sortby(['time','step'])
+        print('\tApply 7D running mean along lead time dimension')
+        hindcast_u = hindcast_u.rolling(step=7,center=True)\
+                                        .mean().dropna('step')
 
-    print('\tApply 7D running mean along lead time dimension')
-    hindcast_v = hindcast_v.rolling(step=7,center=True)\
-                                    .mean().dropna('step')
+        print('\tKeep only lead times of interest')
+        hindcast_u = hindcast_u.where(hindcast_u.step.isin(steps),drop=True)
 
-    print('\tKeep only lead times of interest')
-    hindcast_v = hindcast_v.where(hindcast_v.step.isin(steps),drop=True)
+        print('\tLoad hindcast')
+        hindcast_v = ECMWF_S2SH(high_res=high_res)\
+                        .load(
+                                var2,
+                                t_start,
+                                t_end,
+                                domainID,
+                                download=False,
+                                x_landmask=False
+                            )[var2]
 
-    print('\tCompute absolute wind')
-    hindcast_u,hindcast_v = xr.align(hindcast_u,hindcast_v)
+        hindcast_v = hindcast_v.sortby(['time','step'])
 
-    hindcast = xr.apply_ufunc(
-                    xh.absolute,hindcast_u,hindcast_v,
-                    input_core_dims  = [[],[]],
-                    output_core_dims = [[]],
-                    vectorize=True,dask='parallelized'
-                )
-    hindcast = hindcast.rename(var)
+        print('\tApply 7D running mean along lead time dimension')
+        hindcast_v = hindcast_v.rolling(step=7,center=True)\
+                                        .mean().dropna('step')
+
+        print('\tKeep only lead times of interest')
+        hindcast_v = hindcast_v.where(hindcast_v.step.isin(steps),drop=True)
+
+        print('\tCompute absolute wind')
+        hindcast_u,hindcast_v = xr.align(hindcast_u,hindcast_v)
+
+        hindcast = xr.apply_ufunc(
+                        xh.absolute,hindcast_u,hindcast_v,
+                        input_core_dims  = [[],[]],
+                        output_core_dims = [[]],
+                        vectorize=True,dask='parallelized'
+                    )
+        hindcast = hindcast.rename(var)
 
     try:
         hindcast = hindcast.drop('valid_time')
@@ -109,7 +135,7 @@ if process_hindcast:
         pass
 
     # store in absolute values
-    hindcast.to_netcdf(config['VALID_DB']+path_e+'absolute_wind_hindcast.nc')
+    hindcast.to_netcdf(config['VALID_DB']+path_e+long_name+'_hindcast.nc')
 
     print('\tCompute model climatology')
     mean,std = xh.c_climatology(hindcast)
@@ -119,14 +145,14 @@ if process_hindcast:
     hindcast_a = hindcast_a.rename(var)
 
     # store hindcast anomlies
-    hindcast_a.to_netcdf(config['VALID_DB']+path_e+\
-                                'absolute_wind_anomalies_hindcast.nc')
+    hindcast_a.to_netcdf(config['VALID_DB']+path_e+long_name+\
+                                '_anomalies_hindcast.nc')
 
-hindcast = xr.open_dataset(config['VALID_DB']+path_e+\
-                                'absolute_wind_hindcast.nc')[var]
+hindcast = xr.open_dataset(config['VALID_DB']+path_e+long_name+\
+                                '_hindcast.nc')[var]
 
-hindcast_a = xr.open_dataset(config['VALID_DB']+path_e+\
-                            'absolute_wind_anomalies_hindcast.nc')[var]
+hindcast_a = xr.open_dataset(config['VALID_DB']+path_e+long_name+\
+                            '_anomalies_hindcast.nc')[var]
 
 print('\nProcess ERA as observations')
 if process_era:
