@@ -13,7 +13,7 @@ import S2S.xarray_helpers    as xh
 import S2S.models            as models
 import S2S.graphics.graphics as gr
 
-path_e = 'wind10m/'
+path_e = 't2m/'
 long_name = 'absolute_t2m'
 Archive().make_dir(config['VALID_DB']+path_e)
 
