@@ -13,16 +13,22 @@ import S2S.xarray_helpers    as xh
 import S2S.models            as models
 import S2S.graphics.graphics as gr
 
+import scripts.Henrik.create_domain_file
+
 path_e = 't2m/'
 long_name = 'absolute_t2m'
 Archive().make_dir(config['VALID_DB']+path_e)
 
 domainID = 'norwegian_coast'
 
-var      = 't2m'
+#var      = 't2m'
 
-var1     = False
-var2     = False
+#var1     = False
+#var2     = False
+
+var      = 'abs_wind'
+var1     = 'u10'
+var2     = 'v10'
 
 t_start  = (2019,7,1)
 t_end    = (2020,6,26)
@@ -32,8 +38,8 @@ t_end    = (2020,6,26)
 clim_t_start  = (1999,1,1)
 clim_t_end    = (2021,1,4)
 
-process_hindcast     = False
-process_era          = False
+process_hindcast     = True
+process_era          = True
 make_time_series     = True
 
 high_res             = False
@@ -52,13 +58,13 @@ if process_hindcast:
         print('\tLoad hindcast')
         hindcast = ECMWF_S2SH(high_res=high_res)\
                         .load(
-                                var1,
+                                var,
                                 t_start,
                                 t_end,
                                 domainID,
                                 download=False,
                                 x_landmask=False
-                            )[var1]
+                            )[var]
 
         hindcast = hindcast.sortby(['time','step'])
 
