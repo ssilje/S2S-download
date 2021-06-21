@@ -7,7 +7,7 @@ import time as time_lib
 import gridpp
 
 from S2S.local_configuration import config
-from S2S.data_handler        import BarentsWatch, ERA5, ECMWF_S2SH, Archive
+from S2S.data_handler        import ERA5, ECMWF_S2SH, Archive
 
 import S2S.xarray_helpers    as xh
 import S2S.models            as models
@@ -401,3 +401,5 @@ if make_time_series:
                     clabs=['random','EC_a'],
                     lead_time=[35,42]
                 )
+    
+    crps_mod  = xs.crps_ensemble(val_obs[var],hindcast[var],dim=[])
