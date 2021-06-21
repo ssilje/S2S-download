@@ -21,14 +21,14 @@ Archive().make_dir(config['VALID_DB']+path_e)
 
 domainID = 'norwegian_coast'
 
-#var      = 't2m'
+var      = 't2m'
 
-#var1     = False
-#var2     = False
+var1     = False
+var2     = False
 
-var      = 'abs_wind'
-var1     = 'u10'
-var2     = 'v10'
+#var      = 'abs_wind'
+#var1     = 'u10'
+#var2     = 'v10'
 
 t_start  = (2019,7,1)
 t_end    = (2020,6,26)
@@ -162,24 +162,29 @@ hindcast_a = xr.open_dataset(config['VALID_DB']+path_e+long_name+\
 
 print('\nProcess ERA as observations')
 if process_era:
+    if var1 is False:
+        print('\tLoad ERA')
+        era = ERA5(high_res=high_res)\
+                    .load(var,clim_t_start,clim_t_end,domainID)[var]
+        
+    else:     
+        print('\tLoad ERA')
+        era_u = ERA5(high_res=high_res)\
+                    .load(var1,clim_t_start,clim_t_end,domainID)[var1]
 
-    print('\tLoad ERA')
-    era_u = ERA5(high_res=high_res)\
-                .load(var1,clim_t_start,clim_t_end,domainID)[var1]
+        era_v = ERA5(high_res=high_res)\
+                    .load(var2,clim_t_start,clim_t_end,domainID)[var2]
 
-    era_v = ERA5(high_res=high_res)\
-                .load(var2,clim_t_start,clim_t_end,domainID)[var2]
+        era_u,era_v = xr.align(era_u,era_v)
 
-    era_u,era_v = xr.align(era_u,era_v)
+        era = xr.apply_ufunc(
+                        xh.absolute,era_u,era_v,
+                        input_core_dims  = [[],[]],
+                        output_core_dims = [[]],
+                        vectorize=True,dask='parallelized'
+                    )
 
-    era = xr.apply_ufunc(
-                    xh.absolute,era_u,era_v,
-                    input_core_dims  = [[],[]],
-                    output_core_dims = [[]],
-                    vectorize=True,dask='parallelized'
-                )
-
-    era = era.rename(var)
+        era = era.rename(var)
 
     era = era.sortby(['time'])
 
