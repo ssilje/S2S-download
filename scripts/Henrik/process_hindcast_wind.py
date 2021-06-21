@@ -200,19 +200,20 @@ if process_era:
 
     stacked_era_a = (stacked_era-clim_mean)/clim_std
 
-    stacked_era   = stacked_era.drop('validation_time').rename(var)
+    #stacked_era   = stacked_era.drop('validation_time').rename(var) #funka ikkje pga mangla validation_time
+    stacked_era   = stacked_era.rename(var)
     stacked_era_a = stacked_era_a.drop('validation_time').rename(var)
     clim_mean     = clim_mean.drop('validation_time').rename(var)
     clim_std      = clim_std.drop('validation_time').rename(var)
 
     stacked_era.to_netcdf(config['VALID_DB']+path_e+\
-                                'absoulte_wind_era.nc')
+                                long_name + '_era.nc')
     stacked_era_a.to_netcdf(config['VALID_DB']+path_e+\
-                                'absolute_wind_anomalies_era.nc')
+                                long_name + '_anomalies_era.nc')
     clim_mean.to_netcdf(config['VALID_DB']+path_e+\
-                                'absolute_wind_era_mean.nc')
+                                long_name + '_era_mean.nc')
     clim_std.to_netcdf(config['VALID_DB']+path_e+\
-                                'absolute_wind_era_std.nc')
+                                long_name + '_era_std.nc')
 
     print('\tGenerate random forecasts')
     random_fc_a = models.deterministic_gaussian_forecast(
@@ -225,30 +226,32 @@ if process_era:
                                                 )
 
     random_fc_a.to_netcdf(config['VALID_DB']+path_e+\
-                            'absolute_wind_random-forecast_anomalies.nc')[var]
+                            long_name + '_random-forecast_anomalies.nc')
+                            #long_name + '_random-forecast_anomalies.nc')[var]
 
     random_fc.to_netcdf(config['VALID_DB']+path_e+\
-                                'absolute_wind_random-forecast.nc')[var]
+                                long_name + '_random-forecast.nc')
+                                #long_name + '_random-forecast.nc')[var]
 
 if make_time_series:
 
     stacked_era = xr.open_dataset(config['VALID_DB']+path_e+\
-                                            'absoulte_wind_era.nc')[var]
+                                            long_name + '_era.nc')[var]
 
     stacked_era_a = xr.open_dataset(config['VALID_DB']+path_e+\
-                                'absolute_wind_anomalies_era.nc')[var]
+                                long_name + '_anomalies_era.nc')[var]
 
     clim_mean = xr.open_dataset(config['VALID_DB']+path_e+\
-                                'absolute_wind_era_mean.nc')[var]
+                                long_name + '_era_mean.nc')[var]
 
     clim_std = xr.open_dataset(config['VALID_DB']+path_e+\
-                                'absolute_wind_era_std.nc')[var]
+                                long_name + '_era_std.nc')[var]
 
     random_fc = xr.open_dataset(config['VALID_DB']+path_e+\
-                                'absolute_wind_random-forecast.nc')[var]
+                                long_name + '_random-forecast.nc')[var]
 
     random_fc_a = xr.open_dataset(config['VALID_DB']+path_e+\
-                                'absolute_wind_random-forecast_anomalies.nc')[var]
+                                long_name + '_random-forecast_anomalies.nc')[var]
 
     stacked_era = xh.assign_validation_time(
                     stacked_era.isel(lon=5,lat=5).expand_dims('location')\
@@ -295,7 +298,7 @@ if make_time_series:
                     stacked_era,
                     cast=[random_fc],
                     title='EC',
-                    filename='wind_random',
+                    filename=long_name + '_random',
                     clabs=['random_fc'],
                     lead_time=[7, 14]
                 )
@@ -304,7 +307,7 @@ if make_time_series:
                     stacked_era,
                     cast=[random_fc,hindcast,hindcast_a*clim_std + clim_mean],
                     title='EC',
-                    filename='wind_abs_all',
+                    filename= long_name + '_abs_all',
                     clabs=['random_fc','EC','EC_sb'],
                     lead_time=[7, 14]
                 )
@@ -313,7 +316,7 @@ if make_time_series:
                     stacked_era,
                     cast=[hindcast,hindcast_a*clim_std + clim_mean],
                     title='EC',
-                    filename='wind_abs_fc',
+                    filename=long_name + '_abs_fc',
                     clabs=['EC','EC_sb'],
                     lead_time=[7, 14]
                 )
@@ -322,7 +325,7 @@ if make_time_series:
                     stacked_era_a,
                     cast=[random_fc_a,hindcast_a],
                     title='EC',
-                    filename='wind_anom_all',
+                    filename=long_name +'_anom_all',
                     clabs=['random','EC_a'],
                     lead_time=[7, 14]
                 )
@@ -331,7 +334,7 @@ if make_time_series:
                     stacked_era,
                     cast=[random_fc],
                     title='EC',
-                    filename='wind_random',
+                    filename=long_name + '_random',
                     clabs=['random_fc'],
                     lead_time=[21, 28]
                 )
@@ -340,7 +343,7 @@ if make_time_series:
                     stacked_era,
                     cast=[random_fc,hindcast,hindcast_a*clim_std + clim_mean],
                     title='EC',
-                    filename='wind_abs_all',
+                    filename=long_name + '_abs_all',
                     clabs=['random_fc','EC','EC_sb'],
                     lead_time=[21, 28]
                 )
@@ -349,7 +352,7 @@ if make_time_series:
                     stacked_era,
                     cast=[hindcast,hindcast_a*clim_std + clim_mean],
                     title='EC',
-                    filename='wind_abs_fc',
+                    filename=long_name + '_abs_fc',
                     clabs=['EC','EC_sb'],
                     lead_time=[21, 28]
                 )
@@ -358,7 +361,7 @@ if make_time_series:
                     stacked_era_a,
                     cast=[random_fc_a,hindcast_a],
                     title='EC',
-                    filename='wind_anom_all',
+                    filename=long_name + '_anom_all',
                     clabs=['random','EC_a'],
                     lead_time=[21, 28]
                 )
@@ -367,7 +370,7 @@ if make_time_series:
                     stacked_era,
                     cast=[random_fc],
                     title='EC',
-                    filename='wind_random',
+                    filename=long_name + '_random',
                     clabs=['random_fc'],
                     lead_time=[35,42]
                 )
@@ -376,7 +379,7 @@ if make_time_series:
                     stacked_era,
                     cast=[random_fc,hindcast,hindcast_a*clim_std + clim_mean],
                     title='EC',
-                    filename='wind_abs_all',
+                    filename=long_name + '_abs_all',
                     clabs=['random_fc','EC','EC_sb'],
                     lead_time=[35,42]
                 )
@@ -385,7 +388,7 @@ if make_time_series:
                     stacked_era,
                     cast=[hindcast,hindcast_a*clim_std + clim_mean],
                     title='EC',
-                    filename='wind_abs_fc',
+                    filename=long_name + '_abs_fc',
                     clabs=['EC','EC_sb'],
                     lead_time=[35,42]
                 )
@@ -394,7 +397,7 @@ if make_time_series:
                     stacked_era_a,
                     cast=[random_fc_a,hindcast_a],
                     title='EC',
-                    filename='wind_anom_all',
+                    filename=long_name + '_anom_all',
                     clabs=['random','EC_a'],
                     lead_time=[35,42]
                 )
