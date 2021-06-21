@@ -134,20 +134,7 @@ def o_climatology(da):
 
     print('\t\txarray_helpers.o_climatology()')
 
-    da   = da.sortby('time')
-    time = da.time
-
-    # create an mulitindex mapping time -> (year,dayofyear)
-    stacked_time = pd.MultiIndex.from_arrays(
-                                            [
-                                                da.time.dt.year.to_pandas(),
-                                                da.time.dt.dayofyear.to_pandas()
-                                            ],names=('year','dayofyear')
-                                        )
-
-    # re-assing time from datetime like to multiindex (year,dayofyear) and
-    # and split mutliindex into year and dauofyear dimension
-    da = da.assign_coords(time=stacked_time).unstack('time')
+    da = unstack_time(da)
 
     # to all year,dayofyear matrices in da, apply runnning_clim_CV
     mean,std = xr.apply_ufunc(
@@ -167,6 +154,30 @@ def c_climatology(da):
 
     print('\t\txarray_helpers.c_climatology()')
 
+    da = unstack_time(da)
+
+    # to all year,dayofyear matrices in da, apply runnning_clim
+    mean,std = xr.apply_ufunc(
+            running_clim, da, da.dayofyear,
+            input_core_dims  = [['member','year','dayofyear'],['dayofyear']],
+            output_core_dims = [['year','dayofyear'],['year','dayofyear']],
+            vectorize=True
+        )
+
+    # re-assing time dimension to da from year,dayofyear
+    return stack_time(mean),stack_time(std)
+
+def unstack_time(da):
+    """
+    Splits time dimension in da into a 'year' and a 'dayofyear' dimension.
+    Coordinate time must be datetime-like.
+
+    args:
+        da: xarray.DataArray, requires dims: time
+
+    returns:
+        da: xarray.DataArray, new dimensions: year, dayofyear
+    """
     da   = da.sortby('time')
     time = da.time
 
@@ -180,18 +191,7 @@ def c_climatology(da):
 
     # re-assing time from datetime like to multiindex (year,dayofyear) and
     # and split mutliindex into year and dauofyear dimension
-    da = da.assign_coords(time=stacked_time).unstack('time')
-
-    # to all year,dayofyear matrices in da, apply runnning_clim
-    mean,std = xr.apply_ufunc(
-            running_clim, da, da.dayofyear,
-            input_core_dims  = [['member','year','dayofyear'],['dayofyear']],
-            output_core_dims = [['year','dayofyear'],['year','dayofyear']],
-            vectorize=True
-        )
-
-    # re-assing time dimension to da from year,dayofyear
-    return stack_time(mean),stack_time(std)
+    return da.assign_coords(time=stacked_time).unstack('time')
 
 def stack_time(da):
     """
@@ -447,7 +447,7 @@ def absolute(u,v):
     Compute the absoulte value of two horizontal components.
 
     U = sqrt( u**2 + v**2 )
-    
+
     args:
         u: np.array n-dimensional
         v: np.array n-dimensional

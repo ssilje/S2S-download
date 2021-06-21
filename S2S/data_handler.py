@@ -41,7 +41,8 @@ class Archive:
         var = {
                 'sst':'sea_surface_temperature',
                 'u10':'10m_u_component_of_wind',
-                'v10':'10m_v_component_of_wind'
+                'v10':'10m_v_component_of_wind',
+                't2m':'2m_temperature'
             }[var]
         return '_'.join([var,date.strftime('%Y%m%d')])+'.nc'
 
@@ -88,6 +89,16 @@ class Archive:
                     ]
                 ) + '.grb'
 
+        elif var=='t2m':
+
+            return var+'/'+'_'.join(
+                    [
+                        var,
+                        'CY46R1',
+                        date.strftime('%Y-%m-%d'),
+                        run
+                    ]
+                ) + '.grb'
 
     @staticmethod
     def BW_in_filename(**kwargs):
@@ -240,7 +251,7 @@ class LoadLocal:
                                     )
                 if not os.path.exists(self.in_path+filename):
                     OK = False
-            
+
             if OK:
                 members = []
                 for n,run in enumerate(runs):
