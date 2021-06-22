@@ -98,7 +98,6 @@ if process_hindcast:
         hindcast = hindcast.drop('valid_time')
     except ValueError:
         pass
-
     try:
         hindcast = hindcast.drop('number')
     except ValueError:

@@ -103,65 +103,39 @@ def skill_agg(
 
                 lead_time = np.array([td.days for td in ydata.step.to_pandas()])
 
-                score_fc     = sc.crps_ensemble(ydata,xdata)
+                score_mean   = sc.crps_ensemble(ydata,xdata)
                 score_clim   = xs.crps_gaussian(ydata,cmdata,csdata,dim=[])
 
-                if dim.split('.')[1]=='season':
-                    min_period=6
-                else:
-                    min_period=2
-
-                SS = SSCORE(
-                            observations=score_clim,
-                            forecast=score_fc
-                        ).bootstrap(N=10000,min_period=min_period)
-
                 ax.plot(
                         lead_time,
-                        SS.low_q,
-                        '--',color='grey',linewidth=0.7,
-                        alpha=0.7,
-                        label='95\% CI'
+                        ss(score_mean,score_clim,time='before',est='mean'),
+                        '--',color='k',linewidth=0.7,
+                        alpha=0.5,
+                        label='before mean'
                         )
                 ax.plot(
                         lead_time,
-                        SS.high_q,
-                        '--',color='grey',linewidth=0.7,
-                        alpha=0.7,
-                        label='95\% CI'
+                        ss(score_mean,score_clim,time='after',est='mean'),
+                        '-',color='k',linewidth=0.7,
+                        alpha=0.5,
+                        label='after mean'
                         )
-                ax.fill_between(
-                        lead_time,
-                        SS.high_q,
-                        SS.low_q,
-                        alpha=0.3,
-                        zorder=30
-                    )
                 ax.plot(
                         lead_time,
-                        SS.est,
-                        '-',color='black',linewidth=0.9,
-                        alpha=0.7,
-                        label='MAE SS est.'
+                        ss(score_mean,score_clim,time='before',est='median'),
+                        '--',color='r',linewidth=0.7,
+                        alpha=0.5,
+                        label='before median'
                         )
-
-                for lt in lead_time:
-                    ax.text(
-                            lt,1.1,#0.83,
-                            str(
-                                SS.number_of_years\
-                                    .sel(step=pd.Timedelta(lt,'D')).values
-                            ),
-                            horizontalalignment='center',
-                            verticalalignment='center',
-                            color='red',label='number of years for est.'
-                        )
-                plt.plot([], [], ' ',
-                            label='Red: Number of years per estimate'
+                ax.plot(
+                        lead_time,
+                        ss(score_mean,score_clim,time='after',est='median'),
+                        '-',color='r',linewidth=0.7,
+                        alpha=0.5,
+                        label='after median'
                         )
 
                 ax.set_ylim((-1,1))
-                ax.set_xlim((lead_time[0]-1,lead_time[-1]+1))
 
                 ax.set_title(month(xlabel))
                 ax.set_ylabel(ylab)
@@ -184,7 +158,7 @@ def skill_agg(
 
         handles, labels = ax.get_legend_handles_labels()
         by_label = OrderedDict(zip(labels, handles))
-        legend = fig.legend(
+        fig.legend(
                     by_label.values(),
                     by_label.keys(),
                     loc='upper center',
@@ -193,7 +167,6 @@ def skill_agg(
                     shadow=True,
                     ncol=4
                 )
-        legend.get_texts()[0].set_color('r')
 
         fig.suptitle(suptitle)
         save_fig(fig,fname)

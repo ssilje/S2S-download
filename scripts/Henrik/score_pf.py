@@ -43,8 +43,15 @@ clim_std      = xh.load_by_location(observations.location,'clim_std_temp')[var]
 stacked_era   = xh.load_by_location(observations.location,'era_v_temp')[var]
 stacked_era_a = xh.load_by_location(observations.location,'era_v_a_temp')[var]
 
-era_mean     = xh.load_by_location(observations.location,'era_clim_mean_temp')[var]
-era_std      = xh.load_by_location(observations.location,'era_clim_std_temp')[var]
+#
+era_mean     = xh.load_by_location(
+                                    observations.location,
+                                    'era_clim_mean_temp'
+                                )[var]
+era_std      = xh.load_by_location(
+                                    observations.location,
+                                    'era_clim_std_temp'
+                                )[var]
 
 # hindcast      = hindcast.sel(
 #                             time=slice(stacked_obs.time.min(),
@@ -69,6 +76,9 @@ era_fc        = xh.assign_validation_time(era_fc)
 stacked_era   = xh.assign_validation_time(stacked_era)
 stacked_era_a = xh.assign_validation_time(stacked_era_a)
 
+
+models.bias_adjustment_torrabla(hindcast,stacked_era,clim_std=clim_std)
+exit()
 # gr.point_map(hindcast,poi='Hisdalen')
 
 # gr.timeseries(
@@ -189,122 +199,124 @@ stacked_era_a = xh.assign_validation_time(stacked_era_a)
 #                 clabs=['clim','EC'],
 #                 lead_time=[30,37]
 #             )
+#
+mae.skill_agg(
+            stacked_era,
+            [hindcast],
+            era_mean,
+            era_std,
+            title='ERA',
+            filename='mae_ERA',
+            dim='validation_time.month'
+        )
 
-# mae.skill_agg(
-#             stacked_era,
-#             [hindcast],
-#             era_mean,
-#             era_std,
-#             title='ERA',
-#             filename='mae_ERA',
-#             dim='validation_time.month'
-#         )
+mae.skill_agg(
+            stacked_era,
+            [(hindcast_a*era_std)+era_mean],
+            era_mean,
+            era_std,
+            title='ERA Simple Bias Adjustment',
+            filename='mae_ERA_sb',
+            dim='validation_time.month'
+        )
+mae.skill_agg(
+            stacked_era_a,
+            [hindcast_a],
+            xr.full_like(stacked_era_a,0),
+            xr.full_like(stacked_era_a,1),
+            title='ERA anomalies',
+            filename='mae_ERA_a',
+            dim='validation_time.month'
+        )
+
+mae.skill_agg(
+            stacked_obs,
+            [hindcast],
+            clim_mean,
+            clim_std,
+            title='Barentswatch',
+            filename='mae_BW',
+            dim='validation_time.month'
+        )
 #
-# mae.skill_agg(
-#             stacked_era,
-#             [(hindcast_a*era_std)+era_mean],
-#             era_mean,
-#             era_std,
-#             title='ERA Simple Bias Adjustment',
-#             filename='mae_ERA_sb',
-#             dim='validation_time.month'
-#         )
-# mae.skill_agg(
-#             stacked_era_a,
-#             [hindcast_a],
-#             xr.full_like(stacked_era_a,0),
-#             xr.full_like(stacked_era_a,1),
-#             title='ERA anomalies',
-#             filename='mae_ERA_a',
-#             dim='validation_time.month'
-#         )
-#
-# mae.skill_agg(
-#             stacked_obs,
-#             [hindcast],
-#             clim_mean,
-#             clim_std,
-#             title='Barentswatch',
-#             filename='mae_BW',
-#             dim='validation_time.month'
-#         )
-#
-# mae.skill_agg(
-#             stacked_obs,
-#             [(hindcast_a*clim_std)+clim_mean],
-#             clim_mean,
-#             clim_std,
-#             title='Barentswatch Simple Bias Adjustment',
-#             filename='mae_BW_sb',
-#             dim='validation_time.month'
-#         )
-# mae.skill_agg(
-#             stacked_obs_a,
-#             [hindcast_a],
-#             xr.full_like(stacked_obs_a,0),
-#             xr.full_like(stacked_obs_a,1),
-#             title='Barentswatch anomalies',
-#             filename='mae_BW_a',
-#             dim='validation_time.month'
-#         )
-#
-# crps.skill_agg(
-#             stacked_era,
-#             [hindcast],
-#             era_mean,
-#             era_std,
-#             title='ERA',
-#             filename='crps_ERA',
-#             dim='validation_time.month'
-#         )
-#
-# crps.skill_agg(
-#             stacked_era,
-#             [(hindcast_a*era_std)+era_mean],
-#             era_mean,
-#             era_std,
-#             title='ERA Simple Bias Adjustment',
-#             filename='crps_ERA_sb',
-#             dim='validation_time.month'
-#         )
-# crps.skill_agg(
-#             stacked_era_a,
-#             [hindcast_a],
-#             xr.full_like(stacked_era_a,0),
-#             xr.full_like(stacked_era_a,1),
-#             title='ERA anomalies',
-#             filename='crps_ERA_a',
-#             dim='validation_time.month'
-#         )
-#
-# crps.skill_agg(
-#             stacked_obs,
-#             [hindcast],
-#             clim_mean,
-#             clim_std,
-#             title='Barentswatch',
-#             filename='crps_BW',
-#             dim='validation_time.month'
-#         )
-#
-# crps.skill_agg(
-#             stacked_obs,
-#             [(hindcast_a*clim_std)+clim_mean],
-#             clim_mean,
-#             clim_std,
-#             title='Barentswatch Simple Bias Adjustment',
-#             filename='crps_BW_sb',
-#             dim='validation_time.month'
-#         )
-# crps.skill_agg(
-#             stacked_obs_a,
-#             [hindcast_a],
-#             xr.full_like(stacked_obs_a,0),
-#             xr.full_like(stacked_obs_a,1),
-#             title='Barentswatch anomalies',
-#             filename='crps_BW_a',
-#             dim='validation_time.month'
-#         )
+mae.skill_agg(
+            stacked_obs,
+            [(hindcast_a*clim_std)+clim_mean],
+            clim_mean,
+            clim_std,
+            title='Barentswatch Simple Bias Adjustment',
+            filename='mae_BW_sb',
+            dim='validation_time.month'
+        )
+
+mae.skill_agg(
+            stacked_obs_a,
+            [hindcast_a],
+            xr.full_like(stacked_obs_a,0),
+            xr.full_like(stacked_obs_a,1),
+            title='Barentswatch anomalies',
+            filename='mae_BW_a',
+            dim='validation_time.month'
+        )
+
+crps.skill_agg(
+            stacked_era,
+            [hindcast],
+            era_mean,
+            era_std,
+            title='ERA',
+            filename='crps_ERA',
+            dim='validation_time.month'
+        )
+
+crps.skill_agg(
+            stacked_era,
+            [(hindcast_a*era_std)+era_mean],
+            era_mean,
+            era_std,
+            title='ERA Simple Bias Adjustment',
+            filename='crps_ERA_sb',
+            dim='validation_time.month'
+        )
+        
+crps.skill_agg(
+            stacked_era_a,
+            [hindcast_a],
+            xr.full_like(stacked_era_a,0),
+            xr.full_like(stacked_era_a,1),
+            title='ERA anomalies',
+            filename='crps_ERA_a',
+            dim='validation_time.month'
+        )
+
+crps.skill_agg(
+            stacked_obs,
+            [hindcast],
+            clim_mean,
+            clim_std,
+            title='Barentswatch',
+            filename='crps_BW',
+            dim='validation_time.month'
+        )
+
+crps.skill_agg(
+            stacked_obs,
+            [(hindcast_a*clim_std)+clim_mean],
+            clim_mean,
+            clim_std,
+            title='Barentswatch Simple Bias Adjustment',
+            filename='crps_BW_sb',
+            dim='validation_time.month'
+        )
+crps.skill_agg(
+            stacked_obs_a,
+            [hindcast_a],
+            xr.full_like(stacked_obs_a,0),
+            xr.full_like(stacked_obs_a,1),
+            title='Barentswatch anomalies',
+            filename='crps_BW_a',
+            dim='validation_time.month'
+        )
 #
 # brier.skill_agg(
 #             stacked_era,
@@ -335,7 +347,7 @@ stacked_era_a = xh.assign_validation_time(stacked_era_a)
 #         hindcast_a*era_std + era_mean,
 #         era_mean,
 #         era_std,
-#         dim='validation_time.season',
+#         dim='validation_time.month',
 #         title='ERA Simple Bias Adjustment',
 #         filename='ERA_sb'
 #         )
@@ -350,29 +362,29 @@ stacked_era_a = xh.assign_validation_time(stacked_era_a)
 #         filename='BW_sb'
 #         )
 
-spread_error.r_ss(
-            stacked_era,
-            [hindcast,hindcast_a*era_std + era_mean],
-            era_mean,
-            era_std,
-            labels=['EC','EC sb'],
-            dim='validation_time.month',
-            filename='ERA_se_sb',
-            title='ERA Simple Bias Adjustment',
-            ylab='Spread Error SS'
-        )
-
-spread_error.r_ss(
-            stacked_obs,
-            [hindcast,hindcast_a*clim_std + clim_mean],
-            clim_mean,
-            clim_std,
-            labels=['EC','EC sb'],
-            dim='validation_time.month',
-            filename='BW_se_sb',
-            title='Barentswatch Simple Bias Adjustment',
-            ylab='Spread Error SS'
-        )
+# spread_error.r_ss(
+#             stacked_era,
+#             [hindcast,hindcast_a*era_std + era_mean],
+#             era_mean,
+#             era_std,
+#             labels=['EC','EC sb'],
+#             dim='validation_time.month',
+#             filename='ERA_se_sb',
+#             title='ERA Simple Bias Adjustment',
+#             ylab='Spread Error SS'
+#         )
+#
+# spread_error.r_ss(
+#             stacked_obs,
+#             [hindcast,hindcast_a*clim_std + clim_mean],
+#             clim_mean,
+#             clim_std,
+#             labels=['EC','EC sb'],
+#             dim='validation_time.month',
+#             filename='BW_se_sb',
+#             title='Barentswatch Simple Bias Adjustment',
+#             ylab='Spread Error SS'
+#         )
 
 # mae.cluster_map(
 #         stacked_era,
