@@ -118,7 +118,7 @@ def score_to_pandas(array,time,lon=[None],lat=[None],name='values',step0=1):
     df_base[name]               = array
 
     for key in df_base:
-        df_base[key]  = df_base[key].flatten()
+        df_base[key]  = np.array(df_base[key]).flatten()
     df_base['time']   = pd.to_datetime(df_base['time'])
     df_base['month']  = df_base['time'].month_name()
     df_base['season'] = parse_month2season(df_base['time'].month)
