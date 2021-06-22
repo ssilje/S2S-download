@@ -215,6 +215,174 @@ def deterministic_gaussian_forecast(mean,std):
             vectorize=True,dask='parallelized'
             )
 
+def bias_adjustment_torrabla(forecast,observations,clim_std=None,window=30):
+    """
+    Forecsat calibration as of Eq. 2-4 in Torralba et al. (2017).
+
+    References:
+
+    Torralba, V., Doblas-Reyes, F. J., MacLeod, D., Christel, I., & Davis, M.
+    (2017). Seasonal Climate Prediction:
+    A New Source of Information for the Management of Wind Energy Resources,
+    Journal of Applied Meteorology and Climatology, 56(5), 1231-1247.
+    Retrieved Jun 22, 2021, from
+    https://journals.ametsoc.org/view/journals/apme/56/5/jamc-d-16-0204.1.xml
+    """
+
+    x = forecast.mean('member')
+    z = forecast - x
+
+    if clim_std is None or window!=30:
+        _,clim_std = xh.o_climatology(observations,window=window)
+
+    ds = xr.merge(
+                    [
+                        forecast.rename('fc'),
+                        observations.rename('obs')
+                    ],join='inner',compat='override'
+                )
+
+    ds = xh.unstack_time(ds)
+
+    rho = xr.apply_ufunc(
+                correlation_CV,ds.fc.mean('member'),ds.obs,ds.dayofyear,window,
+                input_core_dims  = [
+                                    ['year','dayofyear'],
+                                    ['year','dayofyear'],
+                                    ['dayofyear'],
+                                    []
+                                ],
+                output_core_dims = [['year','dayofyear']],
+                vectorize=True
+    )
+
+    rho = xh.stack_time(rho)
+
+    sigma_ens = xr.apply_ufunc(
+                std,ds.fc.mean('member'),ds.dayofyear,window,
+                input_core_dims  = [
+                                    ['year','dayofyear'],
+                                    ['dayofyear'],
+                                    []
+                                ],
+                output_core_dims = [['year','dayofyear']],
+                vectorize=True
+    )
+    sigma_ens = xh.stack_time(sigma_ens)
+
+    sigma_ref = clim_std
+
+    sigma_e   = fc.std('member')
+
+
+    alpha = xr.ufuncs.fabs(rho) * sigma_ref/sigma_ens
+
+    beta  = ( 1 - )
+
+def correlation_CV(x,y,index,window=30):
+    """
+    Computes correlation of x against y (rho), keeping dim -1 and -2.
+    Dim -1 must be 'dayofyear', with the corresponding days given in index.
+    Dim -2 must be 'year'.
+
+    args:
+        x:      np.array of float, with day of year as index -1 and year as
+                index -2
+        index:  np.array of int, 1-dimensional holding dayofyear corresponding
+                to dim -1 of x
+
+    returns
+        rho:   np.array of float, with day of year as index -1 and year as
+                dim -2
+
+    dimensions requirements:
+        name            dim
+
+        year            -2
+        dayofyear       -1
+    """
+    rho   = []
+
+    pad   = window//2
+
+    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+    y     = np.pad(y,pad,mode='wrap')[pad:-pad,:]
+
+    index = np.pad(index,pad,mode='wrap')
+
+    index[-pad:] += index[-pad-1]
+    index[:pad]  -= index[-pad-1]
+
+    for ii,idx in enumerate(index[pad:-pad]):
+
+        # pool all values that falls within window
+        xpool = x[...,np.abs(index-idx)<=pad]
+        ypool = y[...,np.abs(index-idx)<=pad]
+
+        yrho = []
+        for yy in range(xpool.shape[-2]):
+
+            # delete the relevant year from pool (for cross validation)
+            filtered_xpool = np.delete(xpool,yy,axis=-2).flatten()
+            filtered_ypool = np.delete(ypool,yy,axis=-2).flatten()
+
+            idx_bool = ~np.logical_or(
+                                np.isnan(filtered_xpool),
+                                np.isnan(filtered_ypool)
+                            )
+
+            r,p = stats.pearsonr(
+                                    filtered_xpool[idx_bool],
+                                    filtered_ypool[idx_bool]
+                                )
+
+            yrho.append(r)
+
+        rho.append(np.array(yrho))
+
+    return np.stack(rho,axis=-1)
+
+def std(x,index,window=30):
+    """
+    Computes std of x, keeping dim -1 and -2.
+    Dim -1 must be 'dayofyear', with the corresponding days given in index.
+    Dim -2 must be 'year'.
+
+    args:
+        x:      np.array of float, with day of year as index -1 and year as
+                index -2
+        index:  np.array of int, 1-dimensional holding dayofyear corresponding
+                to dim -1 of x
+
+    returns
+        std:   np.array of float, with day of year as index -1 and year as
+                dim -2
+
+    dimensions requirements:
+        name            dim
+
+        year            -2
+        dayofyear       -1
+    """
+    std   = []
+
+    pad   = window//2
+
+    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+    index = np.pad(index,pad,mode='wrap')
+
+    index[-pad:] += index[-pad-1]
+    index[:pad]  -= index[-pad-1]
+
+    for ii,idx in enumerate(index[pad:-pad]):
+
+        # pool all values that falls within window
+        pool = x[...,np.abs(index-idx)<=pad]
+
+        std.append(np.full_like(pool[...,0],np.nanstd(pool)))
+
+    return np.stack(std,axis=-1)
+
 ################################################################################
 ############################# Depricated #######################################
 ################################################################################

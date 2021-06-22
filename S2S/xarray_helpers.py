@@ -117,7 +117,7 @@ def running_clim_CV(x,index,window=30):
 
     return np.stack(mean,axis=-1),np.stack(std,axis=-1)
 
-def o_climatology(da):
+def o_climatology(da,window=30):
     """
     Climatology with centered initialization time, using cross validation
     using a 30-day window.
@@ -138,8 +138,8 @@ def o_climatology(da):
 
     # to all year,dayofyear matrices in da, apply runnning_clim_CV
     mean,std = xr.apply_ufunc(
-            running_clim_CV, da, da.dayofyear,
-            input_core_dims  = [['year','dayofyear'],['dayofyear']],
+            running_clim_CV, da, da.dayofyear,window,
+            input_core_dims  = [['year','dayofyear'],['dayofyear'],[]],
             output_core_dims = [['year','dayofyear'],['year','dayofyear']],
             vectorize=True
         )

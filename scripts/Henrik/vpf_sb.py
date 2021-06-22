@@ -129,7 +129,9 @@ for ii in range(di,len(all_observations.location),di):
 
         print('\tOrganize ERA like hindcast')
         stacked_obs = \
-            xh.at_validation(era,hindcast.time+hindcast.step,ddays=1)
+            xh.at_validation(era,hindcast.time+h      = 'abs_wind'
+var1     = 'u10'
+varindcast.step,ddays=1)
 
         print('\tCompute climatology')
         clim_mean,clim_std = xh.o_climatology(stacked_obs)
