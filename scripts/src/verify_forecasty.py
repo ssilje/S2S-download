@@ -82,7 +82,15 @@ clim_std = xh.assign_validation_time(clim_std)
 random_fc = xh.assign_validation_time(random_fc)
 random_fc_a = xh.assign_validation_time(random_fc_a)
     
-    
+time_index = np.argmin(
+                np.abs(
+                    np.array(
+                        hindcast.time+hindcast.step[-1]-stacked_era.time[-1]
+                        )
+                    )
+                ) - 1
+hindcast = hindcast.isel(time=slice(0,time_index))
+
 if verify:
     val_obs = stacked_era
     clim_fc  = models.clim_fc(clim_mean,clim_std)
