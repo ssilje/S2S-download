@@ -77,8 +77,53 @@ stacked_era   = xh.assign_validation_time(stacked_era)
 stacked_era_a = xh.assign_validation_time(stacked_era_a)
 
 
-models.bias_adjustment_torrabla(hindcast,stacked_era,clim_std=clim_std)
+hindcast_ba = models.bias_adjustment_torrabla(
+                                            hindcast_a,
+                                            stacked_era_a
+                                            )
+gr.timeseries(
+                stacked_era,
+                cast=[hindcast_a*era_std + era_mean,hindcast_ba+era_mean],
+                title='EC ba',
+                filename='era_ba',
+                clabs=['EC','EC ba']
+            )
+#
+crps.skill_agg(
+            stacked_era_a,
+            [hindcast_a,hindcast_ba],
+            xr.full_like(stacked_era_a,0),
+            xr.full_like(stacked_era_a,1),
+            title='ERA Simple Bias Adjustment',
+            filename='crps_ERA_ba',
+            dim='validation_time.month',
+            mlabs=['sb','ba']
+        )
+
+hindcast_ba = models.bias_adjustment_torrabla(
+                                            hindcast_a,
+                                            stacked_obs_a
+                                            )
+gr.timeseries(
+                stacked_obs_a,
+                cast=[hindcast_a,hindcast_ba],
+                title='EC ba',
+                filename='BW_ba',
+                clabs=['EC','EC ba']
+            )
+#
+crps.skill_agg(
+            stacked_obs_a,
+            [hindcast_a,hindcast_ba],
+            xr.full_like(stacked_era_a,0),
+            xr.full_like(stacked_era_a,1),
+            title='ERA Bias Adjustment',
+            filename='crps_BW_ba',
+            dim='validation_time.month',
+            mlabs=['sb','ba']
+        )
 exit()
+
 # gr.point_map(hindcast,poi='Hisdalen')
 
 # gr.timeseries(
@@ -278,7 +323,7 @@ crps.skill_agg(
             filename='crps_ERA_sb',
             dim='validation_time.month'
         )
-        
+
 crps.skill_agg(
             stacked_era_a,
             [hindcast_a],

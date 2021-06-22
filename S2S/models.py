@@ -272,12 +272,15 @@ def bias_adjustment_torrabla(forecast,observations,clim_std=None,window=30):
 
     sigma_ref = clim_std
 
-    sigma_e   = fc.std('member')
+    sigma_e   = forecast.std('member')
 
+    alpha = xr.ufuncs.fabs(rho) * ( sigma_ref/sigma_ens )
 
-    alpha = xr.ufuncs.fabs(rho) * sigma_ref/sigma_ens
+    beta  = xr.ufuncs.sqrt( 1 - rho**2 ) * ( sigma_ref/sigma_e )
 
-    beta  = ( 1 - )
+    y = alpha * x + beta * z
+
+    return y
 
 def correlation_CV(x,y,index,window=30):
     """
