@@ -82,14 +82,41 @@ clim_std = xh.assign_validation_time(clim_std)
 random_fc = xh.assign_validation_time(random_fc)
 random_fc_a = xh.assign_validation_time(random_fc_a)
     
-time_index = np.argmin(
-                np.abs(
-                    np.array(
-                        hindcast.time+hindcast.step[-1]-stacked_era.time[-1]
-                        )
-                    )
-                ) - 1
-hindcast = hindcast.isel(time=slice(0,time_index))
+
+#################
+#### Weights ####
+#################
+weights   = np.cos(
+                np.deg2rad(
+                    np.array([
+                        np.array([
+                            np.array([
+                                np.meshgrid(hindcast_a.lat,hindcast_a.lon)[0]
+                            ]*hindcast_a.sizes['time'])
+                        ]*hindcast_a.sizes['step'])
+                    ]*hindcast_a.sizes['member'])
+                )
+            )    
+    
+    
+acc = ACC(np.moveaxis(hindcast_a.values,2,1),stacked_era_a.values,np.moveaxis(weights,2,1))    
+#acc       = build_a_bear.score_to_pandas(acc,time,name='ACC',step0=step0)    
+step0     = pd.to_timedelta(hindcast_a.step)[0].days
+acc       =  score_to_pandas(acc,hindcast_a.validation_time,name='ACC',step0=step0)
+#acc       =  score_to_pandas(acc,time,name='ACC',step0=step0)    
+
+    
+#timepool = [
+ #   np.datetime64(hindcast.time.values[0]) + hindcast.step.values[0],
+ #   np.datetime64(hindcast.time.values[-1]) + hindcast.step.values[-1],
+ #   np.datetime64(clim_mean.time.values[0]) + clim_mean.step.values[0],
+ #   np.datetime64(clim_mean.time.values[-1]) + clim_mean.step.values[-1]
+#]
+#idx_min = np.argmin(timepool)
+#idx_max = np.argmax(timepool)
+
+#hindcast_sel = hindcast.sel(time=slice(str(timepool[idx_min]),str(timepool[idx_max]))))
+#clim_mean_sel = clim_mean.sel(time=slice(str(timepool[idx_min]),str(timepool[idx_max])))
 
 if verify:
     val_obs = stacked_era
