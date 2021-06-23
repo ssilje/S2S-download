@@ -109,71 +109,67 @@ model = hindcast
 clim_mean = clim_mean
 clim_std = clim_std
 
-#for lt in steps:
-lt= steps[0]    
-mod = model.sel(step=pd.Timedelta(lt,'D'))
-obs = observations.sel(step=pd.Timedelta(lt,'D'))
-cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
-cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
+for lt in steps:
+#lt= steps[0]    
+    mod = model.sel(step=pd.Timedelta(lt,'D'))
+    obs = observations.sel(step=pd.Timedelta(lt,'D'))
+    cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
+    cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
    
-dim='validation_time.month'
-x_group = list(mod.groupby(dim))
-y_group = list(obs.groupby(dim))
-cm_group = list(cm.groupby(dim))
-cs_group = list(cs.groupby(dim))
+    dim='validation_time.month'
+    x_group = list(mod.groupby(dim))
+    y_group = list(obs.groupby(dim))
+    cm_group = list(cm.groupby(dim))
+    cs_group = list(cs.groupby(dim))
 
-fg,axes = plt.subplots(ncols=4,nrows=3,\
-                subplot_kw=dict(projection=ccrs.PlateCarree()))
-axes_f = axes.flatten()
-cmap   = mpl.colors.ListedColormap(
-                ['red','red','red','white','lightblue','royalblue','blue']
-                                    )
-levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
-norm   = BoundaryNorm(levels,cmap.N)
-for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
+    fg,axes = plt.subplots(ncols=4,nrows=3,\
+                    subplot_kw=dict(projection=ccrs.PlateCarree()))
+    axes_f = axes.flatten()
+    cmap   = mpl.colors.ListedColormap(
+                    ['red','red','red','white','lightblue','royalblue','blue']
+                                        )
+    levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
+    norm   = BoundaryNorm(levels,cmap.N)
+    for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
     
-    ylabel,ydata   = y_group[n]
-    cmlabel,cmdata = cm_group[n]
-    cslabel,csdata = cs_group[n]
+        ylabel,ydata   = y_group[n]
+        cmlabel,cmdata = cm_group[n]
+        cslabel,csdata = cs_group[n]
 
-    xdata  = mod.unstack().sortby(['time']) #mod
-    ydata  = obs.unstack().sortby(['time']) # obs
-    cmdata = cm.unstack().sortby(['time'])
-    csdata = cs.unstack().sortby(['time'])
+        xdata  = mod.unstack().sortby(['time']) #mod
+        ydata  = obs.unstack().sortby(['time']) # obs
+        cmdata = cm.unstack().sortby(['time'])
+        csdata = cs.unstack().sortby(['time'])
 
-    xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
+        xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
 
-    score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
-    score_clim   = xs.mae(cmdata,ydata,dim=[])
+        score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
+        score_clim   = xs.mae(cmdata,ydata,dim=[])
    
-    SS = 1 - score_mean/score_clim
-    SS = SS.median('time',skipna=True)
+        SS = 1 - score_mean/score_clim
+        SS = SS.median('time',skipna=True)
     
     
 
-    im = SS.transpose('lat','lon').plot(
-        ax=axes_f[n],
-        transform=ccrs.PlateCarree(),  # this is important!
-        add_colorbar=False, 
-        cmap=cmap, 
-        norm=norm
-    )
+        im = SS.transpose('lat','lon').plot(
+            ax=axes_f[n],
+            transform=ccrs.PlateCarree(),  # this is important!
+            add_colorbar=False, 
+            cmap=cmap, 
+            norm=norm
+        )
     
-    #ax = axes[n]
-    ax = axes_f[n]
+        ax = axes_f[n]
 
 
-    ax.coastlines(resolution='10m', color='black',\
-                                    linewidth=0.2)
+        ax.coastlines(resolution='10m', color='black',\
+                     linewidth=0.2)
+                                
     
-    
-                                    
-    
-    ax.set_title(month(xlabel))
-    
-cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels) 
-plt.tight_layout()
+        ax.set_title(month(xlabel))
+    cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels) 
+    plt.tight_layout()
 
-fg.suptitle('SS of MAE at lead time: '+str(lt))    
-fg.savefig('test_SS_day_' + str(lt.days) + '.png')
+    fg.suptitle('SS of MAE at lead time: '+str(lt))    
+    fg.savefig('test_SS_day_' + str(lt.days) + '.png')
 
