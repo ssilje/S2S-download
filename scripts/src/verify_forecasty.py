@@ -103,7 +103,12 @@ cs_group = list(cs.groupby(dim))
 
 fg,axes = plt.subplots(ncols=2,nrows=6,\
                 subplot_kw=dict(projection=ccrs.PlateCarree()))
-axes = axes.flatten()
+axes_f = axes.flatten()
+cmap   = mpl.colors.ListedColormap(
+                ['white','white','white','red','lightblue','royalblue','blue']
+                                    )
+levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
+norm   = BoundaryNorm(levels,cmap.N)
 for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
     
     ylabel,ydata   = y_group[n]
@@ -123,28 +128,32 @@ for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
     SS = 1 - score_mean/score_clim
     SS = SS.median('time',skipna=True)
     
+    
 
-    SS.transpose('lat','lon').plot(
-        ax=axes[n],
+    im = SS.transpose('lat','lon').plot(
+        ax=axes_f[n],
         transform=ccrs.PlateCarree(),  # this is important!
-        # usual xarray stuff
-        cbar_kwargs={"orientation": "horizontal", "shrink": 0.7},
-        robust=True,
+        add_colorbar=False, 
+        cmap=cmap, 
+        norm=norm,
+        robust=True
     )
     
-    ax = axes[n]
+    #ax = axes[n]
+    ax = axes_f[n]
+
 
     ax.coastlines(resolution='10m', color='black',\
                                     linewidth=0.2)
     
-    cmap   = mpl.colors.ListedColormap(
-                ['white','white','white','red','lightblue','royalblue','blue']
-                                    )
-    levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
-    norm   = BoundaryNorm(levels,cmap.N)
+    
+                                    
+    
     ax.set_title(month(xlabel))
+    
+cb = fg.colorbar(im, ax=[axes[:, 1]], location='right',boundaries=levels) 
 
-#fg.colorbar(cs,ax=axes,boundaries=levels)
+
 fg.suptitle('SS of MAE at lead time: '+str(lt))    
 fg.savefig('test_SS_'  + '.png')
 
