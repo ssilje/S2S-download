@@ -172,9 +172,9 @@ for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
     
     ax.set_title(month(xlabel))
     
-cb = fg.colorbar(im, ax=[axes[:, 1]], location='right',boundaries=levels) 
+cb = fg.colorbar(im, ax=[axes[:, -1]], location='right',boundaries=levels) 
 
 
 fg.suptitle('SS of MAE at lead time: '+str(lt))    
-fg.savefig('test_SS_'  + '.png')
+fg.savefig('test_SS_' + lt + '.png')
 
