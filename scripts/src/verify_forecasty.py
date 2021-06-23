@@ -122,11 +122,11 @@ y_group = list(obs.groupby(dim))
 cm_group = list(cm.groupby(dim))
 cs_group = list(cs.groupby(dim))
 
-fg,axes = plt.subplots(ncols=2,nrows=6,\
+fg,axes = plt.subplots(ncols=4,nrows=3,\
                 subplot_kw=dict(projection=ccrs.PlateCarree()))
 axes_f = axes.flatten()
 cmap   = mpl.colors.ListedColormap(
-                ['white','white','white','red','lightblue','royalblue','blue']
+                ['red','red','red','white','lightblue','royalblue','blue']
                                     )
 levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
 norm   = BoundaryNorm(levels,cmap.N)
