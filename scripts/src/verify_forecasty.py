@@ -167,7 +167,7 @@ for lt in steps:
                                 
     
         ax.set_title(month(xlabel))
-        ax = fig.add_gridspec(3, 3)
+        ax = fg.add_gridspec(3, 3)
     cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels) 
     plt.tight_layout()
 
