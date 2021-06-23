@@ -15,7 +15,7 @@ from S2S.data_handler        import ERA5, ECMWF_S2SH, Archive
 import S2S.xarray_helpers    as xh
 import S2S.models            as models
 import S2S.graphics.graphics as gr
-from S2S.graphics import mae,crps,brier,spread_error
+from S2S.graphics import mae,crps,brier,spread_error,graphics
 import scripts.Henrik.create_domain_file
 
 path_e = 't2m/'
