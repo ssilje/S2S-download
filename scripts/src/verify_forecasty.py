@@ -108,7 +108,7 @@ observations = stacked_era
 model = hindcast
 clim_mean = clim_mean
 clim_std = clim_std
-
+dim='validation_time.month'
 for lt in steps:
 #lt= steps[0]    
     mod = model.sel(step=pd.Timedelta(lt,'D'))
@@ -116,7 +116,7 @@ for lt in steps:
     cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
     cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
    
-    dim='validation_time.month'
+   # a = mod.groupby("validation_time.month").mean().mean('member')
     x_group = list(mod.groupby(dim))
     y_group = list(obs.groupby(dim))
     cm_group = list(cm.groupby(dim))
@@ -148,10 +148,10 @@ for lt in steps:
         score_clim   = xs.mae(cmdata,ydata,dim=[])
    
         SS = 1 - score_mean/score_clim
-        SS = SS.median('time',skipna=True)
-        c.append(SS.values)
-    skill_score = c.concat(chunk,'step') # existing dimension  
-
+        SS = SS.median('time',skipna=True) 
+        c.append(SS)
+    
+    skill_score = xr.concat(c,dim='step') ## må legge dei etter kvarandre med mnd
         im = SS.transpose('lat','lon').plot(
             ax=axes_f[n],
             transform=ccrs.PlateCarree(),  # this is important!
