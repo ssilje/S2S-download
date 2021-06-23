@@ -7,6 +7,8 @@ import time as time_lib
 import gridpp
 import properscoring as ps
 import cartopy.crs as ccrs
+from matplotlib.colors import BoundaryNorm
+import matplotlib as mpl
 from S2S.local_configuration import config
 from S2S.data_handler        import ERA5, ECMWF_S2SH, Archive
 
