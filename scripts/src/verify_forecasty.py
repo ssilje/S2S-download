@@ -160,13 +160,14 @@ for lt in steps:
         )
     
         ax = axes_f[n]
-
+        
 
         ax.coastlines(resolution='10m', color='black',\
                      linewidth=0.2)
                                 
     
         ax.set_title(month(xlabel))
+        ax = fig.add_gridspec(3, 3)
     cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels) 
     plt.tight_layout()
 
