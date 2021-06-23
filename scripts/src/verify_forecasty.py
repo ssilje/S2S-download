@@ -14,9 +14,28 @@ from S2S.data_handler        import ERA5, ECMWF_S2SH, Archive
 
 import S2S.xarray_helpers    as xh
 import S2S.models            as models
-import S2S.graphics.graphics as gr, month
+import S2S.graphics.graphics as gr
 from S2S.graphics import mae,crps,brier,spread_error
 import scripts.Henrik.create_domain_file
+
+def month(ii):
+    """
+    ii : integer
+    returns
+    month string_tools
+    """
+    try:
+        ii = int(ii)
+        ii = ['JAN','FEB','MAR',\
+            'APR','MAI','JUN',\
+            'JUL','AUG','SEP',\
+            'OCT','NOV','DES'][ii-1]
+    except (ValueError,IndexError) as error:
+        pass
+    return ii
+
+
+
 
 path_e = 't2m/'
 long_name = 'absolute_t2m'
