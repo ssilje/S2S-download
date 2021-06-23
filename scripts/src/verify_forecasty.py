@@ -171,7 +171,7 @@ for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
     
     ax.set_title(month(xlabel))
     
-cb = fg.colorbar(im, ax=[axes[:, -1]], location='right',boundaries=levels) 
+cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels) 
 plt.tight_layout()
 
 fg.suptitle('SS of MAE at lead time: '+str(lt))    
