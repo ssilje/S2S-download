@@ -130,6 +130,7 @@ for lt in steps:
                                         )
     levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
     norm   = BoundaryNorm(levels,cmap.N)
+    c = []
     for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
     
         ylabel,ydata   = y_group[n]
@@ -148,8 +149,8 @@ for lt in steps:
    
         SS = 1 - score_mean/score_clim
         SS = SS.median('time',skipna=True)
-    
-    
+        c.append(SS.values)
+    skill_score = c.concat(chunk,'step') # existing dimension  
 
         im = SS.transpose('lat','lon').plot(
             ax=axes_f[n],
@@ -168,7 +169,7 @@ for lt in steps:
     
         ax.set_title(month(xlabel))
         ax = fg.add_gridspec(3, 3)
-    cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels) 
+    cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels,extend='both') 
     plt.tight_layout()
 
     fg.suptitle('SS of MAE at lead time: '+str(lt))    
