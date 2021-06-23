@@ -12,7 +12,7 @@ from S2S.data_handler        import ERA5, ECMWF_S2SH, Archive
 import S2S.xarray_helpers    as xh
 import S2S.models            as models
 import S2S.graphics.graphics as gr
-
+from S2S.graphics import mae,crps,brier,spread_error
 import scripts.Henrik.create_domain_file
 
 path_e = 't2m/'
@@ -82,7 +82,71 @@ clim_std = xh.assign_validation_time(clim_std)
 random_fc = xh.assign_validation_time(random_fc)
 random_fc_a = xh.assign_validation_time(random_fc_a)
     
+ observations = stacked_era
+ model = hindcast
+ clim_mean = clim_mean
+ clim_std = clim_std
 
+for lt in steps:
+    mod = model.sel(step=pd.Timedelta(lt,'D'))
+    obs = observations.sel(step=pd.Timedelta(lt,'D'))
+    cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
+    cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
+   
+        dim='validation_time.month'
+        x_group = list(mod.groupby(dim))
+        y_group = list(obs.groupby(dim))
+        cm_group = list(cm.groupby(dim))
+        cs_group = list(cs.groupby(dim))
+
+        for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
+
+            ylabel,ydata   = y_group[n]
+            cmlabel,cmdata = cm_group[n]
+            cslabel,csdata = cs_group[n]
+
+            xdata  = mod.unstack().sortby(['time']) #mod
+            ydata  = obs.unstack().sortby(['time']) # obs
+            cmdata = cm.unstack().sortby(['time'])
+            csdata = cs.unstack().sortby(['time'])
+
+            xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
+
+            score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
+            score_clim   = xs.mae(cmdata,ydata,dim=[])
+   
+            SS = 1 - score_mean/score_clim
+            SS = SS.median('time',skipna=True)
+                    
+c.append(skill_score.values)    
+    
+ xlim = 0.5
+ylim = 0.25
+
+
+    
+ mae.cluster_map(
+         stacked_era,
+         hindcast_a*clim_std + clim_mean,
+         clim_mean,
+         clim_std,
+         c_lim=(xlim,ylim),
+         dim='validation_time.month',
+         title='ERA Simple Bias Adjustment',
+         filename='ERA_sb'
+         )    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 #################
 #### Weights ####
 #################
