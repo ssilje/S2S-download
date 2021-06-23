@@ -6,6 +6,7 @@ import xskillscore as xs
 import time as time_lib
 import gridpp
 import properscoring as ps
+import cartopy.crs as ccrs
 from S2S.local_configuration import config
 from S2S.data_handler        import ERA5, ECMWF_S2SH, Archive
 
@@ -82,174 +83,68 @@ clim_std = xh.assign_validation_time(clim_std)
 random_fc = xh.assign_validation_time(random_fc)
 random_fc_a = xh.assign_validation_time(random_fc_a)
     
- observations = stacked_era
- model = hindcast
- clim_mean = clim_mean
- clim_std = clim_std
+observations = stacked_era
+model = hindcast
+clim_mean = clim_mean
+clim_std = clim_std
 
-for lt in steps:
-    mod = model.sel(step=pd.Timedelta(lt,'D'))
-    obs = observations.sel(step=pd.Timedelta(lt,'D'))
-    cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
-    cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
+#for lt in steps:
+lt= steps[0]    
+mod = model.sel(step=pd.Timedelta(lt,'D'))
+obs = observations.sel(step=pd.Timedelta(lt,'D'))
+cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
+cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
    
-        dim='validation_time.month'
-        x_group = list(mod.groupby(dim))
-        y_group = list(obs.groupby(dim))
-        cm_group = list(cm.groupby(dim))
-        cs_group = list(cs.groupby(dim))
+dim='validation_time.month'
+x_group = list(mod.groupby(dim))
+y_group = list(obs.groupby(dim))
+cm_group = list(cm.groupby(dim))
+cs_group = list(cs.groupby(dim))
 
-        for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
+fg,axes = plt.subplots(ncols=2,nrows=6,\
+                subplot_kw=dict(projection=ccrs.PlateCarree()))
+axes = axes.flatten()
+for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
+    
+    ylabel,ydata   = y_group[n]
+    cmlabel,cmdata = cm_group[n]
+    cslabel,csdata = cs_group[n]
 
-            ylabel,ydata   = y_group[n]
-            cmlabel,cmdata = cm_group[n]
-            cslabel,csdata = cs_group[n]
+    xdata  = mod.unstack().sortby(['time']) #mod
+    ydata  = obs.unstack().sortby(['time']) # obs
+    cmdata = cm.unstack().sortby(['time'])
+    csdata = cs.unstack().sortby(['time'])
 
-            xdata  = mod.unstack().sortby(['time']) #mod
-            ydata  = obs.unstack().sortby(['time']) # obs
-            cmdata = cm.unstack().sortby(['time'])
-            csdata = cs.unstack().sortby(['time'])
+    xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
 
-            xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
-
-            score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
-            score_clim   = xs.mae(cmdata,ydata,dim=[])
+    score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
+    score_clim   = xs.mae(cmdata,ydata,dim=[])
    
-            SS = 1 - score_mean/score_clim
-            SS = SS.median('time',skipna=True)
-                    
-c.append(skill_score.values)    
-    
- xlim = 0.5
-ylim = 0.25
-
-
-    
- mae.cluster_map(
-         stacked_era,
-         hindcast_a*clim_std + clim_mean,
-         clim_mean,
-         clim_std,
-         c_lim=(xlim,ylim),
-         dim='validation_time.month',
-         title='ERA Simple Bias Adjustment',
-         filename='ERA_sb'
-         )    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-#################
-#### Weights ####
-#################
-weights   = np.cos(
-                np.deg2rad(
-                    np.array([
-                        np.array([
-                            np.array([
-                                np.meshgrid(hindcast_a.lat,hindcast_a.lon)[0]
-                            ]*hindcast_a.sizes['time'])
-                        ]*hindcast_a.sizes['step'])
-                    ]*hindcast_a.sizes['member'])
-                )
-            )    
-    
-    
-acc = ACC(np.moveaxis(hindcast_a.values,2,1),stacked_era_a.values,np.moveaxis(weights,2,1))    
-#acc       = build_a_bear.score_to_pandas(acc,time,name='ACC',step0=step0)    
-step0     = pd.to_timedelta(hindcast_a.step)[0].days
-acc       =  score_to_pandas(acc,hindcast_a.validation_time,name='ACC',step0=step0)
-#acc       =  score_to_pandas(acc,time,name='ACC',step0=step0)    
-
-    
-#timepool = [
- #   np.datetime64(hindcast.time.values[0]) + hindcast.step.values[0],
- #   np.datetime64(hindcast.time.values[-1]) + hindcast.step.values[-1],
- #   np.datetime64(clim_mean.time.values[0]) + clim_mean.step.values[0],
- #   np.datetime64(clim_mean.time.values[-1]) + clim_mean.step.values[-1]
-#]
-#idx_min = np.argmin(timepool)
-#idx_max = np.argmax(timepool)
-
-#hindcast_sel = hindcast.sel(time=slice(str(timepool[idx_min]),str(timepool[idx_max]))))
-#clim_mean_sel = clim_mean.sel(time=slice(str(timepool[idx_min]),str(timepool[idx_max])))
-
-if verify:
-    val_obs = stacked_era
-    clim_fc  = models.clim_fc(clim_mean,clim_std)
-    hindcast = hindcast.sel(time=slice(val_obs.time.min(),val_obs.time.max()))
-    
+    SS = 1 - score_mean/score_clim
+    SS = SS.median('time',skipna=True)
     
 
-    crps_mod  = ps.crps_ensemble(np.moveaxis(val_obs.values,0,1),np.moveaxis(hindcast.values,0,-1))
+    SS.transpose('lat','lon').plot(
+        ax=axes[n],
+        transform=ccrs.PlateCarree(),  # this is important!
+        # usual xarray stuff
+        cbar_kwargs={"orientation": "horizontal", "shrink": 0.7},
+        robust=True,
+    )
     
-    #crps_mod  = xs.crps_ensemble(np.moveaxis(val_obs.values,0,1),hindcast.values,dim=[]) fekke ein feilmelding
-    crps_clim      = ps.crps_gaussian(x=sst_obs, mu=0, sig=std_obs) # does not weight with cos(lat), might be problematic in next operation crps_SS
-    crps_clim = ps.crps_gaussian(
-                                np.moveaxis(stacked_era_a.values,0,1),
-                                np.moveaxis(clim_mean.values,-1,1),
-                                np.moveaxis(clim_std.values,-1,1),
-                                dim=[]
-                                )
+    ax = axes[n]
 
-    gr.skill_plot(crps_mod,crps_clim,title='rawEC',filename='rawEC')
-    gr.qq_plot(val_obs[var],hindcast[var],y_axlabel='raw EC',filename='rawEC')
-
-
-stacked_era = xh.assign_validation_time(
-                    stacked_era.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-stacked_era_a = xh.assign_validation_time(
-                    stacked_era_a.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-hindcast = xh.assign_validation_time(
-                    hindcast.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-hindcast_a = xh.assign_validation_time(
-                    hindcast_a.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-clim_mean = xh.assign_validation_time(
-                    clim_mean.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-clim_std = xh.assign_validation_time(
-                    clim_std.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-random_fc = xh.assign_validation_time(
-                    random_fc.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-random_fc_a = xh.assign_validation_time(
-                    random_fc_a.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
+    ax.coastlines(resolution='10m', color='black',\
+                                    linewidth=0.2)
     
-gr.timeseries(
-                    stacked_era,
-                    cast=[random_fc],
-                    title='EC',
-                    filename=long_name + '_random',
-                    clabs=['random_fc'],
-                    lead_time=[7, 14]
-                )
+    cmap   = mpl.colors.ListedColormap(
+                ['white','white','white','red','lightblue','royalblue','blue']
+                                    )
+    levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
+    norm   = BoundaryNorm(levels,cmap.N)
+    ax.set_title(month(xlabel))
+
+#fg.colorbar(cs,ax=axes,boundaries=levels)
+fg.suptitle('SS of MAE at lead time: '+str(lt))    
+fg.savefig('test_SS_'  + '.png')
+
