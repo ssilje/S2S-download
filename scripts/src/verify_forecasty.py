@@ -156,8 +156,7 @@ for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
         transform=ccrs.PlateCarree(),  # this is important!
         add_colorbar=False, 
         cmap=cmap, 
-        norm=norm,
-        robust=True
+        norm=norm
     )
     
     #ax = axes[n]
@@ -173,8 +172,8 @@ for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
     ax.set_title(month(xlabel))
     
 cb = fg.colorbar(im, ax=[axes[:, -1]], location='right',boundaries=levels) 
-
+plt.tight_layout()
 
 fg.suptitle('SS of MAE at lead time: '+str(lt))    
-fg.savefig('test_SS_' + lt + '.png')
+fg.savefig('test_SS_day_' + str(lt.days) + '.png')
 
