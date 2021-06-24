@@ -203,6 +203,6 @@ for lt in steps:
 
     #fg.suptitle('SS of MAE at lead time: '+str(lt))   
     plt.title('SS of MAE at lead time: '+str(lt))
-    fplt.savefig('test_SS_day_' + str(lt.days) + '.png')
+    plt.savefig('test_SS_day_' + str(lt.days) + '.png')
     #plt.savefig('cartopy_example.png')
 
