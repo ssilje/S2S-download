@@ -1,0 +1,24 @@
+
+hindcast = xr.open_dataset(config['VALID_DB']+path_e+long_name+\
+                                '_hindcast.nc')[var]
+                                
+stacked_era = xr.open_dataset(config['VALID_DB']+path_e+\
+                                            long_name + '_era.nc')[var]                                
+
+hindcast = xh.assign_validation_time(hindcast)
+stacked_era = xh.assign_validation_time(stacked_era)
+
+dim='validation_time.month'
+
+for lt in steps:
+
+mod = hindcast.sel(step=pd.Timedelta(lt,'D'))
+obs = stacked_era.sel(step=pd.Timedelta(lt,'D'))
+  
+x_group = list(mod.groupby(dim))
+y_group = list(obs.groupby(dim))
+  
+xdata  = mod.unstack().sortby(['time']) #mod
+ydata  = obs.unstack().sortby(['time']) # obs
+  
+score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
