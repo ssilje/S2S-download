@@ -202,7 +202,8 @@ for lt in steps:
     #plt.tight_layout()
 
     #fg.suptitle('SS of MAE at lead time: '+str(lt))   
-    plt.title('SS of MAE at lead time: '+str(lt))
+    plt.suptitle('SS of MAE at lead time: '+str(lt))
+   
     plt.savefig('test_SS_day_' + str(lt.days) + '.png')
     #plt.savefig('cartopy_example.png')
 
