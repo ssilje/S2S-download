@@ -48,11 +48,12 @@ def skill_agg(
             filename='',
             title='',
             ylab='',
-            mlabs=['']
+            mlabs=[''],
+            mcols=['blue','orange','green','red']
         ):
 
-    if len(mlabs)!=len(in_mod):
-        mlabs = mlabs*len(in_mod)
+    mcols = mcols*len(in_mod)
+    mlabs = mlabs*len(in_mod)
 
     for loc in in_clim.location:
 
@@ -75,7 +76,7 @@ def skill_agg(
         axes = axes.flatten()
         ###########################
 
-        for model,mlab in zip(in_mod,mlabs):
+        for model,mlab,mcol in zip(in_mod,mlabs,mcols):
 
             mod = model.sel(location=loc)
             cm  = clim_mean.sel(location=loc)
@@ -123,22 +124,22 @@ def skill_agg(
                 ax.plot(
                         lead_time,
                         SS.low_q,
-                        '--',color='grey',linewidth=0.7,
+                        '--',color=mcol,linewidth=0.7,
                         alpha=0.7,
-                        label='95\% CI'
+                        label='95% CI'
                         )
                 ax.plot(
                         lead_time,
                         SS.high_q,
-                        '--',color='grey',linewidth=0.7,
+                        '--',color=mcol,linewidth=0.7,
                         alpha=0.7,
-                        label='95\% CI'
+                        label='95% CI'
                         )
                 ax.plot(
                         lead_time,
                         SS.est,
                         '-',
-                        # color='black',
+                        color=mcol,
                         linewidth=0.9,
                         alpha=0.9,
                         label='MAE SS est.'+mlab
@@ -147,7 +148,7 @@ def skill_agg(
                         lead_time,
                         SS.high_q,
                         SS.low_q,
-                        alpha=0.3,
+                        alpha=0.1,
                         zorder=30
                     )
 

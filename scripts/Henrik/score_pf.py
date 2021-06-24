@@ -29,9 +29,9 @@ ylim = 0.25
 
 # observations = BarentsWatch().load('all',no=350).sortby('time')
 
-observations = BarentsWatch().load(['Hisdalen','Stokkvika']).sortby('time')
+observations  = BarentsWatch().load(['Hisdalen','Stokkvika']).sortby('time')
 
-hindcast     = xh.load_by_location(observations.location,'h_temp')[var]
+hindcast      = xh.load_by_location(observations.location,'h_temp')[var]
 hindcast_a    = xh.load_by_location(observations.location,'ha_temp')[var]
 
 stacked_obs   = xh.load_by_location(observations.location,'v_temp')[var]
@@ -43,7 +43,7 @@ clim_std      = xh.load_by_location(observations.location,'clim_std_temp')[var]
 stacked_era   = xh.load_by_location(observations.location,'era_v_temp')[var]
 stacked_era_a = xh.load_by_location(observations.location,'era_v_a_temp')[var]
 
-#
+
 era_mean     = xh.load_by_location(
                                     observations.location,
                                     'era_clim_mean_temp'
@@ -53,10 +53,15 @@ era_std      = xh.load_by_location(
                                     'era_clim_std_temp'
                                 )[var]
 
+obs_init = xh.load_by_location(observations.location,'obs_init_temp')[var]
+era_init = xh.load_by_location(observations.location,'era_init_temp')[var]
+
 # hindcast      = hindcast.sel(
 #                             time=slice(stacked_obs.time.min(),
 #                             stacked_obs.time.max())
 #                             )
+
+fc_mean,fc_std = xh.c_climatology(hindcast)
 
 clim_fc       = models.clim_fc(clim_mean,clim_std)
 era_fc        = models.clim_fc(era_mean,era_std)
@@ -76,53 +81,249 @@ era_fc        = xh.assign_validation_time(era_fc)
 stacked_era   = xh.assign_validation_time(stacked_era)
 stacked_era_a = xh.assign_validation_time(stacked_era_a)
 
+obs_init = xh.assign_validation_time(obs_init)
+era_init = xh.assign_validation_time(era_init)
 
-hindcast_ba = models.bias_adjustment_torrabla(
-                                            hindcast_a,
-                                            stacked_era_a
-                                            )
-gr.timeseries(
-                stacked_era,
-                cast=[hindcast_a*era_std + era_mean,hindcast_ba+era_mean],
-                title='EC ba',
-                filename='era_ba',
-                clabs=['EC','EC ba']
-            )
+# combo = models.combo(era_init,hindcast_a,stacked_era_a)
 #
-crps.skill_agg(
-            stacked_era_a,
-            [hindcast_a,hindcast_ba],
-            xr.full_like(stacked_era_a,0),
-            xr.full_like(stacked_era_a,1),
-            title='ERA Simple Bias Adjustment',
-            filename='crps_ERA_ba',
-            dim='validation_time.month',
-            mlabs=['sb','ba']
-        )
+# gr.timeseries(
+#                 stacked_era_a,
+#                 cast=[hindcast_a,combo],
+#                 title='ERA EC COMBO',
+#                 filename='era_combo',
+#                 clabs=['EC','COMBO']
+#             )
+# gr.timeseries(
+#                 stacked_era_a,
+#                 cast=[hindcast_a,combo],
+#                 title='ERA EC COMBO',
+#                 filename='era_combo',
+#                 clabs=['EC','COMBO'],
+#                 lead_time=[30,37]
+#             )
 
-hindcast_ba = models.bias_adjustment_torrabla(
-                                            hindcast_a,
-                                            stacked_obs_a
-                                            )
-gr.timeseries(
-                stacked_obs_a,
-                cast=[hindcast_a,hindcast_ba],
-                title='EC ba',
-                filename='BW_ba',
-                clabs=['EC','EC ba']
-            )
+# combo = models.combo(era_init,hindcast_a,stacked_era_a)
+# combo2 = ( hindcast_a - hindcast_a.mean('member') ) + combo
+# combo2 = models.bias_adjustment_torralba(combo2,stacked_era_a,spread_only=True)
 #
+# gr.timeseries(
+#                 stacked_era_a,
+#                 cast=[hindcast_a,combo2],
+#                 title='ERA EC COMBO2',
+#                 filename='era_combo2',
+#                 clabs=['EC','COMBO2']
+#             )
+# gr.timeseries(
+#                 stacked_era_a,
+#                 cast=[hindcast_a,combo2],
+#                 title='ERA EC COMBO2',
+#                 filename='era_combo2',
+#                 clabs=['EC','COMBO2'],
+#                 lead_time=[30,37]
+#             )
+#
+# crps.skill_agg(
+#             stacked_era_a,
+#             [hindcast_a,combo2],
+#             xr.full_like(stacked_era_a,0),
+#             xr.full_like(stacked_era_a,1),
+#             title='COMBO2',
+#             filename='crps_combo2',
+#             dim='validation_time.month',
+#             mlabs=['EC','combo2']
+#         )
+#
+# mae.skill_agg(
+#             stacked_era_a,
+#             [hindcast_a,combo2],
+#             xr.full_like(stacked_era_a,0),
+#             xr.full_like(stacked_era_a,1),
+#             title='COMBO2',
+#             filename='mae_combo2',
+#             dim='validation_time.month',
+#             mlabs=['EC','combo2']
+#         )
+
+combo = models.combo(obs_init,hindcast_a,stacked_obs_a)
+combo2 = ( hindcast_a - hindcast_a.mean('member') ) + combo
+combo2 = models.bias_adjustment_torralba(combo2,stacked_obs_a,spread_only=True)
+
+# gr.timeseries(
+#                 stacked_obs_a,
+#                 cast=[hindcast_a,combo2],
+#                 title='BarentsWatch EC COMBO2',
+#                 filename='BW_combo2',
+#                 clabs=['EC','COMBO2']
+#             )
+# gr.timeseries(
+#                 stacked_obs_a,
+#                 cast=[hindcast_a,combo2],
+#                 title='BarentsWatch EC COMBO2',
+#                 filename='BW_combo2',
+#                 clabs=['EC','COMBO2'],
+#                 lead_time=[30,37]
+#             )
+
 crps.skill_agg(
             stacked_obs_a,
-            [hindcast_a,hindcast_ba],
-            xr.full_like(stacked_era_a,0),
-            xr.full_like(stacked_era_a,1),
-            title='ERA Bias Adjustment',
-            filename='crps_BW_ba',
+            [hindcast_a,combo2],
+            xr.full_like(stacked_obs_a,0),
+            xr.full_like(stacked_obs_a,1),
+            title='BarentsWatch COMBO2',
+            filename='crps_BW_combo2',
             dim='validation_time.month',
-            mlabs=['sb','ba']
+            mlabs=['EC','combo2']
         )
-exit()
+
+mae.skill_agg(
+            stacked_obs_a,
+            [hindcast_a,combo2],
+            xr.full_like(stacked_obs_a,0),
+            xr.full_like(stacked_obs_a,1),
+            title='BarentsWatch COMBO2',
+            filename='mae_BW_combo2',
+            dim='validation_time.month',
+            mlabs=['EC','combo2']
+        )
+
+
+# combo = models.combo(obs_init,hindcast_a,stacked_obs_a)
+# gr.timeseries(
+#                 stacked_obs_a,
+#                 cast=[hindcast_a,combo],
+#                 title='Barentswatch EC COMBO',
+#                 filename='BW_combo',
+#                 clabs=['EC','COMBO']
+#             )
+# gr.timeseries(
+#                 stacked_obs_a,
+#                 cast=[hindcast_a,combo],
+#                 title='Barentswatch EC COMBO',
+#                 filename='BW_combo',
+#                 clabs=['EC','COMBO'],
+#                 lead_time=[30,37]
+#             )
+
+# combo = models.combo(era_init,hindcast_a,stacked_era_a,lim=5,sub=0.)
+#
+# gr.timeseries(
+#                 stacked_era_a,
+#                 cast=[hindcast_a,combo],
+#                 title='ERA EC operational COMBO',
+#                 filename='era_combo_operational',
+#                 clabs=['EC','COMBO']
+#             )
+# gr.timeseries(
+#                 stacked_era_a,
+#                 cast=[hindcast_a,combo],
+#                 title='ERA EC operational COMBO',
+#                 filename='era_combo_operational',
+#                 clabs=['EC','COMBO'],
+#                 lead_time=[30,37]
+#             )
+
+# combo = models.combo(obs_init,hindcast_a,stacked_obs_a,lim=5,sub=0.)
+# gr.timeseries(
+#                 stacked_obs_a,
+#                 cast=[hindcast_a,combo],
+#                 title='Barentswatch EC operational COMBO',
+#                 filename='BW_combo_operational',
+#                 clabs=['EC','COMBO']
+#             )
+# gr.timeseries(
+#                 stacked_obs_a,
+#                 cast=[hindcast_a,combo],
+#                 title='Barentswatch EC operational COMBO',
+#                 filename='BW_combo_operational',
+#                 clabs=['EC','COMBO'],
+#                 lead_time=[30,37]
+#             )
+# SUBSTITUTE THIS FOR MEMBER MEAN AND USE TORRALBA TO INCREASE SPREAD
+
+
+# pers = models.persistence(era_init,stacked_era_a)
+# gr.timeseries(
+#                 stacked_era_a,
+#                 cast=[hindcast_a,pers],
+#                 title='ERA EC PERS',
+#                 filename='era_pers',
+#                 clabs=['EC','PERS']
+#             )
+# gr.timeseries(
+#                 stacked_era_a,
+#                 cast=[hindcast_a,pers],
+#                 title='ERA EC PERS',
+#                 filename='era_pers',
+#                 clabs=['EC','PERS'],
+#                 lead_time=[30,37]
+#             )
+#
+# pers = models.persistence(obs_init,stacked_obs_a)
+# gr.timeseries(
+#                 stacked_obs_a,
+#                 cast=[hindcast_a,pers],
+#                 title='Barentswatch EC PERS',
+#                 filename='BW_pers',
+#                 clabs=['EC','PERS']
+#             )
+# gr.timeseries(
+#                 stacked_obs_a,
+#                 cast=[hindcast_a,pers],
+#                 title='Barentswatch EC PERS',
+#                 filename='BW_pers',
+#                 clabs=['EC','PERS'],
+#                 lead_time=[30,37]
+#             )
+
+
+# hindcast_ba = models.bias_adjustment_torrabla(
+#                                             hindcast-fc_mean,
+#                                             stacked_era-era_mean
+#                                             )
+# gr.timeseries(
+#                 stacked_era,
+#                 cast=[hindcast_a*era_std + era_mean,hindcast_ba+era_mean],
+#                 title='EC ba',
+#                 filename='era_ba',
+#                 clabs=['EC','EC ba']
+#             )
+# #
+# crps.skill_agg(
+#             stacked_era_a,
+#             [hindcast_a,hindcast_ba],
+#             xr.full_like(stacked_era_a,0),
+#             xr.full_like(stacked_era_a,1),
+#             title='ERA Simple Bias Adjustment',
+#             filename='crps_ERA_ba',
+#             dim='validation_time.month',
+#             mlabs=['sb','ba']
+#         )
+#
+# hindcast_ba = models.bias_adjustment_torrabla(
+#                                             hindcast_a,
+#                                             stacked_obs_a,
+#                                             window=60
+#                                             )
+# gr.timeseries(
+#                 stacked_obs_a,
+#                 cast=[hindcast_a,hindcast_ba],
+#                 title='EC ba',
+#                 filename='BW_ba',
+#                 clabs=['EC','EC ba']
+#             )
+# #
+# crps.skill_agg(
+#             stacked_obs_a,
+#             [hindcast_a,hindcast_ba],
+#             xr.full_like(stacked_era_a,0),
+#             xr.full_like(stacked_era_a,1),
+#             title='ERA Bias Adjustment',
+#             filename='crps_BW_ba',
+#             dim='validation_time.month',
+#             mlabs=['sb','ba'],
+#             mcols=['blue','orange']
+#         )
+
 
 # gr.point_map(hindcast,poi='Hisdalen')
 
@@ -245,123 +446,123 @@ exit()
 #                 lead_time=[30,37]
 #             )
 #
-mae.skill_agg(
-            stacked_era,
-            [hindcast],
-            era_mean,
-            era_std,
-            title='ERA',
-            filename='mae_ERA',
-            dim='validation_time.month'
-        )
-
-mae.skill_agg(
-            stacked_era,
-            [(hindcast_a*era_std)+era_mean],
-            era_mean,
-            era_std,
-            title='ERA Simple Bias Adjustment',
-            filename='mae_ERA_sb',
-            dim='validation_time.month'
-        )
-mae.skill_agg(
-            stacked_era_a,
-            [hindcast_a],
-            xr.full_like(stacked_era_a,0),
-            xr.full_like(stacked_era_a,1),
-            title='ERA anomalies',
-            filename='mae_ERA_a',
-            dim='validation_time.month'
-        )
-
-mae.skill_agg(
-            stacked_obs,
-            [hindcast],
-            clim_mean,
-            clim_std,
-            title='Barentswatch',
-            filename='mae_BW',
-            dim='validation_time.month'
-        )
+# mae.skill_agg(
+#             stacked_era,
+#             [hindcast],
+#             era_mean,
+#             era_std,
+#             title='ERA',
+#             filename='mae_ERA',
+#             dim='validation_time.month'
+#         )
 #
-mae.skill_agg(
-            stacked_obs,
-            [(hindcast_a*clim_std)+clim_mean],
-            clim_mean,
-            clim_std,
-            title='Barentswatch Simple Bias Adjustment',
-            filename='mae_BW_sb',
-            dim='validation_time.month'
-        )
-
-mae.skill_agg(
-            stacked_obs_a,
-            [hindcast_a],
-            xr.full_like(stacked_obs_a,0),
-            xr.full_like(stacked_obs_a,1),
-            title='Barentswatch anomalies',
-            filename='mae_BW_a',
-            dim='validation_time.month'
-        )
-
-crps.skill_agg(
-            stacked_era,
-            [hindcast],
-            era_mean,
-            era_std,
-            title='ERA',
-            filename='crps_ERA',
-            dim='validation_time.month'
-        )
-
-crps.skill_agg(
-            stacked_era,
-            [(hindcast_a*era_std)+era_mean],
-            era_mean,
-            era_std,
-            title='ERA Simple Bias Adjustment',
-            filename='crps_ERA_sb',
-            dim='validation_time.month'
-        )
-
-crps.skill_agg(
-            stacked_era_a,
-            [hindcast_a],
-            xr.full_like(stacked_era_a,0),
-            xr.full_like(stacked_era_a,1),
-            title='ERA anomalies',
-            filename='crps_ERA_a',
-            dim='validation_time.month'
-        )
-
-crps.skill_agg(
-            stacked_obs,
-            [hindcast],
-            clim_mean,
-            clim_std,
-            title='Barentswatch',
-            filename='crps_BW',
-            dim='validation_time.month'
-        )
-
-crps.skill_agg(
-            stacked_obs,
-            [(hindcast_a*clim_std)+clim_mean],
-            clim_mean,
-            clim_std,
-            title='Barentswatch Simple Bias Adjustment',
-            filename='crps_BW_sb',
-            dim='validation_time.month'
-        )
-crps.skill_agg(
-            stacked_obs_a,
-            [hindcast_a],
-            xr.full_like(stacked_obs_a,0),
-            xr.full_like(stacked_obs_a,1),
-            title='Barentswatch anomalies',
-            filename='crps_BW_a',
-            dim='validation_time.month'
-        )
+# mae.skill_agg(
+#             stacked_era,
+#             [(hindcast_a*era_std)+era_mean],
+#             era_mean,
+#             era_std,
+#             title='ERA Simple Bias Adjustment',
+#             filename='mae_ERA_sb',
+#             dim='validation_time.month'
+#         )
+# mae.skill_agg(
+#             stacked_era_a,
+#             [hindcast_a],
+#             xr.full_like(stacked_era_a,0),
+#             xr.full_like(stacked_era_a,1),
+#             title='ERA anomalies',
+#             filename='mae_ERA_a',
+#             dim='validation_time.month'
+#         )
+#
+# mae.skill_agg(
+#             stacked_obs,
+#             [hindcast],
+#             clim_mean,
+#             clim_std,
+#             title='Barentswatch',
+#             filename='mae_BW',
+#             dim='validation_time.month'
+#         )
+# #
+# mae.skill_agg(
+#             stacked_obs,
+#             [(hindcast_a*clim_std)+clim_mean],
+#             clim_mean,
+#             clim_std,
+#             title='Barentswatch Simple Bias Adjustment',
+#             filename='mae_BW_sb',
+#             dim='validation_time.month'
+#         )
+#
+# mae.skill_agg(
+#             stacked_obs_a,
+#             [hindcast_a],
+#             xr.full_like(stacked_obs_a,0),
+#             xr.full_like(stacked_obs_a,1),
+#             title='Barentswatch anomalies',
+#             filename='mae_BW_a',
+#             dim='validation_time.month'
+#         )
+#
+# crps.skill_agg(
+#             stacked_era,
+#             [hindcast],
+#             era_mean,
+#             era_std,
+#             title='ERA',
+#             filename='crps_ERA',
+#             dim='validation_time.month'
+#         )
+#
+# crps.skill_agg(
+#             stacked_era,
+#             [(hindcast_a*era_std)+era_mean],
+#             era_mean,
+#             era_std,
+#             title='ERA Simple Bias Adjustment',
+#             filename='crps_ERA_sb',
+#             dim='validation_time.month'
+#         )
+#
+# crps.skill_agg(
+#             stacked_era_a,
+#             [hindcast_a],
+#             xr.full_like(stacked_era_a,0),
+#             xr.full_like(stacked_era_a,1),
+#             title='ERA anomalies',
+#             filename='crps_ERA_a',
+#             dim='validation_time.month'
+#         )
+#
+# crps.skill_agg(
+#             stacked_obs,
+#             [hindcast],
+#             clim_mean,
+#             clim_std,
+#             title='Barentswatch',
+#             filename='crps_BW',
+#             dim='validation_time.month'
+#         )
+#
+# crps.skill_agg(
+#             stacked_obs,
+#             [(hindcast_a*clim_std)+clim_mean],
+#             clim_mean,
+#             clim_std,
+#             title='Barentswatch Simple Bias Adjustment',
+#             filename='crps_BW_sb',
+#             dim='validation_time.month'
+#         )
+# crps.skill_agg(
+#             stacked_obs_a,
+#             [hindcast_a],
+#             xr.full_like(stacked_obs_a,0),
+#             xr.full_like(stacked_obs_a,1),
+#             title='Barentswatch anomalies',
+#             filename='crps_BW_a',
+#             dim='validation_time.month'
+#         )
 #
 # brier.skill_agg(
 #             stacked_era,

@@ -5,6 +5,83 @@ import xskillscore as xs
 
 import S2S.xarray_helpers as xh
 
+def centered_acc(x,y):
+
+    idx_bool = ~np.logical_or(np.isnan(x),np.isnan(y))
+
+    x = x[idx_bool]
+    y = y[idx_bool]
+
+    x_anom = (x - x.mean())
+    y_anom = (y - y.mean())
+
+    covar = x_anom * y_anom
+
+    var_x = x_anom**2
+    var_y = y_anom**2
+
+    return covar.sum() / np.sqrt( ( var_x.sum() + var_y.sum() ) )
+
+def uncentered_acc(x,y):
+
+    idx_bool = ~np.logical_or(np.isnan(x),np.isnan(y))
+
+    x = x[idx_bool]
+    y = y[idx_bool]
+
+    x_anom = x
+    y_anom = y
+
+    covar = x_anom * y_anom
+
+    var_x = x_anom**2
+    var_y = y_anom**2
+
+    return covar.sum() / np.sqrt( ( var_x.sum() + var_y.sum() ) )
+
+def ACc(forecast,observations,weights=None,centered=True):
+    """
+    Anomaly correlation after Wilks (2011, Chapter 8)
+
+    D.S. Wilks, Chapter 8 - Forecast Verification,
+    International Geophysics, Academic Press, Volume 100, 2011,
+    Pages 301-394, https://doi.org/10.1016/B978-0-12-385022-5.00008-7.
+    """
+    if weights is None:
+        weights = xr.full_like(observations,1.)
+
+    forecast     = forecast * weights
+    observations = observations * weights
+    
+    try:
+        forecast = forecast.mean('member')
+    except AttributeError:
+        pass
+
+
+    ds = xr.merge(
+                    [
+                        forecast.rename('fc'),
+                        observations.rename('obs')
+                    ],join='inner',compat='override'
+                )
+
+    if centered:
+        ufunc = centered_acc
+    else:
+        ufunc = uncentered_acc
+
+    r = xr.apply_ufunc(
+            centered_acc,ds.fc,ds.obs,
+            input_core_dims = [['lat','lon'],['lat','lon']],
+            output_core_dims = [[]],
+            vectorize=True,dask='parallelized'
+        )
+
+    return r
+
+
+
 def CRPS_ensemble(obs,fc,fair=True,axis=0):
     """
     @author: Ole Wulff
@@ -124,7 +201,7 @@ class SSCORE:
 
     def pull(self,fc,obs,N,ci=.95,min_period=2):
 
-
+        # CHANGE SO THAT MISMATCH YEARS AE TRHOWN OUT INSTEAD
         fc_idx  = (~np.isnan(fc)).sum(axis=0)>min_period
         obs_idx = (~np.isnan(obs)).sum(axis=0)>min_period
 

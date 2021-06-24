@@ -6,179 +6,9 @@ import scipy.stats as stats
 
 import S2S.xarray_helpers as xh
 
-def running_regression_CV(x,index,window=30):
-    """
-    dimensions requirements:
-        name            dim
-
-        year            -2
-        dayofyear       -1
-    """
-    mean  = []
-    std   = []
-
-    pad   = window//2
-
-    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
-    index = np.pad(index,pad,mode='wrap')
-
-    index[-pad:] += index[-pad-1]
-    index[:pad]  -= index[-pad-1]
-
-    for ii,idx in enumerate(index[pad:-pad]):
-
-        pool = x[...,np.abs(index-idx)<=pad]
-
-        ymean,ystd = [],[]
-        for yy in range(pool.shape[-2]):
-
-            filtered_pool = np.delete(pool,yy,axis=-2)
-            # regression
-
-            ############
-            ymean.append(np.nanmean(filtered_pool))
-            ystd.append(np.nanstd(filtered_pool))
-
-        mean.append(np.array(ymean))
-        std.append(np.array(ystd))
-
-    return np.stack(mean,axis=-1),np.stack(std,axis=-1)
-
-def regression1D(x,y):
-    """
-    Returns fitted coeffs by OLS for model
-        y = intercept + slope*x + residuals
-
-    Keeps the
-
-    args:
-        x: np.array dim: (n,)
-        y: np.array dim: (n,)
-
-    returns:
-        intercept,slope: np.array,np.array dim: (n,),(n,)
-    """
-    res1 = []
-    res2 = []
-    for n in range(len(x)):
-        X = np.delete(x,n)
-        X = np.stack([np.ones_like(X),X],axis=1)
-        res = sm.OLS(np.delete(y,n),X).fit()
-        res1.append(res.params[0])
-        res2.append(res.params[1])
-    return np.array(res1),np.array(res2)
-
-def regression2D(x1,x2,y):
-    """
-    Returns fitted coeffs by OLS for model
-        y = intercept +slope1*x1 + slope2*x2 + residuals
-
-    Keeps the
-
-    args:
-        x1: np.array dim: (n,)
-        x2: np.array dim: (n,)
-        y : np.array dim: (n,)
-
-    returns:
-        intercept,slope1,slope2: np.array,np.array dim: (n,),(n,)
-    """
-    res1 = []
-    res2 = []
-    res3 = []
-    for n in range(y.shape[0]):
-        X1 = np.delete(x1,n,axis=0).flatten()
-        X2 = np.delete(x2,n,axis=0).flatten()
-        X0 = np.ones_like(X1)
-        X = np.stack(
-                        [
-                            X0,
-                            X1,
-                            X2
-                        ],axis=1
-                    )
-        Y = np.delete(y,n,axis=0).flatten()
-        res = sm.OLS(Y, X, missing='drop').fit()
-        res1.append(res.params[0])
-        res2.append(res.params[1])
-        res3.append(res.params[2])
-    return np.array(res1),np.array(res2),np.array(res3)
-
-def combo(obs_t0,model_t,obs_t,dim='validation_time.month'):
-    """
-    Not very elegant and not particularly cheap,
-    TODO: RE-DO
-
-    args:
-        obs_t0:  xarray.DataArray
-        model_t: xarray.DataArray
-        obs_t:   xarray.DataArray
-
-    returns:
-
-
-    """
-    print('\tmodels.combo()')
-
-    dim_name = dim.split('.')[0]
-    subgroup = dim.split('.')[1]
-
-    model    = model_t
-    model_t  = model.mean('member',skipna=True)
-
-    if obs_t0.dims != model.dims:
-        obs_t0 = obs_t0.broadcast_like(model_t)
-
-    if obs_t.dims != model.dims:
-        obs_t  = obs_t.broadcast_like(model_t)
-
-    ds = xr.merge(
-                    [
-                        obs_t0.rename('obs_t0'),
-                        model_t.rename('model_t'),
-                        obs_t.rename('obs_t')
-                ],join='inner',compat='override'
-            )
-
-    groups = list(ds.groupby(dim))
-
-    n = 0
-    N = len(groups)
-
-    xh.print_progress(n,N)
-    e1,e2 = ' s','sl'
-
-    stacked_dim = list(groups[0][1].dims)[-1]
-    stack_dim_1 = stacked_dim.split('_')[-2]
-    stack_dim_2 = stacked_dim.split('_')[-1]
-
-    subgroup_data,subgroup_label = [],[]
-    for n,(label,data) in enumerate(groups):
-
-        data = data.unstack()
-
-        tup = xr.apply_ufunc(
-                regression2D, data.obs_t0, data.model_t, data.obs_t,
-                input_core_dims  = [['time'],['time'],['time']],
-                output_core_dims = [['time'],['time'],['time']],
-                vectorize=True
-                )
-
-        subgroup_data.append(xr.merge(
-            [
-                tup[0].rename('intercept'),
-                tup[1].rename('model_t'),
-                tup[2].rename('obs_t0')
-                ]
-            ).stack({stacked_dim:(stack_dim_1,stack_dim_2)})
-        )
-
-        e1 += 'o'
-        e2 += 'o'
-        xh.print_progress(n+1,N,e=e1+' '+e2+'w')
-
-    return xr.concat(subgroup_data,stacked_dim).unstack()
-
+################################################################################
+############################# xarray routines ##################################
+################################################################################
 
 def clim_fc(mean,std,r=1,number_of_members=11):
     """
@@ -215,7 +45,13 @@ def deterministic_gaussian_forecast(mean,std):
             vectorize=True,dask='parallelized'
             )
 
-def bias_adjustment_torrabla(forecast,observations,clim_std=None,window=30):
+def bias_adjustment_torralba(
+                                forecast,
+                                observations,
+                                clim_std=None,
+                                window=30,
+                                spread_only=False
+                            ):
     """
     Forecsat calibration as of Eq. 2-4 in Torralba et al. (2017).
 
@@ -274,7 +110,10 @@ def bias_adjustment_torrabla(forecast,observations,clim_std=None,window=30):
 
     sigma_e   = forecast.std('member')
 
-    alpha = xr.ufuncs.fabs(rho) * ( sigma_ref/sigma_ens )
+    if spread_only:
+        alpha = 1.
+    else:
+        alpha = xr.ufuncs.fabs(rho) * ( sigma_ref/sigma_ens )
 
     beta  = xr.ufuncs.sqrt( 1 - rho**2 ) * ( sigma_ref/sigma_e )
 
@@ -282,6 +121,97 @@ def bias_adjustment_torrabla(forecast,observations,clim_std=None,window=30):
 
     return y
 
+def persistence(init_value,observations,window=30):
+    """
+    Input must be anomlies.
+    """
+
+    print('\tmodels.persistence()')
+    ds = xr.merge(
+                    [
+                        init_value.rename('iv'),
+                        observations.rename('o')
+                ],join='inner',compat='override'
+            )
+
+    ds  = xh.unstack_time(ds)
+
+    rho = xr.apply_ufunc(
+                correlation_CV,ds.iv,ds.o,ds.dayofyear,window,
+                input_core_dims  = [
+                                    ['year','dayofyear'],
+                                    ['year','dayofyear'],
+                                    ['dayofyear'],
+                                    []
+                                ],
+                output_core_dims = [['year','dayofyear']],
+                vectorize=True
+    )
+
+    rho = xh.stack_time(rho)
+
+    try:
+        rho = rho.drop('validation_time')
+    except AttributeError:
+        pass
+
+    return rho * init_value
+
+def combo(init_value,model,observations,window=30,lim=1,sub=np.nan):
+    """
+    Input must be anomlies.
+    """
+
+    print('\t performing models.persistence()')
+    ds = xr.merge(
+                    [
+                        init_value.rename('iv'),
+                        model.rename('mod').mean('member'),
+                        observations.rename('o')
+                ],join='inner',compat='override'
+            )
+
+    ds  = xh.unstack_time(ds)
+
+    alpha,beta = xr.apply_ufunc(
+                running_regression_CV,
+                ds.iv,
+                ds.mod,
+                ds.o,
+                ds.dayofyear,
+                window,
+                lim,
+                sub,
+                input_core_dims  = [
+                                    ['year','dayofyear'],
+                                    ['year','dayofyear'],
+                                    ['year','dayofyear'],
+                                    ['dayofyear'],
+                                    [],
+                                    [],
+                                    []
+                                ],
+                output_core_dims = [['year','dayofyear'],['year','dayofyear']],
+                vectorize=True
+            )
+
+    try:
+        alpha = alpha.drop('validation_time')
+    except AttributeError:
+        pass
+    try:
+        beta = beta.drop('validation_time')
+    except AttributeError:
+        pass
+
+    alpha = xh.stack_time(alpha)
+    beta  = xh.stack_time(beta)
+
+    return alpha * init_value + beta * model.mean('member')
+
+################################################################################
+########################### NumPy routines #####################################
+################################################################################
 def correlation_CV(x,y,index,window=30):
     """
     Computes correlation of x against y (rho), keeping dim -1 and -2.
@@ -386,10 +316,152 @@ def std(x,index,window=30):
 
     return np.stack(std,axis=-1)
 
+def running_regression_CV(x,y,z,index,window=30,lim=1,sub=np.nan):
+    """
+    Fits linear regression model: z = a * x + b * y, keeping dim -1 and -2.
+    Dim -1 must be 'dayofyear', with the corresponding days given in index.
+    Dim -2 must be 'year'.
+
+    args:
+        x:      np.array of float, with day of year as index -1 and year as
+                index -2
+        index:  np.array of int, 1-dimensional holding dayofyear corresponding
+                to dim -1 of x
+
+    returns
+        rho:   np.array of float, with day of year as index -1 and year as
+                dim -2
+
+    dimensions requirements:
+        name            dim
+
+        year            -2
+        dayofyear       -1
+    """
+    slope_x,slope_y = [],[]
+
+    pad   = window//2
+
+    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+    y     = np.pad(y,pad,mode='wrap')[pad:-pad,:]
+    z     = np.pad(z,pad,mode='wrap')[pad:-pad,:]
+
+    index = np.pad(index,pad,mode='wrap')
+
+    index[-pad:] += index[-pad-1]
+    index[:pad]  -= index[-pad-1]
+
+    for ii,idx in enumerate(index[pad:-pad]):
+
+        # pool all values that falls within window
+        xpool = x[...,np.abs(index-idx)<=pad]
+        ypool = y[...,np.abs(index-idx)<=pad]
+        zpool = z[...,np.abs(index-idx)<=pad]
+
+        yslope_x,yslope_y = [],[]
+        for yy in range(xpool.shape[-2]):
+
+            # delete the relevant year from pool (for cross validation)
+            filtered_xpool = np.delete(xpool,yy,axis=-2).flatten()
+            filtered_ypool = np.delete(ypool,yy,axis=-2).flatten()
+            filtered_zpool = np.delete(zpool,yy,axis=-2).flatten()
+
+            idx_bool = ~np.logical_or(
+                                np.logical_or(
+                                                np.isnan(filtered_xpool),
+                                                np.isnan(filtered_ypool)
+                                            ),np.isnan(filtered_zpool)
+                            )
+
+            if idx_bool.sum()<lim:
+                yslope_x.append(sub)
+                yslope_y.append(sub)
+
+            else:
+                X = np.stack(
+                                [
+                                    filtered_xpool[idx_bool],
+                                    filtered_ypool[idx_bool]
+                                ],axis=1
+                            )
+
+                Y = filtered_zpool[idx_bool]
+
+                fit = sm.OLS(Y,X).fit()
+
+                yslope_x.append(fit.params[0])
+                yslope_y.append(fit.params[1])
+
+        slope_x.append(np.array(yslope_x))
+        slope_y.append(np.array(yslope_y))
+
+    return np.stack(slope_x,axis=-1),np.stack(slope_y,axis=-1)
+
+def regression1D(x,y):
+    """
+    Returns fitted coeffs by OLS for model
+        y = intercept + slope*x + residuals
+
+    Keeps the
+
+    args:
+        x: np.array dim: (n,)
+        y: np.array dim: (n,)
+
+    returns:
+        intercept,slope: np.array,np.array dim: (n,),(n,)
+    """
+    res1 = []
+    res2 = []
+    for n in range(len(x)):
+        X = np.delete(x,n)
+        X = np.stack([np.ones_like(X),X],axis=1)
+        res = sm.OLS(np.delete(y,n),X).fit()
+        res1.append(res.params[0])
+        res2.append(res.params[1])
+    return np.array(res1),np.array(res2)
+
+def regression2D(x1,x2,y):
+    """
+    Returns fitted coeffs by OLS for model
+        y = intercept +slope1*x1 + slope2*x2 + residuals
+
+    Keeps the
+
+    args:
+        x1: np.array dim: (n,)
+        x2: np.array dim: (n,)
+        y : np.array dim: (n,)
+
+    returns:
+        intercept,slope1,slope2: np.array,np.array dim: (n,),(n,)
+    """
+    res1 = []
+    res2 = []
+    res3 = []
+    for n in range(y.shape[0]):
+        X1 = np.delete(x1,n,axis=0).flatten()
+        X2 = np.delete(x2,n,axis=0).flatten()
+        X0 = np.ones_like(X1)
+        X = np.stack(
+                        [
+                            X0,
+                            X1,
+                            X2
+                        ],axis=1
+                    )
+        Y = np.delete(y,n,axis=0).flatten()
+        res = sm.OLS(Y, X, missing='drop').fit()
+        res1.append(res.params[0])
+        res2.append(res.params[1])
+        res3.append(res.params[2])
+    return np.array(res1),np.array(res2),np.array(res3)
+
+
 ################################################################################
 ############################# Depricated #######################################
 ################################################################################
-def persistence(predictor,response,var,dim='time.dayofyear'):
+def persistence3(predictor,response,var,dim='time.dayofyear'):
     """
     Not very elegant and probably not particularly cheap
     """
