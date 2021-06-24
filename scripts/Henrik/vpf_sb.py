@@ -23,7 +23,7 @@ t_end    = (2021,1,4)
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
-process_hindcast     = True
+process_hindcast     = False
 process_observations = False
 process_era          = False
 persistence_model    = True
@@ -129,9 +129,7 @@ for ii in range(di,len(all_observations.location),di):
 
         print('\tOrganize ERA like hindcast')
         stacked_obs = \
-            xh.at_validation(era,hindcast.time+h      = 'abs_wind'
-var1     = 'u10'
-varindcast.step,ddays=1)
+            xh.at_validation(era,hindcast.time+hindcast.step,ddays=1)
 
         print('\tCompute climatology')
         clim_mean,clim_std = xh.o_climatology(stacked_obs)
@@ -149,11 +147,11 @@ varindcast.step,ddays=1)
         xh.store_by_location(clim_mean,'era_clim_mean_temp')
         xh.store_by_location(clim_std,'era_clim_std_temp')
 
-    print('\tPrepare persistence model initialization data')
+    print('\nPrepare persistence model initialization data')
     if persistence_model:
 
         # BW
-        o = observations
+        o = observations[var]
         cm,cs = xh.o_climatology(o)
         o_a   = (o-cm)/cs
         o_a = o_a.reindex(
@@ -161,7 +159,7 @@ varindcast.step,ddays=1)
                 method='pad',
                 tolerance='1W'
                 ).broadcast_like(hindcast.mean('member'))
-        xh.store_by_location(o_a,'obs_init_temp')
+        xh.store_by_location(o_a.rename(var),'obs_init_temp')
 
         # ERA
         o     = xh.load_by_location(observations.location,'era_temp')[var]\
@@ -175,6 +173,6 @@ varindcast.step,ddays=1)
         o_a = o_a.reindex(
                 {'time':hindcast.time},
                 method='pad',
-                tolerance='D'
+                tolerance='1D'
                 ).broadcast_like(hindcast.mean('member'))
-        xh.store_by_location(o_a,'era_init_temp')
+        xh.store_by_location(o_a.rename(var),'era_init_temp')
