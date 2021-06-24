@@ -6,36 +6,52 @@ import xskillscore as xs
 import S2S.xarray_helpers as xh
 
 def centered_acc(x,y):
+    """
+    Anomaly correlation after Wilks (2011, Chapter 8) - Eq. 8.
 
+    D.S. Wilks, Chapter 8 - Forecast Verification,
+    International Geophysics, Academic Press, Volume 100, 2011,
+    Pages 301-394, https://doi.org/10.1016/B978-0-12-385022-5.00008-7.
+    """
     idx_bool = ~np.logical_or(np.isnan(x),np.isnan(y))
 
     x = x[idx_bool]
     y = y[idx_bool]
+
+    M = len(x)
 
     x_anom = (x - x.mean())
     y_anom = (y - y.mean())
 
-    covar = x_anom * y_anom
+    covar = x_anom * y_anom / M
 
-    var_x = x_anom**2
-    var_y = y_anom**2
+    var_x = x_anom**2 / M
+    var_y = y_anom**2 / M
 
     return covar.sum() / np.sqrt( ( var_x.sum() + var_y.sum() ) )
 
 def uncentered_acc(x,y):
+    """
+    Anomaly correlation after Wilks (2011, Chapter 8) - Eq. 8.64
 
+    D.S. Wilks, Chapter 8 - Forecast Verification,
+    International Geophysics, Academic Press, Volume 100, 2011,
+    Pages 301-394, https://doi.org/10.1016/B978-0-12-385022-5.00008-7.
+    """
     idx_bool = ~np.logical_or(np.isnan(x),np.isnan(y))
 
     x = x[idx_bool]
     y = y[idx_bool]
 
+    M = len(x)
+
     x_anom = x
     y_anom = y
 
-    covar = x_anom * y_anom
+    covar = x_anom * y_anom / M
 
-    var_x = x_anom**2
-    var_y = y_anom**2
+    var_x = x_anom**2 / M
+    var_y = y_anom**2 / M
 
     return covar.sum() / np.sqrt( ( var_x.sum() + var_y.sum() ) )
 
@@ -52,7 +68,7 @@ def ACc(forecast,observations,weights=None,centered=True):
 
     forecast     = forecast * weights
     observations = observations * weights
-    
+
     try:
         forecast = forecast.mean('member')
     except AttributeError:
