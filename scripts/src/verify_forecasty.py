@@ -125,14 +125,14 @@ for lt in steps:
 
     # skal lage en figur med 12 mnd for kvar leadtime
     
-    fg,axes = plt.subplots(ncols=4,nrows=3,\
-                    subplot_kw=dict(projection=ccrs.PlateCarree()))
-    axes_f = axes.flatten()
-    cmap   = mpl.colors.ListedColormap(
-                    ['red','red','red','white','lightblue','royalblue','blue']
+    #fg,axes = plt.subplots(ncols=4,nrows=3,\
+    #                subplot_kw=dict(projection=ccrs.PlateCarree()))
+    #axes_f = axes.flatten()
+    #cmap   = mpl.colors.ListedColormap(
+     #               ['red','red','red','white','lightblue','royalblue','blue']
                                         )
-    levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
-    norm   = BoundaryNorm(levels,cmap.N)
+    #levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
+    #norm   = BoundaryNorm(levels,cmap.N)
     c = [] #lagar en ny xarray med score for kvar mnd
     
     for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month. n går frå 0-11, xlabel 1-12, xdata: dataene
@@ -173,14 +173,18 @@ for lt in steps:
 #     ...:         cmap=cmap,
 #     ...:         norm=norm
 #     ...:        )
-
+    #fg,axes = plt.axes(subplot_kws=dict(projection=ccrs.PlateCarree()))
+    
     im = skill_score.transpose('lat','lon','time_month').plot(
         x='lon',
         y='lat',
         col='time_month',
         col_wrap=3,
+        levels=levels,
         subplot_kws=dict(projection=ccrs.PlateCarree()),
         transform=ccrs.PlateCarree(),
+        cbar_kwargs={'label':'SS',
+                     'ticks': levels}
     )
     
     
@@ -197,6 +201,8 @@ for lt in steps:
     #cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels,extend='both') 
     #plt.tight_layout()
 
-    fg.suptitle('SS of MAE at lead time: '+str(lt))    
-    fg.savefig('test_SS_day_' + str(lt.days) + '.png')
+    #fg.suptitle('SS of MAE at lead time: '+str(lt))   
+    plt.title('SS of MAE at lead time: '+str(lt))
+    fplt.savefig('test_SS_day_' + str(lt.days) + '.png')
+    #plt.savefig('cartopy_example.png')
 
