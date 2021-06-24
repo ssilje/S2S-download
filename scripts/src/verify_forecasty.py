@@ -109,6 +109,7 @@ model = hindcast
 clim_mean = clim_mean
 clim_std = clim_std
 dim='validation_time.month'
+
 for lt in steps:
 #lt= steps[0]    
     mod = model.sel(step=pd.Timedelta(lt,'D'))
@@ -117,11 +118,13 @@ for lt in steps:
     cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
    
    # a = mod.groupby("validation_time.month").mean().mean('member')
-    x_group = list(mod.groupby(dim))
+    x_group = list(mod.groupby(dim)) # lagar en liste for kvar mnd med 2 dim (nr_mnd, xarray)
     y_group = list(obs.groupby(dim))
     cm_group = list(cm.groupby(dim))
     cs_group = list(cs.groupby(dim))
 
+    # skal lage en figur med 12 mnd for kvar leadtime
+    
     fg,axes = plt.subplots(ncols=4,nrows=3,\
                     subplot_kw=dict(projection=ccrs.PlateCarree()))
     axes_f = axes.flatten()
@@ -130,17 +133,18 @@ for lt in steps:
                                         )
     levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
     norm   = BoundaryNorm(levels,cmap.N)
-    c = []
-    for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month
+    c = [] #lagar en ny xarray med score for kvar mnd
+    
+    for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month. n går frå 0-11, xlabel 1-12, xdata: dataene
     
         ylabel,ydata   = y_group[n]
         cmlabel,cmdata = cm_group[n]
         cslabel,csdata = cs_group[n]
 
-        xdata  = mod.unstack().sortby(['time']) #mod
-        ydata  = obs.unstack().sortby(['time']) # obs
-        cmdata = cm.unstack().sortby(['time'])
-        csdata = cs.unstack().sortby(['time'])
+        xdata  = xdata.unstack().sortby(['time']) #mod
+        ydata  = ydata.unstack().sortby(['time']) # obs
+        cmdata = cmdata.unstack().sortby(['time'])
+        csdata = csdata.unstack().sortby(['time'])
 
         xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
 
@@ -148,10 +152,14 @@ for lt in steps:
         score_clim   = xs.mae(cmdata,ydata,dim=[])
    
         SS = 1 - score_mean/score_clim
-        SS = SS.median('time',skipna=True) 
+        SS = SS.median('time',skipna=True)
+        time_month = np.empty(1)
+        time_month=xlabel
+        
+        SS=SS.assign_coords(time_month=time_month)
         c.append(SS)
     
-    skill_score = xr.concat(c,dim='step') ## må legge dei etter kvarandre med mnd
+    skill_score = xr.concat(c,dim='time_month') ## må legge dei etter kvarandre med mnd
         im = SS.transpose('lat','lon').plot(
             ax=axes_f[n],
             transform=ccrs.PlateCarree(),  # this is important!
