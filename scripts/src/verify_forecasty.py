@@ -160,25 +160,42 @@ for lt in steps:
         c.append(SS)
     
     skill_score = xr.concat(c,dim='time_month') ## må legge dei etter kvarandre med mnd
-        im = SS.transpose('lat','lon').plot(
-            ax=axes_f[n],
-            transform=ccrs.PlateCarree(),  # this is important!
-            add_colorbar=False, 
-            cmap=cmap, 
-            norm=norm
-        )
+    skill_score = skill_score.drop('step')
     
-        ax = axes_f[n]
-        
+# Bruk denne for å plotte lead time med skill    
+#    im = skill_score.transpose('lat','lon','time_month').plot(
+#     ...:         x='lon',
+#     ...:         y='lat',
+#     ...:         col='time_month',
+#     ...:         col_wrap=3,
+#     ...:         subplot_kws=dict(projection=ccrs.PlateCarree()),
+#     ...:         transform=ccrs.PlateCarree(),
+#     ...:         cmap=cmap,
+#     ...:         norm=norm
+#     ...:        )
 
-        ax.coastlines(resolution='10m', color='black',\
-                     linewidth=0.2)
-                                
+    im = skill_score.transpose('lat','lon','time_month').plot(
+        x='lon',
+        y='lat',
+        col='time_month',
+        col_wrap=3,
+        subplot_kws=dict(projection=ccrs.PlateCarree()),
+        transform=ccrs.PlateCarree(),
+    )
     
-        ax.set_title(month(xlabel))
-        ax = fg.add_gridspec(3, 3)
-    cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels,extend='both') 
-    plt.tight_layout()
+    
+    for i,ax in enumerate(im.axes.flat):
+        ax.coastlines(resolution='10m', color='black',\
+                      linewidth=0.2)
+        ax.set_title(month(i))
+    
+
+   
+
+  
+    # ax = fg.add_gridspec(3, 3)
+    #cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels,extend='both') 
+    #plt.tight_layout()
 
     fg.suptitle('SS of MAE at lead time: '+str(lt))    
     fg.savefig('test_SS_day_' + str(lt.days) + '.png')
