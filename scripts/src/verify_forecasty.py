@@ -109,7 +109,7 @@ model = hindcast
 clim_mean = clim_mean
 clim_std = clim_std
 dim='validation_time.month'
-
+cc = []
 for lt in steps:
 #lt= steps[0]    
     mod = model.sel(step=pd.Timedelta(lt,'D'))
@@ -123,16 +123,7 @@ for lt in steps:
     cm_group = list(cm.groupby(dim))
     cs_group = list(cs.groupby(dim))
 
-    # skal lage en figur med 12 mnd for kvar leadtime
-    
-    #fg,axes = plt.subplots(ncols=4,nrows=3,\
-    #                subplot_kw=dict(projection=ccrs.PlateCarree()))
-    #axes_f = axes.flatten()
-    #cmap   = mpl.colors.ListedColormap(
-     #               ['red','red','red','white','lightblue','royalblue','blue']
-                                     #  )
-    
-    #norm   = BoundaryNorm(levels,cmap.N)
+ 
     c = [] #lagar en ny xarray med score for kvar mnd
     
     for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month. n går frå 0-11, xlabel 1-12, xdata: dataene
@@ -160,6 +151,7 @@ for lt in steps:
         c.append(SS)
     
     skill_score = xr.concat(c,dim='time_month') ## må legge dei etter kvarandre med mnd
+    skill_score_step = skill_score
     skill_score = skill_score.drop('step')
     
 # Bruk denne for å plotte lead time med skill    
@@ -205,5 +197,18 @@ for lt in steps:
     plt.suptitle('SS of MAE at lead time: '+str(lt))
    
     plt.savefig('test_SS_day_' + str(lt.days) + '.png')
-    #plt.savefig('cartopy_example.png')
 
+    cc.append(skill_score_step)
+SS_step = xr.concat(cc,dim='step') ## må legge dei etter kvarandre med mnd
+SS_group = list(SS_step.groupby('time_month'))
+
+test = np.empty(SS_step[2,3].shape)
+test[:] =np.NaN
+
+for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
+    index = xdata.where(xdata.values >0) # finding data with skill
+    for lt in steps:
+        skill_map= index.sel(step=pd.Timedelta(lt,'D'))
+        test[:] = skill_map.where(skill_map)
+        da_stacked[da_stacked.notnull()]
+            
