@@ -131,7 +131,7 @@ for lt in steps:
     #cmap   = mpl.colors.ListedColormap(
      #               ['red','red','red','white','lightblue','royalblue','blue']
                                      #  )
-    #levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
+    
     #norm   = BoundaryNorm(levels,cmap.N)
     c = [] #lagar en ny xarray med score for kvar mnd
     
@@ -174,7 +174,7 @@ for lt in steps:
 #     ...:         norm=norm
 #     ...:        )
     #fg,axes = plt.axes(subplot_kws=dict(projection=ccrs.PlateCarree()))
-    
+    levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
     im = skill_score.transpose('lat','lon','time_month').plot(
         x='lon',
         y='lat',
