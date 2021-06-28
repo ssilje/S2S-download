@@ -144,8 +144,11 @@ for lt in steps:
    
         SS = 1 - score_mean/score_clim
         SS = SS.median('time',skipna=True)
-        time_month = np.empty(1)
+        time_month = np.empty(1) 
+        print(time_month)
+        
         time_month=xlabel
+        print(time_month)
         
         SS=SS.assign_coords(time_month=time_month)
         c.append(SS)
@@ -205,6 +208,7 @@ SS_group = list(SS_step.groupby('time_month'))
 test = np.empty(SS_step[2,3].shape)
 test[:] =np.NaN
 SS_group = list(SS_step.groupby('time_month'))
+c_ss =[]
 for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
     index = xdata.where(xdata.values >0) # finding data with skill
     for nlat,ilat in enumerate(SS_step.lat):
@@ -214,4 +218,68 @@ for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
                 test[nlon,nlat] = np.nan
             else:
                 test[nlon,nlat] = xdata_ss[-1].step.dt.days.item()
-                
+            
+    #ss_dataset = xr.Dataset(
+    #    {
+     #       "skill": (["x", "y"], test),
+     #   },
+    #)
+    
+    ss_dataset = xr.Dataset(
+        {
+            "skill": (["lon", "lat"], test),
+        },
+        coords={
+            "lon": (["lon",], SS_step.lon),
+            "lat": (["lat"], SS_step.lat),
+        },
+    )
+    time_month=xlabel
+    ss_dataset=ss_dataset.assign_coords(time_month=time_month)
+    c_ss.append(ss_dataset)
+    
+skill_score_at_lt = xr.concat(c_ss,dim='time_month')     
+    # Bruk denne for å plotte lead time med skill    
+#    im = skill_score.transpose('lat','lon','time_month').plot(
+#     ...:         x='lon',
+#     ...:         y='lat',
+#     ...:         col='time_month',
+#     ...:         col_wrap=3,
+#     ...:         subplot_kws=dict(projection=ccrs.PlateCarree()),
+#     ...:         transform=ccrs.PlateCarree(),
+#     ...:         cmap=cmap,
+#     ...:         norm=norm
+#     ...:        )
+    #fg,axes = plt.axes(subplot_kws=dict(projection=ccrs.PlateCarree()))
+levels = [7, 14, 21, 28, 25, 42]
+im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
+    x='lon',
+    y='lat',
+    col='time_month',
+    col_wrap=3,
+    levels=levels,
+    subplot_kws=dict(projection=ccrs.PlateCarree()),
+    transform=ccrs.PlateCarree(),
+    cbar_kwargs={'label':'lead time',
+                 'ticks': levels}
+)
+    
+    
+    for i,ax in enumerate(im.axes.flat):
+        ax.coastlines(resolution='10m', color='black',\
+                      linewidth=0.2)
+        ax.set_title(month(i))
+    
+
+   
+
+  
+    # ax = fg.add_gridspec(3, 3)
+    #cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels,extend='both') 
+    #plt.tight_layout()
+
+    #fg.suptitle('SS of MAE at lead time: '+str(lt))   
+    plt.suptitle('last lead time with skill)
+   
+    plt.savefig('test_SS_leadtime.png')
+
