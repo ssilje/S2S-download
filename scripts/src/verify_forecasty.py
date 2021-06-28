@@ -204,20 +204,14 @@ SS_group = list(SS_step.groupby('time_month'))
 
 test = np.empty(SS_step[2,3].shape)
 test[:] =np.NaN
-
+SS_group = list(SS_step.groupby('time_month'))
 for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
     index = xdata.where(xdata.values >0) # finding data with skill
     for nlat,ilat in enumerate(SS_step.lat):
         for nlon,ilon in enumerate(SS_step.lon):
-            xdata = xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat]).where(xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat])>0,drop=True) # find the time steps with skill
-            if xdata.shape[0] == 0:
-                test[nlon,nlat] = NaN
+            xdata_ss = xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat]).where(xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat])>0,drop=True) # find the time steps with skill
+            if xdata_ss.shape[0] == 0:
+                test[nlon,nlat] = np.nan
             else:
-                for lt in xdata.steps:
-                step=pd.Timedelta(lt,'D')
-    xdata.sel(lon=xdata.lon[nn],lat=xdata.lat[n]).where(xdata.sel(lon=xdata.lon[nn],lat=xdata.lat[n])>0,drop=True)
-    for lt in steps:
-        skill_map= index.sel(step=pd.Timedelta(lt,'D'))
-        test[:] = skill_map.where(skill_map)
-        da_stacked[da_stacked.notnull()]
-            
+                test[nlon,nlat] = xdata_ss[-1].step.dt.days.item()
+                
