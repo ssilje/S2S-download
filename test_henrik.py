@@ -24,7 +24,7 @@ hindcast = Hindcast(
                         high_res=high_res,
                         steps=steps,
                         process=True,
-                        download=True,
+                        download=False,
                         split_work=True
                     )
 

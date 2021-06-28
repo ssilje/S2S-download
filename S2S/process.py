@@ -72,11 +72,14 @@ class Hindcast:
 
                     self.t_start = self.t_end
                     self.t_end   = self.add_month(self.t_end)
-                    print(data)
+
                     data_list.append(data)
 
                 self.data = xr.concat(data_list,'time')
-                print(self.data)
+
+                # deal with duplicates along time dimesion
+                self.data = self.data.groupby('time').mean()
+
             else:
 
                 print('\tLoad hindcast')
