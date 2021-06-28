@@ -13,7 +13,7 @@ clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
 
-high_res = False
+high_res = True
 steps    = pd.to_timedelta([9,16,23,30,37,44],'D')
 
 hindcast = Hindcast(
