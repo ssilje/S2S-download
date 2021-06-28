@@ -14,7 +14,7 @@ clim_t_end    = (2021,1,4)
 
 
 high_res = True
-steps    = pd.to_timedelta([9,16,23,30,37,44],'D')
+steps    = pd.to_timedelta([9,16,23,30,37],'D')
 
 hindcast = Hindcast(
                         var,
@@ -23,8 +23,9 @@ hindcast = Hindcast(
                         domainID,
                         high_res=high_res,
                         steps=steps,
-                        process=False,
-                        download=True
+                        process=True,
+                        download=True,
+                        split_work=True
                     )
 
 # observations must be weekly mean values with a time dimension

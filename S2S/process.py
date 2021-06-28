@@ -24,7 +24,8 @@ class Hindcast:
                     high_res=False,
                     steps=None,
                     download=False,
-                    process=False
+                    process=False,
+                    split_work=False,
                 ):
 
         self.var            = var
@@ -45,15 +46,48 @@ class Hindcast:
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
 
-            print('\tLoad hindcast')
-            self.raw = self.load_data()
+            if split_work:
 
-            print('\tApply 7D running mean along lead time dimension')
-            self.data = self.raw.rolling(step=7,center=True).mean()
+                data_list = []
 
-            if self.steps is not None:
-                print('\tKeep only specified lead times')
-                self.data = self.data.where(
+                t_end   = self.t_end
+                t_start = self.t_start
+
+                self.t_end = self.add_month(t_start)
+
+                while self.smaller_than(self.t_end,t_end):
+
+                    print('\tLoad hindcast')
+                    raw = self.load_data()
+
+                    print('\tApply 7D running mean along lead time dimension')
+                    data = raw.rolling(step=7,center=True).mean()
+
+                    if self.steps is not None:
+                        print('\tKeep only specified lead times')
+                        data = data.where(
+                                        data.step.isin(self.steps),
+                                        drop=True
+                                    )
+
+                    self.t_start = self.t_end
+                    self.t_end   = self.add_month(self.t_end)
+                    print(data)
+                    data_list.append(data)
+
+                self.data = xr.concat(data_list,'time')
+                print(self.data)
+            else:
+
+                print('\tLoad hindcast')
+                self.raw = self.load_data()
+
+                print('\tApply 7D running mean along lead time dimension')
+                self.data = self.raw.rolling(step=7,center=True).mean()
+
+                if self.steps is not None:
+                    print('\tKeep only specified lead times')
+                    self.data = self.data.where(
                                             self.data.step.isin(self.steps),
                                             drop=True
                                         )
@@ -113,6 +147,30 @@ class Hindcast:
         except ValueError:
             pass
         return data
+
+    @staticmethod
+    def add_month(time):
+
+        current_year  = time[0]
+        current_month = time[1]
+        current_day   = time[2]
+
+        if current_month%12==0:
+            current_month = 1
+            current_year += 1
+        else:
+            current_month += 1
+
+        return (current_year,current_month,current_day)
+
+    @staticmethod
+    def smaller_than(low,high):
+        if low[0]<high[0]:
+            return True
+        elif low[0]==high[0] and low[1]<=high[1]:
+            return True
+        else:
+            return False
 
     def filename_func(self,filename):
         return '_'.join(
