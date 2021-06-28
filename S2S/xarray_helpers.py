@@ -1,6 +1,7 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
 
 from S2S.local_configuration import config
 
@@ -55,8 +56,12 @@ def running_clim(x,index,window=30):
         # pool all values that falls within window
         pool = x[...,np.abs(index-idx)<=pad]
 
-        mean.append(np.full_like(pool[0][...,0],np.nanmean(pool)))
-        std.append(np.full_like(pool[0][...,0],np.nanstd(pool)))
+        if np.isfinite(pool).sum() > 1:
+            mean.append(np.full_like(pool[0][...,0],np.nanmean(pool)))
+            std.append(np.full_like(pool[0][...,0],np.nanstd(pool)))
+        else:
+            mean.append(np.full_like(pool[0][...,0],np.nan))
+            std.append(np.full_like(pool[0][...,0],np.nan))
 
     return np.stack(mean,axis=-1),np.stack(std,axis=-1)
 
@@ -109,15 +114,19 @@ def running_clim_CV(x,index,window=30):
             # delete the relevant year from pool (for cross validation)
             filtered_pool = np.delete(pool,yy,axis=-2)
 
-            ymean.append(np.nanmean(filtered_pool))
-            ystd.append(np.nanstd(filtered_pool))
+            if np.isfinite(filtered_pool).sum() > 1:
+                ymean.append(np.nanmean(filtered_pool))
+                ystd.append(np.nanstd(filtered_pool))
+            else:
+                ymean.append(np.nan)
+                ystd.append(np.nan)
 
         mean.append(np.array(ymean))
         std.append(np.array(ystd))
 
     return np.stack(mean,axis=-1),np.stack(std,axis=-1)
 
-def o_climatology(da):
+def o_climatology(da,window=30):
     """
     Climatology with centered initialization time, using cross validation
     using a 30-day window.
@@ -138,8 +147,8 @@ def o_climatology(da):
 
     # to all year,dayofyear matrices in da, apply runnning_clim_CV
     mean,std = xr.apply_ufunc(
-            running_clim_CV, da, da.dayofyear,
-            input_core_dims  = [['year','dayofyear'],['dayofyear']],
+            running_clim_CV, da, da.dayofyear,window,
+            input_core_dims  = [['year','dayofyear'],['dayofyear'],[]],
             output_core_dims = [['year','dayofyear'],['year','dayofyear']],
             vectorize=True
         )
@@ -386,6 +395,67 @@ def interp_to_loc(observations,hindcast):
                 )
     return xr.concat(out,'location')
 
+# def isolate_highest_r(x,y,index,window=30):
+#     """
+#     """
+#     # Flatten grid
+#     y = y.reshape(y.shape[0],y.shape[1],y.shape[2],-1)
+#
+#     # keep y with member dim
+#     Y = y
+#
+#     # mean over member dim
+#     y = y.mean(2)
+#
+#     pad = window//2
+#
+#     x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+#     y     = np.pad(y,pad,mode='wrap')[pad:-pad,:,pad:-pad]
+#
+#     index = np.pad(index,pad,mode='wrap')
+#
+#     index[-pad:] += index[-pad-1]
+#     index[:pad]  -= index[-pad-1]
+#
+#     ys = [] # for each dayofyear
+#     for ii,idx in enumerate(index[pad:-pad]):
+#
+#         # pool all values that falls within window around respective dayofyear
+#         xpool = x[:,np.abs(index-idx)<=pad]
+#         ypool = y[:,np.abs(index-idx)<=pad]
+#
+#         # flatten year and dayofyear
+#         xpool = xpool.reshape(-1)
+#         ypool = ypool.reshape(-1,ypool.shape[-1])
+#
+#         r = [] # for each gridpoint
+#         for ii_y in range(ypool.shape[-1]):
+#
+#             # keep only nonnan forecast-observation pairs
+#             idx_bool = ~np.logical_or(
+#                                 np.isnan(xpool),
+#                                 np.isnan(ypool[:,ii_y])
+#                             )
+#
+#             xp = xpool[idx_bool]
+#             yp = ypool[idx_bool,ii_y]
+#
+#             # if all nan (most likely landmask) give -99 as correlation coef.
+#             if idx_bool.sum()==0:
+#                 r.append(-99)
+#             # otherwise pearsons r
+#             else:
+#                 r.append(stats.pearsonr(xp,yp)[0])
+#
+#         r = np.array(r)
+#
+#         # pick the gridpoint of highest correlation to represent the observation
+#         # at the respective dayofyear
+#         ys.append(Y[:,ii,:,np.argmax(r)])
+#
+#     # stack along dayofyear dimension
+#     return np.stack(ys,axis=1)
+
 def at_validation(obs,vt,ddays=1):
     """
     args:
@@ -457,6 +527,37 @@ def absolute(u,v):
     """
     return np.sqrt( u**2 + v**2 )
 
+def cor_map(x, y):
+    """Correlate each n with each m.
+
+    Parameters
+    ----------
+    x : np.array
+      Shape N X T.
+
+    y : np.array
+      Shape M X T.
+
+    Returns
+    -------
+    np.array
+      N X M array in which each element is a correlation coefficient.
+
+    Written by stackoverflow user: dbliss,
+    Dowloaded June 25 2021 from https://stackoverflow.com/a/30145770
+    """
+    mu_x = x.mean(1)
+    mu_y = y.mean(1)
+    n = x.shape[1]
+    if n != y.shape[1]:
+        raise ValueError('x and y must ' +
+                         'have the same number of timepoints.')
+    s_x = x.std(1, ddof=n - 1)
+    s_y = y.std(1, ddof=n - 1)
+    cov = np.dot(x,
+                 y.T) - n * np.dot(mu_x[:, np.newaxis],
+                                  mu_y[np.newaxis, :])
+    return cov / np.dot(s_x[:, np.newaxis], s_y[np.newaxis, :])
 ################################################################################
 ################################################################################
 ################################################################################

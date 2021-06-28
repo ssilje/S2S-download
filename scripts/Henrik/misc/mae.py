@@ -14,9 +14,22 @@ from S2S.local_configuration import config
 import S2S.xarray_helpers as xh
 from .graphics import *
 import S2S.location_cluster as lc
-from S2S.scoring import SSCORE
+from S2S.scoring import CI
 
 from . import latex
+
+class SCORE(CI):
+
+    def __init__(self,**kwargs):
+
+        super().__init__(**kwargs)
+
+    @staticmethod
+    def score(x,y):
+        """
+        MAE
+        """
+        return np.absolute(x-y)
 
 def ss(fc,clim,time='before',est='mean'):
 
@@ -48,13 +61,8 @@ def skill_agg(
             dim='validation_time.month',
             filename='',
             title='',
-            ylab='',
-            mlabs=[''],
-            mcols=['blue','orange','green','red']
+            ylab=''
         ):
-
-    mcols = mcols*len(in_mod)
-    mlabs = mlabs*len(in_mod)
 
     for loc in in_clim.location:
 
@@ -77,7 +85,7 @@ def skill_agg(
         axes = axes.flatten()
         ###########################
 
-        for model,mlab,mcol in zip(in_mod,mlabs,mcols):
+        for model in in_mod:
 
             mod = model.sel(location=loc)
             cm  = clim_mean.sel(location=loc)
@@ -109,75 +117,42 @@ def skill_agg(
 
                 lead_time = np.array([td.days for td in ydata.step.to_pandas()])
 
-                score_fc   = xs.mae(
-                                    xdata.mean('member',skipna=True),
-                                    ydata,
-                                    dim=[]
-                                )
-                score_clim = xs.mae(cmdata,ydata,dim=[])
+                score_cf     = xs.mae(xdata.sel(member=0),ydata,dim=[])
+                score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
+                score_median = xs.mae(xdata.median('member',skipna=True),ydata,dim=[])
 
-                if dim.split('.')[1]=='season':
-                    min_period=6
-                else:
-                    min_period=2
-
-                SS = SSCORE(
-                            observations=score_clim,
-                            forecast=score_fc
-                        ).bootstrap(N=10000,min_period=min_period)
+                score_clim   = xs.mae(cmdata,ydata,dim=[])
 
                 ax.plot(
                         lead_time,
-                        SS.low_q,
-                        '--',
-                        color=mcol,
-                        linewidth=0.7,
-                        alpha=0.7,
-                        label='95% CI'
+                        ss(score_mean,score_clim,time='before',est='mean'),
+                        '--',color='k',linewidth=0.7,
+                        alpha=0.5,
+                        label='before mean'
                         )
                 ax.plot(
                         lead_time,
-                        SS.high_q,
-                        '--',
-                        color=mcol,
-                        linewidth=0.7,
-                        alpha=0.7,
-                        label='95% CI'
+                        ss(score_mean,score_clim,time='after',est='mean'),
+                        '-',color='k',linewidth=0.7,
+                        alpha=0.5,
+                        label='after mean'
                         )
                 ax.plot(
                         lead_time,
-                        SS.est,
-                        '-',
-                        color=mcol,
-                        linewidth=0.9,
-                        alpha=0.9,
-                        label='MAE SS est.' + mlab
+                        ss(score_mean,score_clim,time='before',est='median'),
+                        '--',color='r',linewidth=0.7,
+                        alpha=0.5,
+                        label='before median'
                         )
-                ax.fill_between(
+                ax.plot(
                         lead_time,
-                        SS.high_q,
-                        SS.low_q,
-                        alpha=0.1,
-                        zorder=30
-                        )
-
-                for lt in lead_time:
-                    ax.text(
-                            lt,1.1,#0.83,
-                            str(
-                                SS.number_of_years\
-                                    .sel(step=pd.Timedelta(lt,'D')).values
-                            ),
-                            horizontalalignment='center',
-                            verticalalignment='center',
-                            color='red',label='number of years for est.'
-                        )
-                plt.plot([], [], ' ',
-                            label='Red: Number of years per estimate'
+                        ss(score_mean,score_clim,time='after',est='median'),
+                        '-',color='r',linewidth=0.7,
+                        alpha=0.5,
+                        label='after median'
                         )
 
                 ax.set_ylim((-1,1))
-                ax.set_xlim((lead_time[0]-1,lead_time[-1]+1))
 
                 ax.set_title(month(xlabel))
                 ax.set_ylabel(ylab)
@@ -200,7 +175,7 @@ def skill_agg(
 
         handles, labels = ax.get_legend_handles_labels()
         by_label = OrderedDict(zip(labels, handles))
-        legend = fig.legend(
+        fig.legend(
                     by_label.values(),
                     by_label.keys(),
                     loc='upper center',
@@ -209,7 +184,6 @@ def skill_agg(
                     shadow=True,
                     ncol=4
                 )
-        legend.get_texts()[0].set_color('r')
 
         fig.suptitle(suptitle)
         save_fig(fig,fname)

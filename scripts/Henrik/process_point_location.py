@@ -23,10 +23,10 @@ t_end    = (2021,1,4)
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
-process_hindcast     = False
-process_observations = False
+process_hindcast     = True
+process_observations = True
 process_era          = False
-persistence_model    = True
+persistence_model    = False
 
 high_res             = False
 
@@ -34,6 +34,18 @@ high_res             = False
 steps = pd.to_timedelta([9,16,23,30,37,44],'D')
 
 all_observations = BarentsWatch().load('all',no=350).sortby('time')
+
+print('\tLoad hindcast')
+grid_hindcast = ECMWF_S2SH(high_res=high_res)\
+                .load(
+                        var,
+                        t_start,
+                        t_end,
+                        domainID,
+                        download=False
+                    )[var]-272.15
+
+grid_hindcast = grid_hindcast.sortby(['time','step'])
 di = 5
 
 for ii in range(di,len(all_observations.location),di):
@@ -42,32 +54,41 @@ for ii in range(di,len(all_observations.location),di):
 
     observations = all_observations.isel(location=slice(ii-di,ii))
 
+    print('\nProcess observations')
+    if process_observations:
+
+        print('\tOrganize observations like hindcast')
+        stacked_obs = \
+            xh.at_validation(
+                            observations,
+                            grid_hindcast.time+grid_hindcast.step,
+                            ddays=1
+                            )
+
+        print('\tCompute climatology')
+        clim_mean,clim_std = xh.o_climatology(stacked_obs)
+
+        stacked_obs_a = (stacked_obs-clim_mean)/clim_std
+
+        xh.store_by_location(stacked_obs.drop('validation_time'),'v_temp')
+        xh.store_by_location(stacked_obs_a.drop('validation_time'),'v_a_temp')
+
+        xh.store_by_location(clim_mean.drop('validation_time'),'clim_mean_temp')
+        xh.store_by_location(clim_std.drop('validation_time'),'clim_std_temp')
+
+    stacked_obs   = xh.load_by_location(observations.location,'v_temp')[var]
+    stacked_obs_a = xh.load_by_location(observations.location,'v_a_temp')[var]
+
     print('\nProcess hindcast')
     if process_hindcast:
 
-        print('\tLoad hindcast')
-        hindcast = ECMWF_S2SH(high_res=high_res)\
-                        .load(
-                                var,
-                                t_start,
-                                t_end,
-                                domainID,
-                                download=False,
-                                x_landmask=True
-                            )[var]-272.15
-        gr.point_map(all_observations,poi='Hisdalen')
-        exit()
-        # drop pre-assigned validation time coordinates
-        hindcast = hindcast.drop('valid_time')
-
         print('\tInterpolate hindcast to point locations')
-        hindcast = xh.interp_to_loc(observations,hindcast)
-
-        hindcast = hindcast.sortby(['time','step'])
+        hindcast = xh.select_location_by_correlation(grid_hindcast,observations)
 
         print('\tApply 7D running mean along lead time dimension')
         hindcast = xh.running_mean(hindcast,window=7)
 
+        print('\tKeep only specified lead times')
         hindcast = hindcast.where(hindcast.step.isin(steps),drop=True)
 
         try:
@@ -76,6 +97,10 @@ for ii in range(di,len(all_observations.location),di):
             pass
         try:
             hindcast = hindcast.drop('surface')
+        except ValueError:
+            pass
+        try:
+            hindcast = hindcast.drop('valid_time')
         except ValueError:
             pass
 
@@ -91,24 +116,6 @@ for ii in range(di,len(all_observations.location),di):
         xh.store_by_location(hindcast_a.rename(var),'ha_temp')
 
     hindcast = xh.load_by_location(observations.location,'h_temp')
-
-    print('\nProcess observations')
-    if process_observations:
-
-        print('\tOrganize observations like hindcast')
-        stacked_obs = \
-            xh.at_validation(observations,hindcast.time+hindcast.step,ddays=1)
-
-        print('\tCompute climatology')
-        clim_mean,clim_std = xh.o_climatology(stacked_obs)
-
-        stacked_obs_a = (stacked_obs-clim_mean)/clim_std
-
-        xh.store_by_location(stacked_obs.drop('validation_time'),'v_temp')
-        xh.store_by_location(stacked_obs_a.drop('validation_time'),'v_a_temp')
-
-        xh.store_by_location(clim_mean.drop('validation_time'),'clim_mean_temp')
-        xh.store_by_location(clim_std.drop('validation_time'),'clim_std_temp')
 
     print('\nProcess ERA as observations')
     if process_era:

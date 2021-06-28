@@ -1,6 +1,102 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
+import xskillscore as xs
+
+import S2S.xarray_helpers as xh
+
+def centered_acc(x,y):
+    """
+    Anomaly correlation after Wilks (2011, Chapter 8) - Eq. 8.
+
+    D.S. Wilks, Chapter 8 - Forecast Verification,
+    International Geophysics, Academic Press, Volume 100, 2011,
+    Pages 301-394, https://doi.org/10.1016/B978-0-12-385022-5.00008-7.
+    """
+    idx_bool = ~np.logical_or(np.isnan(x),np.isnan(y))
+
+    x = x[idx_bool]
+    y = y[idx_bool]
+
+    M = len(x)
+
+    x_anom = (x - x.mean())
+    y_anom = (y - y.mean())
+
+    covar = x_anom * y_anom / M
+
+    var_x = x_anom**2 / M
+    var_y = y_anom**2 / M
+
+    return covar.sum() / np.sqrt( ( var_x.sum() + var_y.sum() ) )
+
+def uncentered_acc(x,y):
+    """
+    Anomaly correlation after Wilks (2011, Chapter 8) - Eq. 8.64
+
+    D.S. Wilks, Chapter 8 - Forecast Verification,
+    International Geophysics, Academic Press, Volume 100, 2011,
+    Pages 301-394, https://doi.org/10.1016/B978-0-12-385022-5.00008-7.
+    """
+    idx_bool = ~np.logical_or(np.isnan(x),np.isnan(y))
+
+    x = x[idx_bool]
+    y = y[idx_bool]
+
+    M = len(x)
+
+    x_anom = x
+    y_anom = y
+
+    covar = x_anom * y_anom / M
+
+    var_x = x_anom**2 / M
+    var_y = y_anom**2 / M
+
+    return covar.sum() / np.sqrt( ( var_x.sum() + var_y.sum() ) )
+
+def ACc(forecast,observations,weights=None,centered=True):
+    """
+    Anomaly correlation after Wilks (2011, Chapter 8)
+
+    D.S. Wilks, Chapter 8 - Forecast Verification,
+    International Geophysics, Academic Press, Volume 100, 2011,
+    Pages 301-394, https://doi.org/10.1016/B978-0-12-385022-5.00008-7.
+    """
+    if weights is None:
+        weights = xr.full_like(observations,1.)
+
+    forecast     = forecast * weights
+    observations = observations * weights
+
+    try:
+        forecast = forecast.mean('member')
+    except AttributeError:
+        pass
+
+
+    ds = xr.merge(
+                    [
+                        forecast.rename('fc'),
+                        observations.rename('obs')
+                    ],join='inner',compat='override'
+                )
+
+    if centered:
+        ufunc = centered_acc
+    else:
+        ufunc = uncentered_acc
+
+    r = xr.apply_ufunc(
+            centered_acc,ds.fc,ds.obs,
+            input_core_dims = [['lat','lon'],['lat','lon']],
+            output_core_dims = [[]],
+            vectorize=True,dask='parallelized'
+        )
+
+    return r
+
+
 
 def ACC(fc_anom,obs_anom,weights):
     """
@@ -118,5 +214,97 @@ def fair_brier_score(observations,forecasts):
     o = observations
     return (e / M - o) ** 2 - e * (M - e) / (M ** 2 * (M - 1))
 
-def fair_factor(ensemble_size):
-    return ensemble_size/(ensemble_size+1)
+class SSCORE:
+    """
+    Calculate monthly and seasonal means of scores with bootstrapped CIs.
+    """
+
+    def __init__(self,**kwargs):
+
+        self.forecast     = self.try_key(kwargs,'forecast')
+        self.observations = self.try_key(kwargs,'observations')
+
+        self.data  = xr.merge(
+                            [
+                                self.forecast.rename('fc'),
+                                self.observations.rename('obs')
+                            ],
+                        join='inner',
+                        compat='equals'
+                        )
+
+    @staticmethod
+    def skill_score(x,y):
+        return 1 - np.nanmean(x,axis=-1)/np.nanmean(y,axis=-1)
+
+    @staticmethod
+    def try_key(dictionary,key):
+        try:
+            return dictionary[key]
+        except KeyError:
+            return None
+
+    def bootstrap(self,N=1000,ci=.95,min_period=2):
+
+        # split into weeks
+        ds = xh.unstack_time(self.data)
+
+        low_q,est,high_q,ny = xr.apply_ufunc(
+                self.pull, ds.fc, ds.obs, N, ci, min_period,
+                input_core_dims  = [
+                                    ['dayofyear','year'],
+                                    ['dayofyear','year'],
+                                    [],
+                                    [],
+                                    []
+                                ],
+                output_core_dims = [[],[],[],[]],
+                vectorize=True
+            )
+        out = xr.merge(
+                    [
+                        low_q.rename('low_q'),
+                        est.rename('est'),
+                        high_q.rename('high_q')
+                    ], join='inner', compat='equals'
+                )
+        out = out.assign_coords(number_of_years=ny)
+        return out
+
+    def pull(self,fc,obs,N,ci=.95,min_period=2):
+
+        # CHANGE SO THAT MISMATCH YEARS AE TRHOWN OUT INSTEAD
+        fc_idx  = (~np.isnan(fc)).sum(axis=0)>min_period
+        obs_idx = (~np.isnan(obs)).sum(axis=0)>min_period
+
+        if (fc_idx==obs_idx).all():
+
+            fc = np.nanmean(fc[...,fc_idx],axis=0)
+            obs = np.nanmean(obs[...,obs_idx],axis=0)
+
+            y  = fc.shape[-1]
+            ny = (~np.isnan(fc)).sum()
+
+            # generate random integers as indices for fc-obs pairs
+            _idx_ = np.random.randint(low=0,high=y,size=(N,y))
+
+            # pick y random fc-obs pairs N times
+            _fc_   = fc[_idx_]
+            _obs_  = obs[_idx_]
+
+            # calculate score N times
+            score = np.sort(self.skill_score(_fc_,_obs_))
+
+            # actual score
+            est_score = self.skill_score(fc,obs)
+
+            # quantiles
+            alpha  = (1-ci)/2
+
+            high_q = score[ int( (N-1) * (1-alpha) ) ]
+            low_q  = score[ int( (N-1) * alpha ) ]
+
+            return low_q,est_score,high_q,ny
+
+        else:
+            raise ValueError('Forecast and observation mismatch.')
