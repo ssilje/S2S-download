@@ -395,6 +395,26 @@ def interp_to_loc(observations,hindcast):
                 )
     return xr.concat(out,'location')
 
+def step_at_zero(ss,step):
+    idx = np.argmin(abs(ss))
+    if 0 < step[idx]:
+        return step[idx+1]
+    else:
+        return step[idx]
+
+def return_lead_time_at_ss_zero(ss):
+    """
+    ss: xarray.DataArray must contain step dimension
+    """
+    return xr.apply_ufunc(
+                step_at_zero,ss,ss.step,
+                input_core_dims  = [
+                                    ['step'],
+                                    ['step']
+                                ],
+                output_core_dims = [[]],
+                vectorize=True,dask='parallelized'
+    )
 # def isolate_highest_r(x,y,index,window=30):
 #     """
 #     """
