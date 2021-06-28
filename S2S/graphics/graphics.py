@@ -347,7 +347,13 @@ def timeseries(
             filename='',
             title=''
             ):
+    """
+    Plots timeseries of observations and forecast/hindcast
 
+    args:
+        cast list of xarray.DataArray
+    """
+    observations = xh.assign_validation_time(observations)
 
     if observations.location.values.ndim==0:
         locations = [observations.location]
@@ -401,6 +407,8 @@ def timeseries(
 
             subtitle = '    MAE:'
             for cn,c in enumerate(cast):
+
+                c = xh.assign_validation_time(c)
 
                 try:
                     c = c\

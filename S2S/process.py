@@ -265,6 +265,28 @@ class Observations:
         self.mean   = self.load(filename_mean)
         self.std    = self.load(filename_std)
 
+        filename_init = self.filename_func('init')
+
+        if self.process or not os.path.exists(self.path+filename_init):
+
+            print('\tGather observations at model initalization')
+            init_mean,init_std = xh.o_climatology(self.observations)
+
+            init_mean = init_mean.rename(self.var)
+            init_std  = init_std.rename(self.var)
+
+            init_obs_a = ( self.observations - init_mean ) / init_std
+
+            init_obs_a = init_obs_a.reindex(
+                            {'time':forecast.data.time},
+                            method='pad',
+                            tolerance='1W'
+                        ).broadcast_like(self.data)
+
+            self.store(init_obs_a,filename_init)
+
+        self.init_a = self.load(filename_init)
+
     def filename_func(self,filename):
         return '_'.join(
                         [
