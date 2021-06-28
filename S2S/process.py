@@ -204,11 +204,13 @@ class Observations:
                 ):
 
         self.name           = name
-        self.observations   = observations
+        self.observations   = observations.sortby('time')
         self.forecast       = forecast
         self.process        = process
         self.var            = forecast.data.name
         self.path           = config['VALID_DB']
+
+        self.forecast.data  = self.forecast.data.sortby(['time','step'])
 
         self.t_start        = (
                                 observations.time.min().dt.year.values,
@@ -280,7 +282,7 @@ class Observations:
             init_obs_a = init_obs_a.reindex(
                             {'time':forecast.data.time},
                             method='pad',
-                            tolerance='1W'
+                            tolerance='7D'
                         ).broadcast_like(self.data)
 
             self.store(init_obs_a,filename_init)
