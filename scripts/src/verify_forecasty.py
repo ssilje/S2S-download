@@ -247,8 +247,9 @@ skill_score_at_lt = xr.concat(c_ss,dim='time_month')
 #     ...:         norm=norm
 #     ...:        )
     #fg,axes = plt.axes(subplot_kws=dict(projection=ccrs.PlateCarree()))
-levels = [7, 14, 21, 28, 25, 42]
-im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
+levels = [0, 7, 14, 21, 28, 25, 42]
+#im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
+im = skill_score_at_lt.skill.plot(
     x='lon',
     y='lat',
     col='time_month',
@@ -265,17 +266,6 @@ im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
         ax.coastlines(resolution='10m', color='black',\
                       linewidth=0.2)
         ax.set_title(month(i))
-    
-
-   
-
-  
-    # ax = fg.add_gridspec(3, 3)
-    #cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels,extend='both') 
-    #plt.tight_layout()
-
-    #fg.suptitle('SS of MAE at lead time: '+str(lt))   
-    plt.suptitle('last lead time with skill)
-   
+    plt.suptitle('last lead time with skill')
     plt.savefig('test_SS_leadtime.png')
 
