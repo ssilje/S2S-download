@@ -157,9 +157,17 @@ def persistence(init_value,observations,window=30):
 
     return rho * init_value
 
-def combo(init_value,model,observations,window=30,lim=1,sub=np.nan):
+def combo(
+            init_value,
+            model,
+            observations,
+            window=30,
+            lim=1,
+            sub=np.nan,
+            cluster_name=None
+        ):
     """
-    Input must be anomlies.
+    Input must be anomalies.
     """
 
     print('\t performing models.persistence()')
@@ -238,8 +246,13 @@ def correlation_CV(x,y,index,window=30):
 
     pad   = window//2
 
-    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
-    y     = np.pad(y,pad,mode='wrap')[pad:-pad,:]
+    if len(x.shape)==2:
+        x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+        y     = np.pad(y,pad,mode='wrap')[pad:-pad,:]
+
+    if len(x.shape)==3:
+        x     = np.pad(x,pad,mode='wrap')[pad:-pad,pad:-pad,:]
+        y     = np.pad(y,pad,mode='wrap')[pad:-pad,pad:-pad,:]
 
     index = np.pad(index,pad,mode='wrap')
 
@@ -301,7 +314,12 @@ def std(x,index,window=30):
 
     pad   = window//2
 
-    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+    if len(x.shape)==2:
+        x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+
+    if len(x.shape)==3:
+        x     = np.pad(x,pad,mode='wrap')[pad:-pad,pad:-pad,:]
+
     index = np.pad(index,pad,mode='wrap')
 
     index[-pad:] += index[-pad-1]
@@ -341,6 +359,14 @@ def running_regression_CV(x,y,z,index,window=30,lim=1,sub=np.nan):
     slope_x,slope_y = [],[]
 
     pad   = window//2
+
+    if len(x.shape)==2:
+        x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+        y     = np.pad(y,pad,mode='wrap')[pad:-pad,:]
+
+    if len(x.shape)==3:
+        x     = np.pad(x,pad,mode='wrap')[pad:-pad,pad:-pad,:]
+        y     = np.pad(y,pad,mode='wrap')[pad:-pad,pad:-pad,:]
 
     x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
     y     = np.pad(y,pad,mode='wrap')[pad:-pad,:]

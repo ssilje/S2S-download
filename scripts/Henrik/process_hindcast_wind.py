@@ -12,6 +12,7 @@ from S2S.data_handler        import BarentsWatch, ERA5, ECMWF_S2SH, Archive
 import S2S.xarray_helpers    as xh
 import S2S.models            as models
 import S2S.graphics.graphics as gr
+import S2S.scoring           as sc
 
 path_e = 'wind10m/'
 
@@ -212,151 +213,155 @@ if make_time_series:
     random_fc_a = xr.open_dataset(config['VALID_DB']+path_e+\
                                 'absolute_wind_random-forecast_anomalies.nc')[var]
 
-    stacked_era = xh.assign_validation_time(
-                    stacked_era.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
 
-    stacked_era_a = xh.assign_validation_time(
-                    stacked_era_a.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
+    print(sc.ACc(hindcast_a,stacked_era_a))
 
-    hindcast = xh.assign_validation_time(
-                    hindcast.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
+    # stacked_era = xh.assign_validation_time(
+    #                 stacked_era.isel(lon=5,lat=5).expand_dims('location')\
+    #                     .assign_coords(location=['lon: 63. lat: 7.5'])
+    #                     )
+    #
+    # stacked_era_a = xh.assign_validation_time(
+    #                 stacked_era_a.isel(lon=5,lat=5).expand_dims('location')\
+    #                     .assign_coords(location=['lon: 63. lat: 7.5'])
+    #                     )
+    #
+    # hindcast = xh.assign_validation_time(
+    #                 hindcast.isel(lon=5,lat=5).expand_dims('location')\
+    #                     .assign_coords(location=['lon: 63. lat: 7.5'])
+    #                     )
+    #
+    # hindcast_a = xh.assign_validation_time(
+    #                 hindcast_a.isel(lon=5,lat=5).expand_dims('location')\
+    #                     .assign_coords(location=['lon: 63. lat: 7.5'])
+    #                     )
+    #
+    # clim_mean = xh.assign_validation_time(
+    #                 clim_mean.isel(lon=5,lat=5).expand_dims('location')\
+    #                     .assign_coords(location=['lon: 63. lat: 7.5'])
+    #                     )
+    #
+    # clim_std = xh.assign_validation_time(
+    #                 clim_std.isel(lon=5,lat=5).expand_dims('location')\
+    #                     .assign_coords(location=['lon: 63. lat: 7.5'])
+    #                     )
+    #
+    # random_fc = xh.assign_validation_time(
+    #                 random_fc.isel(lon=5,lat=5).expand_dims('location')\
+    #                     .assign_coords(location=['lon: 63. lat: 7.5'])
+    #                     )
+    #
+    # random_fc_a = xh.assign_validation_time(
+    #                 random_fc_a.isel(lon=5,lat=5).expand_dims('location')\
+    #                     .assign_coords(location=['lon: 63. lat: 7.5'])
+    #                     )
 
-    hindcast_a = xh.assign_validation_time(
-                    hindcast_a.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-    clim_mean = xh.assign_validation_time(
-                    clim_mean.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-    clim_std = xh.assign_validation_time(
-                    clim_std.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-    random_fc = xh.assign_validation_time(
-                    random_fc.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
-
-    random_fc_a = xh.assign_validation_time(
-                    random_fc_a.isel(lon=5,lat=5).expand_dims('location')\
-                        .assign_coords(location=['lon: 63. lat: 7.5'])
-                        )
 
     #[7, 14, 21, 28, 35, 42]
-    gr.timeseries(
-                    stacked_era,
-                    cast=[random_fc],
-                    title='EC',
-                    filename='wind_random',
-                    clabs=['random_fc'],
-                    lead_time=[7, 14]
-                )
-
-    gr.timeseries(
-                    stacked_era,
-                    cast=[random_fc,hindcast,hindcast_a*clim_std + clim_mean],
-                    title='EC',
-                    filename='wind_abs_all',
-                    clabs=['random_fc','EC','EC_sb'],
-                    lead_time=[7, 14]
-                )
-
-    gr.timeseries(
-                    stacked_era,
-                    cast=[hindcast,hindcast_a*clim_std + clim_mean],
-                    title='EC',
-                    filename='wind_abs_fc',
-                    clabs=['EC','EC_sb'],
-                    lead_time=[7, 14]
-                )
-
-    gr.timeseries(
-                    stacked_era_a,
-                    cast=[random_fc_a,hindcast_a],
-                    title='EC',
-                    filename='wind_anom_all',
-                    clabs=['random','EC_a'],
-                    lead_time=[7, 14]
-                )
-
-    gr.timeseries(
-                    stacked_era,
-                    cast=[random_fc],
-                    title='EC',
-                    filename='wind_random',
-                    clabs=['random_fc'],
-                    lead_time=[21, 28]
-                )
-
-    gr.timeseries(
-                    stacked_era,
-                    cast=[random_fc,hindcast,hindcast_a*clim_std + clim_mean],
-                    title='EC',
-                    filename='wind_abs_all',
-                    clabs=['random_fc','EC','EC_sb'],
-                    lead_time=[21, 28]
-                )
-
-    gr.timeseries(
-                    stacked_era,
-                    cast=[hindcast,hindcast_a*clim_std + clim_mean],
-                    title='EC',
-                    filename='wind_abs_fc',
-                    clabs=['EC','EC_sb'],
-                    lead_time=[21, 28]
-                )
-
-    gr.timeseries(
-                    stacked_era_a,
-                    cast=[random_fc_a,hindcast_a],
-                    title='EC',
-                    filename='wind_anom_all',
-                    clabs=['random','EC_a'],
-                    lead_time=[21, 28]
-                )
-
-    gr.timeseries(
-                    stacked_era,
-                    cast=[random_fc],
-                    title='EC',
-                    filename='wind_random',
-                    clabs=['random_fc'],
-                    lead_time=[35,42]
-                )
-
-    gr.timeseries(
-                    stacked_era,
-                    cast=[random_fc,hindcast,hindcast_a*clim_std + clim_mean],
-                    title='EC',
-                    filename='wind_abs_all',
-                    clabs=['random_fc','EC','EC_sb'],
-                    lead_time=[35,42]
-                )
-
-    gr.timeseries(
-                    stacked_era,
-                    cast=[hindcast,hindcast_a*clim_std + clim_mean],
-                    title='EC',
-                    filename='wind_abs_fc',
-                    clabs=['EC','EC_sb'],
-                    lead_time=[35,42]
-                )
-
-    gr.timeseries(
-                    stacked_era_a,
-                    cast=[random_fc_a,hindcast_a],
-                    title='EC',
-                    filename='wind_anom_all',
-                    clabs=['random','EC_a'],
-                    lead_time=[35,42]
-                )
+    # gr.timeseries(
+    #                 stacked_era,
+    #                 cast=[random_fc],
+    #                 title='EC',
+    #                 filename='wind_random',
+    #                 clabs=['random_fc'],
+    #                 lead_time=[7, 14]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era,
+    #                 cast=[random_fc,hindcast,hindcast_a*clim_std + clim_mean],
+    #                 title='EC',
+    #                 filename='wind_abs_all',
+    #                 clabs=['random_fc','EC','EC_sb'],
+    #                 lead_time=[7, 14]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era,
+    #                 cast=[hindcast,hindcast_a*clim_std + clim_mean],
+    #                 title='EC',
+    #                 filename='wind_abs_fc',
+    #                 clabs=['EC','EC_sb'],
+    #                 lead_time=[7, 14]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era_a,
+    #                 cast=[random_fc_a,hindcast_a],
+    #                 title='EC',
+    #                 filename='wind_anom_all',
+    #                 clabs=['random','EC_a'],
+    #                 lead_time=[7, 14]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era,
+    #                 cast=[random_fc],
+    #                 title='EC',
+    #                 filename='wind_random',
+    #                 clabs=['random_fc'],
+    #                 lead_time=[21, 28]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era,
+    #                 cast=[random_fc,hindcast,hindcast_a*clim_std + clim_mean],
+    #                 title='EC',
+    #                 filename='wind_abs_all',
+    #                 clabs=['random_fc','EC','EC_sb'],
+    #                 lead_time=[21, 28]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era,
+    #                 cast=[hindcast,hindcast_a*clim_std + clim_mean],
+    #                 title='EC',
+    #                 filename='wind_abs_fc',
+    #                 clabs=['EC','EC_sb'],
+    #                 lead_time=[21, 28]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era_a,
+    #                 cast=[random_fc_a,hindcast_a],
+    #                 title='EC',
+    #                 filename='wind_anom_all',
+    #                 clabs=['random','EC_a'],
+    #                 lead_time=[21, 28]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era,
+    #                 cast=[random_fc],
+    #                 title='EC',
+    #                 filename='wind_random',
+    #                 clabs=['random_fc'],
+    #                 lead_time=[35,42]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era,
+    #                 cast=[random_fc,hindcast,hindcast_a*clim_std + clim_mean],
+    #                 title='EC',
+    #                 filename='wind_abs_all',
+    #                 clabs=['random_fc','EC','EC_sb'],
+    #                 lead_time=[35,42]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era,
+    #                 cast=[hindcast,hindcast_a*clim_std + clim_mean],
+    #                 title='EC',
+    #                 filename='wind_abs_fc',
+    #                 clabs=['EC','EC_sb'],
+    #                 lead_time=[35,42]
+    #             )
+    #
+    # gr.timeseries(
+    #                 stacked_era_a,
+    #                 cast=[random_fc_a,hindcast_a],
+    #                 title='EC',
+    #                 filename='wind_anom_all',
+    #                 clabs=['random','EC_a'],
+    #                 lead_time=[35,42]
+    #             )

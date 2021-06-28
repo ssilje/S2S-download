@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def ACC(fc_anom,obs_anom,weights):
+def ACC(fc_anom,obs_anom,weights=None):
     """
     Anomaly correlation after Wilks (2011, Chapter 8)
 
@@ -56,3 +56,36 @@ def ACC(fc_anom,obs_anom,weights):
                 )
             )
         )
+
+# def xr_acc(forecast,observations,weights):
+#     """
+#     Anomaly correlation after Wilks (2011, Chapter 8)
+#
+#     D.S. Wilks, Chapter 8 - Forecast Verification,
+#     International Geophysics, Academic Press, Volume 100, 2011,
+#     Pages 301-394, https://doi.org/10.1016/B978-0-12-385022-5.00008-7.
+#
+#     args:
+#         fc_anom:  np.array, dims (ensemble_member,step,validation_time,lon,lat)
+#                               or (step,validation_time,lon,lat)
+#         obs_anom: np.array, dims (step,validation_time,lon,lat)
+#
+#     returns:
+#         acc:      np.array, dims (step,validation_time)
+#     """
+#     if weights is None:
+#         weights = xr.full_like(observations,1.)
+#     try:
+#         forecast = forecast.mean('member')
+#     except AttributeError:
+#         pass
+#
+#     ds = xr.merge(
+#                     [
+#                         forecast.rename('fc'),
+#                         observations.rename('obs')
+#                     ],join='inner',compat='override'
+#                 )
+#
+#     try:
+#         ds = xh.
