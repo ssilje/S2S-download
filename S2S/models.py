@@ -10,7 +10,7 @@ import S2S.xarray_helpers as xh
 ############################# xarray routines ##################################
 ################################################################################
 
-def clim_fc(mean,std,r=1,number_of_members=11):
+def clim_fc(mean,std,r=1):
     """
     Combines mean and std along a member dimension
 
@@ -23,7 +23,7 @@ def clim_fc(mean,std,r=1,number_of_members=11):
     mean = mean.expand_dims('member')
     std  = std.expand_dims('member')
 
-    return xr.concat([mean-r*std,mean+r*std],'member')
+    return xr.concat([mean-r*std,mean+r*std],pd.Index([1,2],name='member'))
 
 def deterministic_gaussian_forecast(mean,std):
     """
@@ -50,10 +50,11 @@ def bias_adjustment_torralba(
                                 observations,
                                 clim_std=None,
                                 window=30,
-                                spread_only=False
+                                spread_only=False,
+                                cluster_name=None
                             ):
     """
-    Forecsat calibration as of Eq. 2-4 in Torralba et al. (2017).
+    Forecast calibration as of Eq. 2-4 in Torralba et al. (2017).
 
     References:
 
@@ -64,6 +65,11 @@ def bias_adjustment_torralba(
     Retrieved Jun 22, 2021, from
     https://journals.ametsoc.org/view/journals/apme/56/5/jamc-d-16-0204.1.xml
     """
+
+    if cluster_name:
+        icd = [cluster_name,'year','dayofyear']
+    else:
+        icd = ['year','dayofyear']
 
     x = forecast.mean('member')
     z = forecast - x
@@ -83,8 +89,8 @@ def bias_adjustment_torralba(
     rho = xr.apply_ufunc(
                 correlation_CV,ds.fc.mean('member'),ds.obs,ds.dayofyear,window,
                 input_core_dims  = [
-                                    ['year','dayofyear'],
-                                    ['year','dayofyear'],
+                                    icd,
+                                    icd,
                                     ['dayofyear'],
                                     []
                                 ],
@@ -97,11 +103,11 @@ def bias_adjustment_torralba(
     sigma_ens = xr.apply_ufunc(
                 std,ds.fc.mean('member'),ds.dayofyear,window,
                 input_core_dims  = [
-                                    ['year','dayofyear'],
+                                    icd,
                                     ['dayofyear'],
                                     []
                                 ],
-                output_core_dims = [['year','dayofyear']],
+                output_core_dims = [icd],
                 vectorize=True
     )
     sigma_ens = xh.stack_time(sigma_ens)
@@ -170,6 +176,11 @@ def combo(
     Input must be anomalies.
     """
 
+    if cluster_name:
+        icd = [cluster_name,'year','dayofyear']
+    else:
+        icd = ['year','dayofyear']
+
     print('\t performing models.persistence()')
     ds = xr.merge(
                     [
@@ -191,9 +202,9 @@ def combo(
                 lim,
                 sub,
                 input_core_dims  = [
-                                    ['year','dayofyear'],
-                                    ['year','dayofyear'],
-                                    ['year','dayofyear'],
+                                    icd,
+                                    icd,
+                                    icd,
                                     ['dayofyear'],
                                     [],
                                     [],
@@ -241,6 +252,8 @@ def correlation_CV(x,y,index,window=30):
 
         year            -2
         dayofyear       -1
+
+    Returns 2 dimensional array (year,dayofyear)
     """
     rho   = []
 
@@ -309,6 +322,8 @@ def std(x,index,window=30):
 
         year            -2
         dayofyear       -1
+
+    Returns n dimensional array (...n-2,year,dayofyear) n is number of input dim
     """
     std   = []
 
@@ -355,6 +370,8 @@ def running_regression_CV(x,y,z,index,window=30,lim=1,sub=np.nan):
 
         year            -2
         dayofyear       -1
+
+    Returns 2 dimensional array (year,dayofyear)
     """
     slope_x,slope_y = [],[]
 
@@ -363,14 +380,13 @@ def running_regression_CV(x,y,z,index,window=30,lim=1,sub=np.nan):
     if len(x.shape)==2:
         x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
         y     = np.pad(y,pad,mode='wrap')[pad:-pad,:]
+        z     = np.pad(z,pad,mode='wrap')[pad:-pad,:]
 
     if len(x.shape)==3:
         x     = np.pad(x,pad,mode='wrap')[pad:-pad,pad:-pad,:]
         y     = np.pad(y,pad,mode='wrap')[pad:-pad,pad:-pad,:]
+        z     = np.pad(z,pad,mode='wrap')[pad:-pad,pad:-pad,:]
 
-    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
-    y     = np.pad(y,pad,mode='wrap')[pad:-pad,:]
-    z     = np.pad(z,pad,mode='wrap')[pad:-pad,:]
 
     index = np.pad(index,pad,mode='wrap')
 
