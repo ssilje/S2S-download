@@ -207,6 +207,15 @@ test[:] =np.NaN
 
 for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
     index = xdata.where(xdata.values >0) # finding data with skill
+    for nlat,ilat in enumerate(SS_step.lat):
+        for nlon,ilon in enumerate(SS_step.lon):
+            xdata = xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat]).where(xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat])>0,drop=True) # find the time steps with skill
+            if xdata.shape[0] == 0:
+                test[nlon,nlat] = NaN
+            else:
+                for lt in xdata.steps:
+                step=pd.Timedelta(lt,'D')
+    xdata.sel(lon=xdata.lon[nn],lat=xdata.lat[n]).where(xdata.sel(lon=xdata.lon[nn],lat=xdata.lat[n])>0,drop=True)
     for lt in steps:
         skill_map= index.sel(step=pd.Timedelta(lt,'D'))
         test[:] = skill_map.where(skill_map)
