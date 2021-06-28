@@ -144,7 +144,7 @@ era_init = xh.assign_validation_time(era_init)
 #             mlabs=['EC','combo2']
 #         )
 
-combo = models.combo(obs_init,hindcast_a,stacked_obs_a)
+combo  = models.combo(obs_init,hindcast_a,stacked_obs_a)
 combo2 = ( hindcast_a - hindcast_a.mean('member') ) + combo
 combo2 = models.bias_adjustment_torralba(combo2,stacked_obs_a,spread_only=True)
 
