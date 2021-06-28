@@ -205,33 +205,29 @@ for lt in steps:
 SS_step = xr.concat(cc,dim='step') ## må legge dei etter kvarandre med mnd
 SS_group = list(SS_step.groupby('time_month'))
 
-test = np.empty(SS_step[2,3].shape)
-test[:] =np.NaN
+
 SS_group = list(SS_step.groupby('time_month'))
 c_ss =[]
 for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
     index = xdata.where(xdata.values >0) # finding data with skill
-    for nlat,ilat in enumerate(SS_step.lat):
-        for nlon,ilon in enumerate(SS_step.lon):
+    ss_dataset = []
+    test = np.empty(SS_step[2,3].shape)
+    test[:] =np.NaN
+    for nlat,ilat in enumerate(xdata.lat):
+        for nlon,ilon in enumerate(xdata.lon):
             xdata_ss = xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat]).where(xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat])>0,drop=True) # find the time steps with skill
             if xdata_ss.shape[0] == 0:
                 test[nlon,nlat] = np.nan
             else:
-                test[nlon,nlat] = xdata_ss[-1].step.dt.days.item()
-            
-    #ss_dataset = xr.Dataset(
-    #    {
-     #       "skill": (["x", "y"], test),
-     #   },
-    #)
+                test[nlon,nlat] = xdata_ss[-1].step.dt.days.item() 
     
     ss_dataset = xr.Dataset(
         {
             "skill": (["lon", "lat"], test),
         },
         coords={
-            "lon": (["lon",], SS_step.lon),
-            "lat": (["lat"], SS_step.lat),
+            "lon": (["lon",], xdata.lon),
+            "lat": (["lat"], xdata.lat),
         },
     )
     time_month=xlabel
