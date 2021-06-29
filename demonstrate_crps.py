@@ -103,3 +103,25 @@ crps.skill_agg(
             title       = 'BW combo vs Clim',
             mlabs       = ['EC']
         )
+
+crps.skill_agg(
+            in_obs      = hisdalen_obs,
+            in_mod      = [hisdalen_ec],
+            clim_mean   = xr.full_like(hisdalen_obs,0),
+            clim_std    = xr.full_like(hisdalen_obs,1),
+            dim         = 'validation_time.season',
+            filename    = 'BW_EC_vs_clim',
+            title       = 'BW EC vs Clim',
+            mlabs       = ['EC']
+        )
+
+crps.skill_agg(
+            in_obs      = hisdalen_obs,
+            in_mod      = [hisdalen_combo],
+            clim_mean   = xr.full_like(hisdalen_obs,0),
+            clim_std    = xr.full_like(hisdalen_obs,1),
+            dim         = 'validation_time.season',
+            filename    = 'BW_combo_vs_clim',
+            title       = 'BW combo vs Clim',
+            mlabs       = ['EC']
+        )
