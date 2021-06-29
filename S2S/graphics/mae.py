@@ -493,11 +493,8 @@ def map(
             levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
             norm   = BoundaryNorm(levels,cmap.N)
 
-            alpha = c
-            alpha[alpha<0] = 0
-
-            cs = ax.scatter(x, y, marker='o', c=c, s=1.2, cmap=cmap, norm=norm,
-                alpha=alpha, transform=ccrs.PlateCarree())
+            cs = ax.scatter(x, y, marker='o', c=c, s=1., cmap=cmap, norm=norm,
+                alpha=0.5, transform=ccrs.PlateCarree())
 
             ax.set_title(month(xlabel))
 
