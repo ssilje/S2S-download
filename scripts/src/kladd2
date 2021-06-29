@@ -63,3 +63,18 @@ cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels,exten
 
 fg.suptitle('SS of MAE at lead time: '+str(lt))    
 fg.savefig('test_SS_day_' + str(lt.days) + '.png')
+
+
+ # Bruk denne for å plotte lead time med skill    
+#    im = skill_score.transpose('lat','lon','time_month').plot(
+#     ...:         x='lon',
+#     ...:         y='lat',
+#     ...:         col='time_month',
+#     ...:         col_wrap=3,
+#     ...:         subplot_kws=dict(projection=ccrs.PlateCarree()),
+#     ...:         transform=ccrs.PlateCarree(),
+#     ...:         cmap=cmap,
+#     ...:         norm=norm
+#     ...:        )
+    #fg,axes = plt.axes(subplot_kws=dict(projection=ccrs.PlateCarree()))
+#levels = [0, 7, 14, 21, 28, 25, 42]
