@@ -40,7 +40,7 @@ def ss(fc,clim,time='before',est='mean'):
     return SS
 
 def skill_agg(
-            in_clim,
+            in_obs,
             in_mod,
             clim_mean,
             clim_std,
@@ -55,9 +55,23 @@ def skill_agg(
     mcols = mcols*len(in_mod)
     mlabs = mlabs*len(in_mod)
 
-    for loc in in_clim.location:
+    # if location dimension does not exist, assign it
+    if np.isin(np.array(in_obs.dims),'location').sum() == 0:
 
-        clim     = in_clim.sel(location=loc)
+        out = []
+        for array in in_mod:
+
+            out.append(array.expand_dims('location'))
+
+        clim_mean = clim_mean.expand_dims('location')
+        clim_std  = clim_std.expand_dims('location')
+        in_obs    = in_obs.expand_dims('location')
+
+        in_mod = out
+
+    for loc in in_obs.location:
+
+        clim     = xh.assign_validation_time(in_obs.sel(location=loc))
 
         fname    = 'crps/'+filename+'_'+dim.split('.')[1]+'_'+\
                                 name_from_loc(str(loc.values))
@@ -78,9 +92,9 @@ def skill_agg(
 
         for model,mlab,mcol in zip(in_mod,mlabs,mcols):
 
-            mod = model.sel(location=loc)
-            cm  = clim_mean.sel(location=loc)
-            cs  = clim_std.sel(location=loc)
+            mod = xh.assign_validation_time(model.sel(location=loc))
+            cm  = xh.assign_validation_time(clim_mean.sel(location=loc))
+            cs  = xh.assign_validation_time(clim_std.sel(location=loc))
 
             x_group  = list(mod.groupby(dim))
             y_group  = list(clim.groupby(dim))
