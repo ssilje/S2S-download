@@ -64,6 +64,8 @@ process_hindcast     = False
 process_era          = False
 make_time_series     = False
 
+plot_MAE             = False
+
 high_res             = False
 verify               = True
 
@@ -110,6 +112,8 @@ clim_mean = clim_mean
 clim_std = clim_std
 dim='validation_time.month'
 cc = []
+
+
 for lt in steps:
 #lt= steps[0]    
     mod = model.sel(step=pd.Timedelta(lt,'D'))
@@ -117,8 +121,8 @@ for lt in steps:
     cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
     cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
    
-   # a = mod.groupby("validation_time.month").mean().mean('member')
-    x_group = list(mod.groupby(dim)) # lagar en liste for kvar mnd med 2 dim (nr_mnd, xarray)
+  
+    x_group = list(mod.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
     y_group = list(obs.groupby(dim))
     cm_group = list(cm.groupby(dim))
     cs_group = list(cs.groupby(dim))
@@ -156,58 +160,45 @@ for lt in steps:
     skill_score = xr.concat(c,dim='time_month') ## må legge dei etter kvarandre med mnd
     skill_score_step = skill_score
     skill_score = skill_score.drop('step')
-    
-# Bruk denne for å plotte lead time med skill    
-#    im = skill_score.transpose('lat','lon','time_month').plot(
-#     ...:         x='lon',
-#     ...:         y='lat',
-#     ...:         col='time_month',
-#     ...:         col_wrap=3,
-#     ...:         subplot_kws=dict(projection=ccrs.PlateCarree()),
-#     ...:         transform=ccrs.PlateCarree(),
-#     ...:         cmap=cmap,
-#     ...:         norm=norm
-#     ...:        )
-    #fg,axes = plt.axes(subplot_kws=dict(projection=ccrs.PlateCarree()))
-    levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
-    im = skill_score.transpose('lat','lon','time_month').plot(
-        x='lon',
-        y='lat',
-        col='time_month',
-        col_wrap=3,
-        levels=levels,
-        subplot_kws=dict(projection=ccrs.PlateCarree()),
-        transform=ccrs.PlateCarree(),
-        cbar_kwargs={'label':'SS',
-                     'ticks': levels}
-    )
+  
+    if plot_MAE:
+        levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
+        im = skill_score.transpose('lat','lon','time_month').plot(
+            x='lon',
+            y='lat',
+            col='time_month',
+            col_wrap=3,
+            levels=levels,
+            subplot_kws=dict(projection=ccrs.PlateCarree()),
+            transform=ccrs.PlateCarree(),
+            cbar_kwargs={'label':'SS',
+                         'ticks': levels}
+        )
     
     
-    for i,ax in enumerate(im.axes.flat):
-        ax.coastlines(resolution='10m', color='black',\
-                      linewidth=0.2)
-        ax.set_title(month(i))
+        for i,ax in enumerate(im.axes.flat):
+            ax.coastlines(resolution='10m', color='black',\
+                          linewidth=0.2)
+            ax.set_title(month(i))
     
 
    
 
   
-    # ax = fg.add_gridspec(3, 3)
-    #cb = fg.colorbar(im, ax=[axes[-1, :]], location='bottom',boundaries=levels,extend='both') 
-    #plt.tight_layout()
-
-    #fg.suptitle('SS of MAE at lead time: '+str(lt))   
-    plt.suptitle('SS of MAE at lead time: '+str(lt))
+     
+        plt.suptitle('SS of MAE at lead time: '+str(lt))
    
-    plt.savefig('test_SS_day_' + str(lt.days) + '.png')
+        plt.savefig('test_SS_day_' + str(lt.days) + '.png')
 
-    cc.append(skill_score_step)
-SS_step = xr.concat(cc,dim='step') ## må legge dei etter kvarandre med mnd
-SS_group = list(SS_step.groupby('time_month'))
-
+    cc.append(skill_score_step) # lagrar MAE for kvar mnd og kvar step
+SS_step = xr.concat(cc,dim='step') 
 
 SS_group = list(SS_step.groupby('time_month'))
-c_ss =[]
+
+
+SS_group = list(SS_step.groupby('time_month'))
+c_ss =[] # ny xarray med siste lead time med skill 
+
 for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
     index = xdata.where(xdata.values >0) # finding data with skill
     ss_dataset = []
@@ -230,6 +221,7 @@ for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
             "lat": (["lat"], xdata.lat),
         },
     )
+    
     time_month=xlabel
     ss_dataset=ss_dataset.assign_coords(time_month=time_month)
     c_ss.append(ss_dataset)
@@ -237,8 +229,9 @@ for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
 skill_score_at_lt = xr.concat(c_ss,dim='time_month')     
    
 levels = [3.5, 10.5, 17.5, 24.5, 31.5, 38.5, 45.5]
+# Sjekk her: plottet blir det samme om eg brukar transpose eller ikkje. 
 #im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
-im = skill_score_at_lt.skill.plot(
+im = skill_score_at_lt.skill.plot( 
     x='lon',
     y='lat',
     col='time_month',
