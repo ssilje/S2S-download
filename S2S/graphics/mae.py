@@ -421,6 +421,10 @@ def map(
               filename=''
              ):
 
+    observations = xh.assign_validation_time(observations)
+    model        = xh.assign_validation_time(model)
+    clim_mean    = xh.assign_validation_time(clim_mean)
+    
     for lt in lead_time:
 
         fname = 'mae_map/'+filename+'_'+dim.split('.')[1]+'_'+str(lt)

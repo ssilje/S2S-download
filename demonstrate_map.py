@@ -42,7 +42,7 @@ point_observations = Observations(
                             name='BarentsWatch',
                             observations=point_observations,
                             forecast=grid_hindcast,
-                            process=True
+                            process=False
                             )
 
 point_hindcast     = Grid2Point(point_observations,grid_hindcast)\
@@ -56,8 +56,7 @@ pers  = models.persistence(
 combo = models.combo(
                         init_value      = point_observations.init_a,
                         model           = point_hindcast.data_a,
-                        observations    = point_observations.data_a,
-                        cluster_name    = 'location'
+                        observations    = point_observations.data_a
                     )
 
 combo = point_hindcast.data_a - point_hindcast.data_a.mean('member') + combo
@@ -66,13 +65,12 @@ combo = point_hindcast.data_a - point_hindcast.data_a.mean('member') + combo
 combo = models.bias_adjustment_torralba(
                             forecast        = combo,
                             observations    = point_observations.data_a,
-                            spread_only     = True,
-                            cluster_name    = 'location'
+                            spread_only     = True
                             )
 
 mae.map(
         observations = point_observations.data_a,
-        models       = point_hindcast.data_a,
+        model        = point_hindcast.data_a,
         clim_mean    = xr.full_like(point_observations.data_a,0),
         dim          = 'validation_time.month',
         filename     = 'EC_vs_clim'
@@ -80,7 +78,7 @@ mae.map(
 
 mae.map(
         observations = point_observations.data_a,
-        models       = point_hindcast.data_a,
+        model        = point_hindcast.data_a,
         clim_mean    = pers,
         dim          = 'validation_time.month',
         filename     = 'EC_vs_pers'
@@ -88,7 +86,7 @@ mae.map(
 
 mae.map(
         observations = point_observations.data_a,
-        models       = combo,
+        model        = combo,
         clim_mean    = xr.full_like(point_observations.data_a,0),
         dim          = 'validation_time.month',
         filename     = 'combo_vs_clim'
@@ -96,7 +94,7 @@ mae.map(
 
 mae.map(
         observations = point_observations.data_a,
-        models       = combo,
+        model        = combo,
         clim_mean    = pers,
         dim          = 'validation_time.month',
         filename     = 'combo_vs_pers'
@@ -104,7 +102,7 @@ mae.map(
 
 mae.map(
         observations = point_observations.data_a,
-        models       = combo,
+        model        = combo,
         clim_mean    = point_hindcast.data_a,
         dim          = 'validation_time.month',
         filename     = 'combo_vs_EC'

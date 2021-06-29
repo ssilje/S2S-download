@@ -285,9 +285,9 @@ def correlation_CV(x,y,index,window=30):
             filtered_xpool = np.delete(xpool,yy,axis=-2).flatten()
             filtered_ypool = np.delete(ypool,yy,axis=-2).flatten()
 
-            idx_bool = ~np.logical_or(
-                                np.isnan(filtered_xpool),
-                                np.isnan(filtered_ypool)
+            idx_bool = np.logical_and(
+                                np.isfinite(filtered_xpool),
+                                np.isfinite(filtered_ypool)
                             )
             if idx_bool.sum()<2:
                 r = np.nan
@@ -425,11 +425,11 @@ def running_regression_CV(x,y,z,index,window=30,lim=1,sub=np.nan):
             filtered_ypool = np.delete(ypool,yy,axis=-2).flatten()
             filtered_zpool = np.delete(zpool,yy,axis=-2).flatten()
 
-            idx_bool = ~np.logical_or(
-                                np.logical_or(
-                                                np.isnan(filtered_xpool),
-                                                np.isnan(filtered_ypool)
-                                            ),np.isnan(filtered_zpool)
+            idx_bool = np.logical_and(
+                                np.logical_and(
+                                                np.isfinite(filtered_xpool),
+                                                np.isfinite(filtered_ypool)
+                                              ),np.isfinite(filtered_zpool)
                             )
 
             if idx_bool.sum()<lim:

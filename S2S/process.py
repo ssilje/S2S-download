@@ -430,9 +430,9 @@ class Grid2Point:
         for ii in range(a.shape[-1]):
 
             # keep only nonnan forecast-observation pairs
-            idx_bool = ~np.logical_or(
-                                np.isnan(o),
-                                np.isnan(a[...,ii])
+            idx_bool = np.logical_and(
+                                np.isfinite(o),
+                                np.isfinite(a[...,ii])
                             )
 
             # if all nan (most likely landmask) give -99 as correlation coef.
