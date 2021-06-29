@@ -59,7 +59,7 @@ for loc in o.location:
 
     o_cluster  = location_cluster.cluster(
                                         da=o,
-                                        loc=loc,
+                                        loc=str(loc.values),
                                         lon_tolerance=0.5,
                                         lat_tolerance=0.25
                                     )

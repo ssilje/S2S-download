@@ -20,7 +20,7 @@ clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
 
-high_res = False
+high_res = True
 steps    = pd.to_timedelta([9,16,23,30,37],'D')
 
 # observations must be weekly mean values with a time dimension
@@ -42,7 +42,7 @@ point_observations = Observations(
                             name='BarentsWatch',
                             observations=point_observations,
                             forecast=grid_hindcast,
-                            process=False
+                            process=True
                             )
 
 point_hindcast     = Grid2Point(point_observations,grid_hindcast)\
