@@ -78,3 +78,32 @@ fg.savefig('test_SS_day_' + str(lt.days) + '.png')
 #     ...:        )
     #fg,axes = plt.axes(subplot_kws=dict(projection=ccrs.PlateCarree()))
 #levels = [0, 7, 14, 21, 28, 25, 42]
+
+
+levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
+        im = skill_score.transpose('lat','lon','time_month').plot(
+            x='lon',
+            y='lat',
+            col='time_month',
+            col_wrap=3,
+            levels=levels,
+            subplot_kws=dict(projection=ccrs.PlateCarree()),
+            transform=ccrs.PlateCarree(),
+            cbar_kwargs={'label':'SS',
+                         'ticks': levels}
+        )
+    
+    
+        for i,ax in enumerate(im.axes.flat):
+            ax.coastlines(resolution='10m', color='black',\
+                          linewidth=0.2)
+            ax.set_title(month(i))
+    
+
+   
+
+  
+     
+        plt.suptitle('SS of MAE at lead time: '+str(lt))
+   
+        plt.savefig('test_SS_day_' + str(lt.days) + '.png')
