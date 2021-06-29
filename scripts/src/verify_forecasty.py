@@ -148,11 +148,11 @@ for lt in steps:
    
         SS = 1 - score_mean/score_clim
         SS = SS.median('time',skipna=True)
-        time_month = np.empty(1) 
-        print(time_month)
+        #time_month = np.empty(1) 
+        #print(time_month)
         
         time_month=xlabel
-        print(time_month)
+        #print(time_month)
         
         SS=SS.assign_coords(time_month=time_month)
         c.append(SS)
