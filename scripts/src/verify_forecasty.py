@@ -247,7 +247,8 @@ skill_score_at_lt = xr.concat(c_ss,dim='time_month')
 #     ...:         norm=norm
 #     ...:        )
     #fg,axes = plt.axes(subplot_kws=dict(projection=ccrs.PlateCarree()))
-levels = [0, 7, 14, 21, 28, 25, 42]
+#levels = [0, 7, 14, 21, 28, 25, 42]
+levels = [3.5, 10.5, 17.5, 24.5, 31.5, 38.5, 45.5]
 #im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
 im = skill_score_at_lt.skill.plot(
     x='lon',
