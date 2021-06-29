@@ -129,7 +129,18 @@ def qq_plot(dax_in,day_in,dim='validation_time.month',
                         filename='',
                         title=''):
 
-    for loc in dax_in.location:
+    # if location dimension does not exist, assign it
+    if np.isin(np.array(dax_in.dims),'location').sum() == 0:
+        dax_in = dax_in.expand_dims('location')
+        day_in = day_in.expand_dims('location')
+
+    if dax_in.location.values.ndim==0:
+        locations = [dax_in.location]
+
+    else:
+        locations = dax_in.location
+
+    for loc in locations:
 
         dax = dax_in.sel(location=loc)
         day = day_in.sel(location=loc)
@@ -159,6 +170,8 @@ def qq_plot(dax_in,day_in,dim='validation_time.month',
         axes = axes.flatten()
         ###########################
 
+        limits = [min(dax.min(),day.min()),max(dax.max(),day.max())]
+
         x_group = list(dax.groupby(dim))
         y_group = list(day.groupby(dim))
 
@@ -180,11 +193,11 @@ def qq_plot(dax_in,day_in,dim='validation_time.month',
             ax.set_xlabel(x_axlabel)
             ax.set_ylabel(y_axlabel)
 
-            limits = [np.nanmin(all)-1,np.nanmax(all)+1]
             ax.set_aspect('equal')
             ax.set_xlim(limits)
             ax.set_ylim(limits)
-            ax.plot([0, 1], [0, 1],'k',transform=ax.transAxes,alpha=0.7,linewidth=0.6)
+            ax.plot([limits[0], limits[1]], [limits[0], limits[1]],
+                                            'k',alpha=0.7,linewidth=0.6)
 
             ax.plot(x,y,'o',alpha=0.4,ms=1)
 

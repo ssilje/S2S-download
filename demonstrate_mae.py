@@ -131,3 +131,55 @@ mae.skill_agg(
             title       = 'BW combo vs pers',
             mlabs       = ['']
         )
+
+
+
+mae.skill_agg(
+            in_obs      = hisdalen_obs,
+            in_mod      = [hisdalen_ec],
+            clim_mean   = xr.full_like(hisdalen_obs,0),
+            dim         = 'validation_time.season',
+            filename    = 'BW_EC_vs_clim',
+            title       = 'BW EC vs Clim',
+            mlabs       = ['EC']
+        )
+
+mae.skill_agg(
+            in_obs      = hisdalen_obs,
+            in_mod      = [hisdalen_pers],
+            clim_mean   = xr.full_like(hisdalen_obs,0),
+            dim         = 'validation_time.season',
+            filename    = 'BW_persistence_vs_clim',
+            title       = 'BW persistence vs clim',
+            mlabs       = ['pers']
+        )
+
+mae.skill_agg(
+            in_obs      = hisdalen_obs,
+            in_mod      = [hisdalen_ec],
+            clim_mean   = hisdalen_pers,
+            dim         = 'validation_time.season',
+            filename    = 'BW_EC_vs_persistence',
+            title       = 'BW EC vs persistence',
+            mlabs       = ['']
+        )
+
+mae.skill_agg(
+            in_obs      = hisdalen_obs,
+            in_mod      = [hisdalen_combo],
+            clim_mean   = hisdalen_ec,
+            dim         = 'validation_time.season',
+            filename    = 'BW_combo_vs_EC',
+            title       = 'BW combo vs EC',
+            mlabs       = ['']
+        )
+
+mae.skill_agg(
+            in_obs      = hisdalen_obs,
+            in_mod      = [hisdalen_combo],
+            clim_mean   = hisdalen_pers,
+            dim         = 'validation_time.season',
+            filename    = 'BW_combo_vs_pers',
+            title       = 'BW combo vs pers',
+            mlabs       = ['']
+        )

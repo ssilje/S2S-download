@@ -80,6 +80,9 @@ class Hindcast:
                 # deal with duplicates along time dimesion
                 self.data = self.data.groupby('time').mean()
 
+                self.t_start = t_start
+                self.t_end   = t_end
+
             else:
 
                 print('\tLoad hindcast')
