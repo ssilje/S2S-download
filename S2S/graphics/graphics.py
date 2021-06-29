@@ -453,6 +453,12 @@ def timeseries(
                             zorder=30
                         )
 
+                    ax.fill_between(
+                            [],
+                            [],
+                            []
+                        )
+
                     score = xs.mae(o,c,dim=[])\
                                 .mean('time',skipna=True)
 

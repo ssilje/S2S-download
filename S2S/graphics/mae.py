@@ -41,24 +41,51 @@ def ss(fc,clim,time='before',est='mean'):
     return SS
 
 def skill_agg(
-            in_clim,
+            in_obs,
             in_mod,
             clim_mean,
-            clim_std,
             dim='validation_time.month',
             filename='',
             title='',
             ylab='',
             mlabs=[''],
-            mcols=['blue','orange','green','red']
+            mcols=['blue','orange','green','red'],
+            aggregate_around=None,
         ):
 
     mcols = mcols*len(in_mod)
     mlabs = mlabs*len(in_mod)
 
-    for loc in in_clim.location:
+    # if location dimension does not exist, assign it
+    if np.isin(np.array(in_obs.dims),'location').sum() == 0:
 
-        clim     = in_clim.sel(location=loc)
+        out = []
+        for array in in_mod:
+
+            out.append(array.expand_dims('location'))
+
+        clim_mean = clim_mean.expand_dims('location')
+        in_obs    = in_obs.expand_dims('location')
+
+        in_mod = out
+
+    if aggregate_around is not None:
+
+        locations = [aggregate_around]
+
+    else:
+
+        if in_obs.location.values.ndim==0:
+            locations = [in_obs.location]
+        else:
+            locations = in_obs.location
+
+    for loc in locations:
+
+        if aggregate_around is None:
+            clim = xh.assign_validation_time(in_obs).sel(location=loc)
+        else:
+            clim = xh.assign_validation_time(in_obs)
 
         fname    = 'mae/'+filename+'_'+dim.split('.')[1]+'_'+\
                                 name_from_loc(str(loc.values))
@@ -79,14 +106,18 @@ def skill_agg(
 
         for model,mlab,mcol in zip(in_mod,mlabs,mcols):
 
-            mod = model.sel(location=loc)
-            cm  = clim_mean.sel(location=loc)
-            cs  = clim_std.sel(location=loc)
+            if aggregate_around is None:
+                mod = xh.assign_validation_time(model.sel(location=loc))
+                cm  = xh.assign_validation_time(clim_mean.sel(location=loc))
+
+            else:
+                mod = xh.assign_validation_time(model)
+                cm  = xh.assign_validation_time(clim_mean)
+
 
             x_group  = list(mod.groupby(dim))
             y_group  = list(clim.groupby(dim))
             cm_group = list(cm.groupby(dim))
-            cs_group = list(cs.groupby(dim))
 
             for n,(xlabel,xdata) in enumerate(x_group):
 
@@ -94,27 +125,40 @@ def skill_agg(
 
                 ylabel,ydata   = y_group[n]
                 cmlabel,cmdata = cm_group[n]
-                cslabel,csdata = cs_group[n]
                 # this approach is not bulletproof
                 # check manually that right groups go together
                 print('\tgraphics.skill_plot: matched groups ',
-                                            xlabel,ylabel,cmlabel,cslabel)
+                                            xlabel,ylabel,cmlabel)
 
                 xdata  = xdata.unstack().sortby(['time','step'])
                 ydata  = ydata.unstack().sortby(['time','step'])
                 cmdata = cmdata.unstack().sortby(['time','step'])
-                csdata = csdata.unstack().sortby(['time','step'])
 
-                xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
+                xdata,ydata,cmdata = xr.align(xdata,ydata,cmdata)
 
                 lead_time = np.array([td.days for td in ydata.step.to_pandas()])
 
+                try:
+                    ens_center_estimate = xdata.mean('member',skipna=True)
+                except ValueError:
+                    ens_center_estimate = xdata
+
+                try:
+                    ens_center_estimate_cm = cmdata.mean('member',skipna=True)
+                except ValueError:
+                    ens_center_estimate_cm = cmdata
+
                 score_fc   = xs.mae(
-                                    xdata.mean('member',skipna=True),
+                                    ens_center_estimate,
                                     ydata,
                                     dim=[]
                                 )
-                score_clim = xs.mae(cmdata,ydata,dim=[])
+                score_clim = xs.mae(ens_center_estimate_cm,ydata,dim=[])
+
+                if aggregate_around is not None:
+
+                    score_fc = score_fc.mean('location',skipna=True)
+                    score_clim = score_clim.mean('location',skipna=True)
 
                 if dim.split('.')[1]=='season':
                     min_period=6
@@ -122,9 +166,9 @@ def skill_agg(
                     min_period=2
 
                 SS = SSCORE(
-                            observations=score_clim,
-                            forecast=score_fc
-                        ).bootstrap(N=10000,min_period=min_period)
+                            observations = score_clim,
+                            forecast     = score_fc
+                        ).bootstrap( N = 10000, min_period = min_period )
 
                 ax.plot(
                         lead_time,
@@ -153,6 +197,7 @@ def skill_agg(
                         alpha=0.9,
                         label='MAE SS est.' + mlab
                         )
+
                 ax.fill_between(
                         lead_time,
                         SS.high_q,
@@ -215,7 +260,7 @@ def skill_agg(
         save_fig(fig,fname)
 
 def skill_agg_cluster(
-            in_clim,
+            in_obs,
             in_mod,
             clim_mean,
             clim_std,
@@ -234,7 +279,7 @@ def skill_agg_cluster(
     #### Initialize figure ####
     ###########################
     latex.set_style(style='white')
-    subplots = fg(in_clim,dim)
+    subplots = fg(in_obs,dim)
     fig,axes = plt.subplots(subplots[0],subplots[1],
                     figsize=latex.set_size(width='thesis',
                         subplots=(subplots[0],subplots[1]))
@@ -247,7 +292,7 @@ def skill_agg_cluster(
         mod  = model
         cm   = clim_mean
         cs   = clim_std
-        clim = in_clim
+        clim = in_obs
 
         x_group  = list(mod.groupby(dim))
         y_group  = list(clim.groupby(dim))
@@ -370,13 +415,16 @@ def map(
               observations,
               model,
               clim_mean,
-              clim_std,
               dim='validation_time.month',
               title='',
               lead_time=[9,16,23,30,37],
               filename=''
              ):
 
+    observations = xh.assign_validation_time(observations)
+    model        = xh.assign_validation_time(model)
+    clim_mean    = xh.assign_validation_time(clim_mean)
+    
     for lt in lead_time:
 
         fname = 'mae_map/'+filename+'_'+dim.split('.')[1]+'_'+str(lt)
@@ -384,7 +432,6 @@ def map(
         mod = model.sel(step=pd.Timedelta(lt,'D'))
         obs = observations.sel(step=pd.Timedelta(lt,'D'))
         cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
-        cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
 
         subplots = fg(mod,dim)
         latex.set_style(style='white')
@@ -397,13 +444,11 @@ def map(
         x_group = list(mod.groupby(dim))
         y_group = list(obs.groupby(dim))
         cm_group = list(cm.groupby(dim))
-        cs_group = list(cs.groupby(dim))
 
         for n,(xlabel,xdata) in enumerate(x_group):
 
             ylabel,ydata   = y_group[n]
             cmlabel,cmdata = cm_group[n]
-            cslabel,csdata = cs_group[n]
 
             # this approach is not bulletproof
             # check manually that right groups go together
@@ -412,12 +457,21 @@ def map(
             xdata  = xdata.unstack().sortby(['time'])
             ydata  = ydata.unstack().sortby(['time'])
             cmdata = cmdata.unstack().sortby(['time'])
-            csdata = csdata.unstack().sortby(['time'])
 
-            xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
+            xdata,ydata,cmdata = xr.align(xdata,ydata,cmdata)
 
-            score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
-            score_clim   = xs.mae(cmdata,ydata,dim=[])
+            try:
+                ens_center_estimate = xdata.mean('member',skipna=True)
+            except ValueError:
+                ens_center_estimate = xdata
+
+            try:
+                ens_center_estimate_cm = cmdata.mean('member',skipna=True)
+            except ValueError:
+                ens_center_estimate_cm = cmdata
+
+            score_mean   = xs.mae(ens_center_estimate,ydata,dim=[])
+            score_clim   = xs.mae(ens_center_estimate_cm,ydata,dim=[])
 
             skill_score = ss(score_mean,score_clim,time='before',est='median')
 

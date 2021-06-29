@@ -217,17 +217,24 @@ class SSCORE:
 
     def pull(self,fc,obs,N,ci=.95,min_period=2):
 
-        # CHANGE SO THAT MISMATCH YEARS AE TRHOWN OUT INSTEAD
+        # use only years of at least min_period observations
         fc_idx  = (~np.isnan(fc)).sum(axis=0)>min_period
         obs_idx = (~np.isnan(obs)).sum(axis=0)>min_period
 
-        if (fc_idx==obs_idx).all():
+        # use only coincinding years
+        idx_bool = np.logical_and(
+                            fc_idx,
+                            obs_idx
+                            )
 
-            fc = np.nanmean(fc[...,fc_idx],axis=0)
-            obs = np.nanmean(obs[...,obs_idx],axis=0)
+        ny = idx_bool.sum()
+
+        if idx_bool.sum()>1:
+
+            fc = np.nanmean(fc[...,idx_bool],axis=0)
+            obs = np.nanmean(obs[...,idx_bool],axis=0)
 
             y  = fc.shape[-1]
-            ny = (~np.isnan(fc)).sum()
 
             # generate random integers as indices for fc-obs pairs
             _idx_ = np.random.randint(low=0,high=y,size=(N,y))
@@ -239,16 +246,21 @@ class SSCORE:
             # calculate score N times
             score = np.sort(self.skill_score(_fc_,_obs_))
 
-            # actual score
-            est_score = self.skill_score(fc,obs)
-
             # quantiles
             alpha  = (1-ci)/2
 
             high_q = score[ int( (N-1) * (1-alpha) ) ]
             low_q  = score[ int( (N-1) * alpha ) ]
 
-            return low_q,est_score,high_q,ny
-
         else:
-            raise ValueError('Forecast and observation mismatch.')
+
+            high_q = np.nan
+            low_q  = np.nan
+
+        if idx_bool.sum()>0:
+            # actual score
+            est_score = self.skill_score(fc,obs)
+        else:
+            est_score = np.nan
+
+        return low_q,est_score,high_q,ny

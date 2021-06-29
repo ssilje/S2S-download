@@ -158,7 +158,7 @@ def persistence(init_value,observations,window=30):
 
     try:
         rho = rho.drop('validation_time')
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
 
     return rho * init_value
@@ -216,11 +216,11 @@ def combo(
 
     try:
         alpha = alpha.drop('validation_time')
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
     try:
         beta = beta.drop('validation_time')
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
 
     alpha = xh.stack_time(alpha)
@@ -285,12 +285,15 @@ def correlation_CV(x,y,index,window=30):
             filtered_xpool = np.delete(xpool,yy,axis=-2).flatten()
             filtered_ypool = np.delete(ypool,yy,axis=-2).flatten()
 
-            idx_bool = ~np.logical_or(
-                                np.isnan(filtered_xpool),
-                                np.isnan(filtered_ypool)
+            idx_bool = np.logical_and(
+                                np.isfinite(filtered_xpool),
+                                np.isfinite(filtered_ypool)
                             )
+            if idx_bool.sum()<2:
+                r = np.nan
 
-            r,p = stats.pearsonr(
+            else:
+                r,p = stats.pearsonr(
                                     filtered_xpool[idx_bool],
                                     filtered_ypool[idx_bool]
                                 )
@@ -306,6 +309,20 @@ def std(x,index,window=30):
     Computes std of x, keeping dim -1 and -2.
     Dim -1 must be 'dayofyear', with the corresponding days given in index.
     Dim -2 must be 'year'.
+clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
+pers    = models.persistence(
+                init_value   = point_observations.init_a,
+                observations = point_observations.data_a
+                )
+
+graphics.timeseries(
+                        observations    = point_observations.data_a,
+                        cast            = [pers,point_hindcast.data_a],
+                        lead_time       = [9,16],
+                        clabs           = ['persistence','EC'],
+                        filename        = 'BW_persistence',
+                        title           = 'Barentswatch EC'
+                    )
 
     args:
         x:      np.array of float, with day of year as index -1 and year as
@@ -408,11 +425,11 @@ def running_regression_CV(x,y,z,index,window=30,lim=1,sub=np.nan):
             filtered_ypool = np.delete(ypool,yy,axis=-2).flatten()
             filtered_zpool = np.delete(zpool,yy,axis=-2).flatten()
 
-            idx_bool = ~np.logical_or(
-                                np.logical_or(
-                                                np.isnan(filtered_xpool),
-                                                np.isnan(filtered_ypool)
-                                            ),np.isnan(filtered_zpool)
+            idx_bool = np.logical_and(
+                                np.logical_and(
+                                                np.isfinite(filtered_xpool),
+                                                np.isfinite(filtered_ypool)
+                                              ),np.isfinite(filtered_zpool)
                             )
 
             if idx_bool.sum()<lim:
