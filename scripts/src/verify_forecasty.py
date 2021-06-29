@@ -235,19 +235,7 @@ for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
     c_ss.append(ss_dataset)
     
 skill_score_at_lt = xr.concat(c_ss,dim='time_month')     
-    # Bruk denne for å plotte lead time med skill    
-#    im = skill_score.transpose('lat','lon','time_month').plot(
-#     ...:         x='lon',
-#     ...:         y='lat',
-#     ...:         col='time_month',
-#     ...:         col_wrap=3,
-#     ...:         subplot_kws=dict(projection=ccrs.PlateCarree()),
-#     ...:         transform=ccrs.PlateCarree(),
-#     ...:         cmap=cmap,
-#     ...:         norm=norm
-#     ...:        )
-    #fg,axes = plt.axes(subplot_kws=dict(projection=ccrs.PlateCarree()))
-#levels = [0, 7, 14, 21, 28, 25, 42]
+   
 levels = [3.5, 10.5, 17.5, 24.5, 31.5, 38.5, 45.5]
 #im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
 im = skill_score_at_lt.skill.plot(
