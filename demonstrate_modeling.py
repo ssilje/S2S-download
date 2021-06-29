@@ -26,7 +26,7 @@ grid_hindcast     = Hindcast(
                         domainID,
                         high_res=high_res,
                         steps=steps,
-                        process=False,
+                        process=True,
                         download=False,
                         split_work=True
                     )
