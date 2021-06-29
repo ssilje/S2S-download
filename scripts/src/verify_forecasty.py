@@ -263,10 +263,10 @@ im = skill_score_at_lt.skill.plot(
 )
     
     
-    for i,ax in enumerate(im.axes.flat):
-        ax.coastlines(resolution='10m', color='black',\
-                      linewidth=0.2)
-        ax.set_title(month(i))
-    plt.suptitle('last lead time with skill')
-    plt.savefig('test_SS_leadtime.png')
+for i,ax in enumerate(im.axes.flat):
+    ax.coastlines(resolution='10m', color='black',\
+                  linewidth=0.2)
+    ax.set_title(month(i))
+plt.suptitle('last lead time with skill')
+plt.savefig('test_SS_leadtime.png')
 
