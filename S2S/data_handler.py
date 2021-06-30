@@ -48,7 +48,9 @@ class Archive:
 
     @staticmethod
     def S2S_in_filename(**kwargs):
-
+        """
+        Returns filename to load from the S2S database
+        """
         var   = kwargs['var']
         date  = kwargs['date']
         run   = kwargs['run']
@@ -108,13 +110,13 @@ class Archive:
         return '_'.join(['barentswatch',str(location)])+'.nc'
 
     @staticmethod
-    def out_filename(var,start,end,domainID,label):
+    def out_filename(var,start,end,bounds,label):
         return '%s_%s-%s_%s_%s%s'%(
                             var,
                             dt.to_datetime(start).strftime('%Y-%m-%d'),
                             dt.to_datetime(end).strftime('%Y-%m-%d'),
                             label,
-                            domainID,
+                            '%s_%s-%s_%s'%(bounds),
                             '.nc'
                         )
 
@@ -129,12 +131,14 @@ class Archive:
         if not os.path.exists(path):
             os.makedirs(path)
 
+    # These two functions are depricated after stopped usign domains.json
     @staticmethod
     def get_bounds(domainID):
         with open(config['DOMAINS'], 'r') as file:
             domain_dict = json.load(file)
         return domain_dict[domainID]['bounds']
 
+    # These two functions are depricated after stopped usign domains.json
     @staticmethod
     def get_domain(domainID):
         with open(config['DOMAINS'], 'r') as file:
@@ -187,6 +191,10 @@ class LoadLocal:
         return ds
 
     def filename(self,key='in'):
+        """
+        Returns functions returning filenames dependent on self.label and 'key'
+        argument
+        """
 
         label = self.label
 
@@ -206,6 +214,16 @@ class LoadLocal:
             return Archive().out_filename
 
     def load_frequency(self):
+        """
+        Returns a list like item of pandas.Datetime
+        from self.start_time to self.end_time. Frequency dependent on input.
+        """
+
+        # Only the option 'daily' is used so far.
+        # self.excecute_loading_sequence checks if file exists.
+        # Consider deleting the remaining options, in case this function
+        # is deprocated and dt.days_from(self.start_time,self.end_time) could be
+        # called directly.
 
         option = self.loading_options['load_time']
 
@@ -222,6 +240,9 @@ class LoadLocal:
             exit()
 
     def execute_loading_sequence(self,x_landmask=False):
+
+        # Consider removing x_landmask option unless filling dataset holes
+        # become something we want to do in the future
 
         chunk = []
 
@@ -307,7 +328,7 @@ class LoadLocal:
                 var,
                 start_time,
                 end_time,
-                domainID,
+                bounds,
                 download=False,
                 prnt=True,
                 x_landmask=False
@@ -320,14 +341,13 @@ class LoadLocal:
         self.var          = var
         self.start_time   = start_time
         self.end_time     = end_time
-        self.domainID     = domainID
-        self.bounds       = archive.get_bounds(domainID)
+        self.bounds       = bounds
         self.download     = download
         self.out_filename = archive.out_filename(
                                                 var=var,
                                                 start=start_time,
                                                 end=end_time,
-                                                domainID=domainID,
+                                                bounds=bounds,
                                                 label=archive.ftype[self.label]
                                                 )
 

@@ -141,68 +141,69 @@ def qq_plot(dax_in,day_in,dim='validation_time.month',
         locations = dax_in.location
 
     for loc in locations:
+        for lt in dax_in.step:
 
-        dax = dax_in.sel(location=loc)
-        day = day_in.sel(location=loc)
+            dax = dax_in.sel(location=loc,step=lt)
+            day = day_in.sel(location=loc,step=lt)
 
-        dax,day  = xr.broadcast(dax,day)
+            dax,day  = xr.broadcast(dax,day)
 
-        if dim=='validation_time.month':
-            dax = xh.assign_validation_time(dax)
-            day = xh.assign_validation_time(day)
+            if dim=='validation_time.month':
+                dax = xh.assign_validation_time(dax)
+                day = xh.assign_validation_time(day)
 
-        fname    = 'qqplot_'+filename+'_'+name_from_loc(str(dax.location.values))
-        suptitle = title + ' ' + \
-                        name_from_loc(str(dax.location.values)) #+\
-                        # ' leadtime: ' + '-'.join([
-                        #         str(pd.Timedelta(dax.step.min().to_pandas()).days),
-                        #         str(pd.Timedelta(dax.step.max().to_pandas()).days)
-                        #     ]) + ' days'
-        ###########################
-        #### Initialize figure ####
-        ###########################
-        latex.set_style(style='white')
-        subplots = fg(dax,dim)
-        fig,axes = plt.subplots(subplots[0],subplots[1],
-                        figsize=latex.set_size(width='thesis',
-                            subplots=(subplots[0],subplots[1]))
-                        )
-        axes = axes.flatten()
-        ###########################
+            fname    = 'qqplot_'+filename+'_'+name_from_loc(str(dax.location.values))+str(lt.dt.days.values)
+            suptitle = title + ' ' + \
+                            name_from_loc(str(dax.location.values)) +' lead time: '+str(lt.dt.days.values)#+\
+                            # ' leadtime: ' + '-'.join([
+                            #         str(pd.Timedelta(dax.step.min().to_pandas()).days),
+                            #         str(pd.Timedelta(dax.step.max().to_pandas()).days)
+                            #     ]) + ' days'
+            ###########################
+            #### Initialize figure ####
+            ###########################
+            latex.set_style(style='white')
+            subplots = fg(dax,dim)
+            fig,axes = plt.subplots(subplots[0],subplots[1],
+                            figsize=latex.set_size(width='thesis',
+                                subplots=(subplots[0],subplots[1]))
+                            )
+            axes = axes.flatten()
+            ###########################
 
-        limits = [min(dax.min(),day.min()),max(dax.max(),day.max())]
+            limits = [-5,5]
 
-        x_group = list(dax.groupby(dim))
-        y_group = list(day.groupby(dim))
+            x_group = list(dax.groupby(dim))
+            y_group = list(day.groupby(dim))
 
-        for n,(xlabel,xdata) in enumerate(x_group):
+            for n,(xlabel,xdata) in enumerate(x_group):
 
-            ylabel,ydata = y_group[n]
-            # this approach is not bulletproof
-            # check manually that right groups go together
-            print('\tgraphics.qq_plot: matched groups ',xlabel,ylabel)
+                ylabel,ydata = y_group[n]
+                # this approach is not bulletproof
+                # check manually that right groups go together
+                print('\tgraphics.qq_plot: matched groups ',xlabel,ylabel)
 
-            x,y = xr.align(xdata,ydata)
-            x,y = x.values.flatten(),y.values.flatten()
-            all = np.array([x,y]).flatten()
+                x,y = xr.align(xdata,ydata)
+                x,y = x.values.flatten(),y.values.flatten()
+                all = np.array([x,y]).flatten()
 
-            ax = axes[n]
+                ax = axes[n]
 
-            ax.set_title(month(xlabel))
+                ax.set_title(month(xlabel))
 
-            ax.set_xlabel(x_axlabel)
-            ax.set_ylabel(y_axlabel)
+                ax.set_xlabel(x_axlabel)
+                ax.set_ylabel(y_axlabel)
 
-            ax.set_aspect('equal')
-            ax.set_xlim(limits)
-            ax.set_ylim(limits)
-            ax.plot([limits[0], limits[1]], [limits[0], limits[1]],
-                                            'k',alpha=0.7,linewidth=0.6)
+                ax.set_aspect('equal')
+                ax.set_xlim(limits)
+                ax.set_ylim(limits)
+                ax.plot([limits[0], limits[1]], [limits[0], limits[1]],
+                                                'k',alpha=0.7,linewidth=0.6)
 
-            ax.plot(x,y,'o',alpha=0.4,ms=1)
+                ax.plot(x,y,'o',alpha=0.4,ms=1)
 
-        fig.suptitle(suptitle)
-        save_fig(fig,fname)
+            fig.suptitle(suptitle)
+            save_fig(fig,fname)
 
 def skill_plot(in_mod,in_clim,dim='validation_time.month',
                                 filename='',

@@ -10,7 +10,7 @@ from S2S import models, location_cluster
 def loc(name):
     return str(location_cluster.loc_from_name(name))
 
-domainID = 'norwegian_coast'
+bounds = (0,28,55,75)
 var      = 'sst'
 
 t_start  = (2020,1,23)
@@ -30,7 +30,7 @@ grid_hindcast     = Hindcast(
                         var,
                         t_start,
                         t_end,
-                        domainID,
+                        bounds,
                         high_res=high_res,
                         steps=steps,
                         process=False,
@@ -47,6 +47,11 @@ point_observations = Observations(
 
 point_hindcast     = Grid2Point(point_observations,grid_hindcast)\
                             .correlation(step_dependent=True)
+
+pers  = models.persistence(
+                init_value   = point_observations.init_a,
+                observations = point_observations.data_a
+                )
 
 o  = point_observations.data_a
 oi = point_observations.init_a
@@ -94,16 +99,32 @@ mod = xr.concat(mod,'location')
 
 mae.map(
         observations = obs,
-        models       = mod,
+        model        = mod,
         clim_mean    = xr.full_like(obs,0),
         dim          = 'validation_time.month',
-        filename     = 'COMBO_vs_clim'
+        filename     = 'COMBO_vs_clim_cluster'
         )
 
 mae.map(
         observations = obs,
-        models       = mod,
+        model        = mod,
         clim_mean    = xr.full_like(obs,0),
         dim          = 'validation_time.season',
-        filename     = 'COMBO_vs_clim'
+        filename     = 'COMBO_vs_clim_cluster'
+        )
+
+mae.map(
+        observations = obs,
+        model        = mod,
+        clim_mean    = pers,
+        dim          = 'validation_time.month',
+        filename     = 'COMBO_vs_pers_cluster'
+        )
+
+mae.map(
+        observations = obs,
+        model        = mod,
+        clim_mean    = pers,
+        dim          = 'validation_time.season',
+        filename     = 'COMBO_vs_pers_cluster'
         )

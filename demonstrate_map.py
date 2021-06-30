@@ -10,7 +10,7 @@ from S2S import models, location_cluster
 def loc(name):
     return str(location_cluster.loc_from_name(name))
 
-domainID = 'norwegian_coast'
+bounds = (0,28,55,75)
 var      = 'sst'
 
 t_start  = (2020,1,23)
@@ -30,7 +30,7 @@ grid_hindcast     = Hindcast(
                         var,
                         t_start,
                         t_end,
-                        domainID,
+                        bounds,
                         high_res=high_res,
                         steps=steps,
                         process=False,
