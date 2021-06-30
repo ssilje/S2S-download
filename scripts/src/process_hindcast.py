@@ -15,20 +15,26 @@ import S2S.graphics.graphics as gr
 
 import scripts.Henrik.create_domain_file
 
-path_e = 't2m/'
-long_name = 'absolute_t2m'
+#path_e = 't2m/'
+#long_name = 'absolute_t2m'
+
+path_e = 'wind10m/'
+long_name = 'absolute_wind10m'
 Archive().make_dir(config['VALID_DB']+path_e)
 
 domainID = 'norwegian_coast'
 
-var      = 't2m'
+var      = 'abs_wind'
+var1     = 'u10'
+var2     = 'v10'
 
-var1     = False
-var2     = False
 
-#var      = 'abs_wind'
-#var1     = 'u10'
-#var2     = 'v10'
+#var      = 't2m'
+
+#var1     = False
+#var2     = False
+
+
 
 t_start  = (2019,7,1)
 t_end    = (2020,6,26)
