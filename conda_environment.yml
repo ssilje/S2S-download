@@ -23,6 +23,7 @@ dependencies:
   - xarray-extras
   - openpyxl
   - xskillscore
+  - cftime
 
 #installed manually:
 # pip3 install gridpp==0.6.0-dev.1
