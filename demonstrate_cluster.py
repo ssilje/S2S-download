@@ -94,3 +94,29 @@ graphics.timeseries(
                         filename        = 'BW_persistence_combo_clustered',
                         title           = 'Barentswatch'
                     )
+
+graphics.timeseries(
+                        observations    = hisdalen_obs,
+                        cast            = [
+                                            hisdalen_pers,
+                                            hisdalen_ec,
+                                            hisdalen_combo
+                                        ],
+                        lead_time       = [23,30],
+                        clabs           = ['persistence','EC','combo'],
+                        filename        = 'BW_persistence_combo_clustered',
+                        title           = 'Barentswatch'
+                    )
+
+graphics.timeseries(
+                        observations    = hisdalen_obs,
+                        cast            = [
+                                            hisdalen_pers,
+                                            hisdalen_ec,
+                                            hisdalen_combo
+                                        ],
+                        lead_time       = [37],
+                        clabs           = ['persistence','EC','combo'],
+                        filename        = 'BW_persistence_combo_clustered',
+                        title           = 'Barentswatch'
+                    )

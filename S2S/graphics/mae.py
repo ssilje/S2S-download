@@ -424,7 +424,7 @@ def map(
     observations = xh.assign_validation_time(observations)
     model        = xh.assign_validation_time(model)
     clim_mean    = xh.assign_validation_time(clim_mean)
-    
+
     for lt in lead_time:
 
         fname = 'mae_map/'+filename+'_'+dim.split('.')[1]+'_'+str(lt)
@@ -493,8 +493,8 @@ def map(
             levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
             norm   = BoundaryNorm(levels,cmap.N)
 
-            cs = ax.scatter(x, y, marker='o', c=c, s=1.2, cmap=cmap, norm=norm,
-                alpha=0.8, transform=ccrs.PlateCarree())
+            cs = ax.scatter(x, y, marker='o', c=c, s=1., cmap=cmap, norm=norm,
+                alpha=0.5, transform=ccrs.PlateCarree())
 
             ax.set_title(month(xlabel))
 

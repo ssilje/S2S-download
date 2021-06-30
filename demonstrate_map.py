@@ -107,3 +107,47 @@ mae.map(
         dim          = 'validation_time.month',
         filename     = 'combo_vs_EC'
         )
+
+
+
+
+
+mae.map(
+        observations = point_observations.data_a,
+        model        = point_hindcast.data_a,
+        clim_mean    = xr.full_like(point_observations.data_a,0),
+        dim          = 'validation_time.season',
+        filename     = 'EC_vs_clim'
+        )
+
+mae.map(
+        observations = point_observations.data_a,
+        model        = point_hindcast.data_a,
+        clim_mean    = pers,
+        dim          = 'validation_time.season',
+        filename     = 'EC_vs_pers'
+        )
+
+mae.map(
+        observations = point_observations.data_a,
+        model        = combo,
+        clim_mean    = xr.full_like(point_observations.data_a,0),
+        dim          = 'validation_time.season',
+        filename     = 'combo_vs_clim'
+        )
+
+mae.map(
+        observations = point_observations.data_a,
+        model        = combo,
+        clim_mean    = pers,
+        dim          = 'validation_time.season',
+        filename     = 'combo_vs_pers'
+        )
+
+mae.map(
+        observations = point_observations.data_a,
+        model        = combo,
+        clim_mean    = point_hindcast.data_a,
+        dim          = 'validation_time.season',
+        filename     = 'combo_vs_EC'
+        )

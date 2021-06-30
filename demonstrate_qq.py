@@ -1,10 +1,9 @@
 import pandas as pd
-import xarray as xr
 
 from S2S.data_handler import ERA5, BarentsWatch
 from S2S.process import Hindcast, Observations, Grid2Point
 
-from S2S.graphics import mae,crps,graphics
+from S2S.graphics import mae,crps,graphics as mae,crps,graphics
 from S2S import models, location_cluster
 
 def loc(name):
@@ -55,7 +54,8 @@ point_observations = Observations(
 point_hindcast     = Grid2Point(point_observations,grid_hindcast)\
                             .correlation(step_dependent=True)
 
-pers  = models.persistence(
+clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
+pers    = models.persistence(
                 init_value   = point_observations.init_a,
                 observations = point_observations.data_a
                 )
@@ -78,50 +78,27 @@ combo = models.bias_adjustment_torralba(
                             )
 
 hisdalen_obs   = point_observations.data_a.sel(location=loc('Hisdalen'))
-hisdalen_combo = combo.sel(location=loc('Hisdalen'))
 hisdalen_pers  = pers.sel(location=loc('Hisdalen'))
+hisdalen_combo = combo.sel(location=loc('Hisdalen'))
 hisdalen_ec    = point_hindcast.data_a.sel(location=loc('Hisdalen'))
 
-crps.skill_agg(
-            in_obs      = hisdalen_obs,
-            in_mod      = [hisdalen_ec],
-            clim_mean   = xr.full_like(hisdalen_obs,0),
-            clim_std    = xr.full_like(hisdalen_obs,1),
-            dim         = 'validation_time.month',
-            filename    = 'BW_EC_vs_clim',
-            title       = 'BW EC vs Clim',
-            mlabs       = ['EC']
-        )
+graphics.qq_plot(
+                hisdalen_obs,
+                hisdalen_combo,
+                y_axlabel = 'EC',
+                filename='EC'
+                )
 
-crps.skill_agg(
-            in_obs      = hisdalen_obs,
-            in_mod      = [hisdalen_combo],
-            clim_mean   = xr.full_like(hisdalen_obs,0),
-            clim_std    = xr.full_like(hisdalen_obs,1),
-            dim         = 'validation_time.month',
-            filename    = 'BW_combo_vs_clim',
-            title       = 'BW combo vs Clim',
-            mlabs       = ['EC']
-        )
+graphics.qq_plot(
+                hisdalen_obs,
+                hisdalen_pers,
+                y_axlabel = 'pers',
+                filename='pers'
+                )
 
-crps.skill_agg(
-            in_obs      = hisdalen_obs,
-            in_mod      = [hisdalen_ec],
-            clim_mean   = xr.full_like(hisdalen_obs,0),
-            clim_std    = xr.full_like(hisdalen_obs,1),
-            dim         = 'validation_time.season',
-            filename    = 'BW_EC_vs_clim',
-            title       = 'BW EC vs Clim',
-            mlabs       = ['EC']
-        )
-
-crps.skill_agg(
-            in_obs      = hisdalen_obs,
-            in_mod      = [hisdalen_combo],
-            clim_mean   = xr.full_like(hisdalen_obs,0),
-            clim_std    = xr.full_like(hisdalen_obs,1),
-            dim         = 'validation_time.season',
-            filename    = 'BW_combo_vs_clim',
-            title       = 'BW combo vs Clim',
-            mlabs       = ['EC']
-        )
+graphics.qq_plot(
+                hisdalen_obs,
+                hisdalen_combo,
+                y_axlabel = 'combo',
+                filename='combo_clustered'
+                )
