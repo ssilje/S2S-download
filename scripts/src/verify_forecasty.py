@@ -35,6 +35,35 @@ def month(ii):
     return ii
 
 
+def plot_months(
+        varplot,
+        levels_plot,
+        label_text,
+        levels_cbar,
+        plot_title,
+        plot_save,
+):
+    # Sjekk her: plottet blir det samme om eg brukar transpose eller ikkje. 
+    #im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
+    im = varplot.plot( 
+        x='lon',
+        y='lat',
+        col='time_month',
+        col_wrap=3,
+        levels=levels_plot,
+        subplot_kws=dict(projection=ccrs.PlateCarree()),
+        transform=ccrs.PlateCarree(),
+        cbar_kwargs={'label': label_text,
+                 'ticks': levels_cbar}
+    )
+  
+    for i,ax in enumerate(im.axes.flat):
+        ax.coastlines(resolution='10m', color='black',\
+                      linewidth=0.2)
+        ax.set_title(month(i))
+    plt.suptitle(plot_title)
+    plt.savefig(plot_save)
+
 
 
 path_e = 't2m/'
@@ -64,7 +93,7 @@ process_hindcast     = False
 process_era          = False
 make_time_series     = False
 
-plot_MAE             = False
+plot_MAE             = True
 
 high_res             = False
 verify               = True
@@ -162,33 +191,16 @@ for lt in steps:
     skill_score = skill_score.drop('step')
   
     if plot_MAE:
-        levels = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1]
-        im = skill_score.transpose('lat','lon','time_month').plot(
-            x='lon',
-            y='lat',
-            col='time_month',
-            col_wrap=3,
-            levels=levels,
-            subplot_kws=dict(projection=ccrs.PlateCarree()),
-            transform=ccrs.PlateCarree(),
-            cbar_kwargs={'label':'SS',
-                         'ticks': levels}
+        
+        plot_months(
+            varplot = skill_score.transpose('lat','lon','time_month'),
+            levels_plot = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1],
+            label_text  = 'SS',
+            levels_cbar = [-1,-0.5,-0.25,-0.05,0.05,0.25,0.5,1],
+            plot_title  = 'SS of MAE at lead time: '+str(lt),
+            plot_save   = 'test_SS_day_' + str(lt.days) + '.png',
         )
-    
-    
-        for i,ax in enumerate(im.axes.flat):
-            ax.coastlines(resolution='10m', color='black',\
-                          linewidth=0.2)
-            ax.set_title(month(i))
-    
-
-   
-
-  
-     
-        plt.suptitle('SS of MAE at lead time: '+str(lt))
-   
-        plt.savefig('test_SS_day_' + str(lt.days) + '.png')
+ 
 
     cc.append(skill_score_step) # lagrar MAE for kvar mnd og kvar step
 SS_step = xr.concat(cc,dim='step') 
@@ -200,10 +212,14 @@ SS_group = list(SS_step.groupby('time_month'))
 c_ss =[] # ny xarray med siste lead time med skill 
 
 for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
+    
     index = xdata.where(xdata.values >0) # finding data with skill
+    
     ss_dataset = []
+    
     test = np.empty(SS_step[2,3].shape)
     test[:] =np.NaN
+    
     for nlat,ilat in enumerate(xdata.lat):
         for nlon,ilon in enumerate(xdata.lon):
             xdata_ss = xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat]).where(xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat])>0,drop=True) # find the time steps with skill
@@ -227,27 +243,16 @@ for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
     c_ss.append(ss_dataset)
     
 skill_score_at_lt = xr.concat(c_ss,dim='time_month')     
-   
-levels = [3.5, 10.5, 17.5, 24.5, 31.5, 38.5, 45.5]
-# Sjekk her: plottet blir det samme om eg brukar transpose eller ikkje. 
-#im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
-im = skill_score_at_lt.skill.plot( 
-    x='lon',
-    y='lat',
-    col='time_month',
-    col_wrap=3,
-    levels=levels,
-    subplot_kws=dict(projection=ccrs.PlateCarree()),
-    transform=ccrs.PlateCarree(),
-    cbar_kwargs={'label':'lead time',
-                 'ticks': levels}
+
+plot_months(
+    varplot = skill_score_at_lt.skill,
+    levels_plot = [3.5, 10.5, 17.5, 24.5, 31.5, 38.5, 45.5],
+    label_text  = 'lead time',
+    levels_cbar = [7, 14, 21, 28, 35, 42],
+    plot_title  = 'last lead time with skill',
+    plot_save   = 'test_SS_leadtime.png',
 )
-    
-    
-for i,ax in enumerate(im.axes.flat):
-    ax.coastlines(resolution='10m', color='black',\
-                  linewidth=0.2)
-    ax.set_title(month(i))
-plt.suptitle('last lead time with skill')
-plt.savefig('test_SS_leadtime.png')
+
+
+
 
