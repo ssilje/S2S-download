@@ -30,7 +30,7 @@ grid_hindcast     = Hindcast(
                         var,
                         t_start,
                         t_end,
-                        bounds
+                        bounds,
                         high_res=high_res,
                         steps=steps,
                         process=False,
