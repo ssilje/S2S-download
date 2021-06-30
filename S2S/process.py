@@ -352,10 +352,18 @@ class Observations:
             init_mean = init_mean.rename(self.var)
             init_std  = init_std.rename(self.var)
 
+            _,c = np.unique(init_mean.time.values, return_counts=True)
+            if len(c[c>1])>0:
+                init_mean = init_mean.groupby('time').mean(skipna=True)
+
+            _,c = np.unique(init_std.time.values, return_counts=True)
+            if len(c[c>1])>0:
+                init_std = init_std.groupby('time').mean(skipna=True)
+
             init_obs_a = ( self.observations - init_mean ) / init_std
 
-            init_obs_a = init_obs_a.sortby('time').reindex(
-                            {'time':forecast.data.time.sortby('time')},
+            init_obs_a = init_obs_a.reindex(
+                            {'time':forecast.data.time},
                             method='pad',
                             tolerance='7D'
                         ).broadcast_like(self.data)
