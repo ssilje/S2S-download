@@ -38,8 +38,8 @@ t_end    = (2020,6,26)
 clim_t_start  = (1999,1,1)
 clim_t_end    = (2021,1,4)
 
-process_hindcast     = False
-process_era          = False
+process_hindcast     = True
+process_era          = True
 make_time_series     = True
 
 high_res             = False
