@@ -94,7 +94,7 @@ mod = xr.concat(mod,'location')
 
 mae.map(
         observations = obs,
-        models       = mod,
+        model        = mod,
         clim_mean    = xr.full_like(obs,0),
         dim          = 'validation_time.month',
         filename     = 'COMBO_vs_clim'
@@ -102,7 +102,7 @@ mae.map(
 
 mae.map(
         observations = obs,
-        models       = mod,
+        model        = mod,
         clim_mean    = xr.full_like(obs,0),
         dim          = 'validation_time.season',
         filename     = 'COMBO_vs_clim'
