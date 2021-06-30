@@ -48,6 +48,11 @@ point_observations = Observations(
 point_hindcast     = Grid2Point(point_observations,grid_hindcast)\
                             .correlation(step_dependent=True)
 
+pers  = models.persistence(
+                init_value   = point_observations.init_a,
+                observations = point_observations.data_a
+                )
+
 o  = point_observations.data_a
 oi = point_observations.init_a
 h  = point_hindcast.data_a
@@ -96,7 +101,7 @@ mae.map(
         observations = obs,
         model        = mod,
         clim_mean    = xr.full_like(obs,0),
-        dim          = 'validation_time.month',
+        dim          = 'validation_time.month_cluster'',
         filename     = 'COMBO_vs_clim'
         )
 
@@ -105,5 +110,21 @@ mae.map(
         model        = mod,
         clim_mean    = xr.full_like(obs,0),
         dim          = 'validation_time.season',
-        filename     = 'COMBO_vs_clim'
+        filename     = 'COMBO_vs_clim_cluster''
+        )
+
+mae.map(
+        observations = obs,
+        model        = mod,
+        clim_mean    = pers,
+        dim          = 'validation_time.month',
+        filename     = 'COMBO_vs_pers_cluster'
+        )
+
+mae.map(
+        observations = obs,
+        model        = mod,
+        clim_mean    = pers,
+        dim          = 'validation_time.season',
+        filename     = 'COMBO_vs_pers_cluster''
         )
