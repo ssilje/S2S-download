@@ -207,8 +207,6 @@ SS_step = xr.concat(cc,dim='step')
 
 SS_group = list(SS_step.groupby('time_month'))
 
-
-SS_group = list(SS_step.groupby('time_month'))
 c_ss =[] # ny xarray med siste lead time med skill 
 
 for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
