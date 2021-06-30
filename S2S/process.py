@@ -14,13 +14,50 @@ import S2S.models            as models
 import S2S.handle_datetime   as dt
 
 class Hindcast:
+    """
+    Loads hindcast from S2S database, computes weekly means and then provides
 
+        self.data:      the absolute values of the hindcast (xarray.DataArray)
+        self.data_a:    the anomlies of the data relative to model climatology
+                        (xarray.DataArray)
+        self.mean:      the model mean climatology (over 30-day running window)
+                        (xarray.DataArray)
+        self.std:       the model std climatology (over 30-day running window)
+                        (xarray.DataArray)
+
+    Arguments to __init__
+
+        var:        the name of the variable, should correspond to filenames in
+                    the S2S database (string)
+        t_start:    start time of files to load (tuple of int; (year,monty,day))
+        t_end:      end time of files to load (tuple of int; (year,monty,day))
+                    both start and end are included to load files
+        bounds:     bounds of lon-lat grid to load
+                    (tuple of float; (min lon, max lon, min lat, max lat))
+                    Current grid is 0-360 in longitude direction starting at 0
+                    at the exact location of Boris Johnson (does not vary much).
+        high_res:   changes path to 0.5 degree grid hindcast (only for SST).
+                    Default is 1.5 degree grid.
+        steps:      The steps one would like to store (after computing running
+                    7-day means along step (lead time) dimension).
+                    In combination with split_work=True, this could save some
+                    internal memory, by re-arrangeing(?) the work flow and
+                    tossing out lead times at an earlier stage. Default keeps
+                    all lead times.
+        dowload:    if True, and process is set to True, forces download from
+                    S2S database even if temporary files are found. Default is
+                    False.
+        process:    if True, forces the computation of model climatology and
+                    anomalies. Default is False.
+        split_work: if True, exploits the steps given in argument 'steps' to
+                    reduce the use of internal memory. Default is False.
+    """
     def __init__(
                     self,
                     var,
                     t_start,
                     t_end,
-                    domainID,
+                    bounds,
                     high_res=False,
                     steps=None,
                     download=False,
@@ -31,7 +68,7 @@ class Hindcast:
         self.var            = var
         self.t_start        = t_start
         self.t_end          = t_end
-        self.domainID       = domainID
+        self.bounds         = bounds
         self.high_res       = high_res
         self.steps          = steps
         self.download       = download
@@ -50,11 +87,14 @@ class Hindcast:
 
                 data_list = []
 
+                # store the actual start and end times
                 t_end   = self.t_end
                 t_start = self.t_start
 
+                # assign new end time, one month after start time
                 self.t_end = self.add_month(t_start)
 
+                # until end time is reached; load one month at the time
                 while self.smaller_than(self.t_end,t_end):
 
                     print('\tLoad hindcast')
@@ -70,16 +110,20 @@ class Hindcast:
                                         drop=True
                                     )
 
+                    # update times to the next month
                     self.t_start = self.t_end
                     self.t_end   = self.add_month(self.t_end)
 
+                    # append to list
                     data_list.append(data)
 
+                # concatinate xarray.DataArrays in list to one xarray.DataArray
                 self.data = xr.concat(data_list,'time')
 
                 # deal with duplicates along time dimesion
                 self.data = self.data.groupby('time').mean()
 
+                # restore original times of loading
                 self.t_start = t_start
                 self.t_end   = t_end
 
@@ -134,7 +178,7 @@ class Hindcast:
                                 self.var,
                                 self.t_start,
                                 self.t_end,
-                                self.domainID,
+                                self.bounds,
                                 self.download
                             )[self.var]-272.15
 
@@ -185,7 +229,7 @@ class Hindcast:
                             self.var,
                             dt.to_datetime(self.t_start).strftime('%Y-%m-%d'),
                             dt.to_datetime(self.t_end).strftime('%Y-%m-%d'),
-                            self.domainID,
+                            '%s_%s-%s_%s'%(self.bounds),
                             'hindcast'
                         ]
                     ) + '.nc'
@@ -197,7 +241,35 @@ class Hindcast:
         return xr.open_dataset(self.path+filename)[self.var]
 
 class Observations:
+    """
+    Stacks observations along step (lead time) dimension to match forecast
+    for matrix operations. Further computes climatology using a 30-day running
+    window with cross validation (leaving out the current year). Produces:
 
+        self.data:      the absolute values of the observations
+                        (xarray.DataArray)
+        self.data_a:    the anomalies of the data relative to climatology
+                        (xarray.DataArray)
+        self.mean:      the mean climatology (over 30-day running window)
+                        (xarray.DataArray)
+        self.std:       the std climatology (over 30-day running window)
+                        (xarray.DataArray)
+        self.init_a     the observed value at forecast initialization time,
+                        stacked along step (lead time) dimension. Given as
+                        anomlies.
+
+    Arguments to __init__
+
+        name:           name of the observation data, to create temporary files
+        observations:   xarray.DataArray with required dimension time. Must
+                        be seven day means.
+        forecast:       process.Hindcast like object. Assimilates the
+                        observations to the attributes of this input.
+        process:        Forces data processing even if temporary files are
+                        found. Temporary file names are not so flexible at the
+                        moment, can be smart to keep this option on if input
+                        observations are changed.
+    """
     def __init__(
                     self,
                     name,
@@ -311,10 +383,20 @@ class Observations:
 
 class Grid2Point:
     """
-    observations and forecast must have common dimensions: time and step
-    observations must be equipped with a location dimension
-        (with arbitrary name)
-    forecast must have member, lon and lat dimensions
+    Class rountine correlation() returns a forecast (process.Hindcast like)
+    with corresponding dimensions to observations.
+    The routine selects the highest correlated (Pearson) gridpoint to represent
+    each dimension in observations, respectively.
+
+    Arguments to __init__
+
+        observations:   process.Observations like object
+        forecast:       process.Hindcast like object
+
+        Note:
+            - observations and forecast must have common dimensions:
+            time and step
+            - forecast must have member, lon and lat dimensions
     """
 
     def __init__(self,observations,forecast):
@@ -323,6 +405,19 @@ class Grid2Point:
         self.forecast     = forecast
 
     def correlation(self,step_dependent=False):
+        """
+        Returns a forecast (process.Hindcast like) with corresponding dimensions
+        to observations. The routine selects the highest correlated (Pearson)
+        gridpoint to represent each dimension in observations, respectively.
+
+        args:
+            step_dependent: if True, correlation is done respectively of each
+                            step (lead time). Default is False.
+
+        returns:
+            process.Hindcast like object with 'regridded' to dimensions of
+            observations, additional to time and step.
+        """
         return self.select_location_by_correlation(
                                                 self.observations,
                                                 self.forecast,
