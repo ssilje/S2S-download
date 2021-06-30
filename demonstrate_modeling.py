@@ -6,7 +6,7 @@ from S2S.process import Hindcast, Observations, Grid2Point
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics
 from S2S import models
 
-domainID = 'norwegian_coast'
+bounds = (0,28,55,75)
 var      = 'sst'
 
 t_start  = (2020,1,23)
@@ -23,7 +23,7 @@ grid_hindcast     = Hindcast(
                         var,
                         t_start,
                         t_end,
-                        domainID,
+                        bounds,
                         high_res=high_res,
                         steps=steps,
                         process=False,
