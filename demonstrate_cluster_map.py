@@ -110,7 +110,7 @@ mae.map(
         model        = mod,
         clim_mean    = xr.full_like(obs,0),
         dim          = 'validation_time.season',
-        filename     = 'COMBO_vs_clim_cluster''
+        filename     = 'COMBO_vs_clim_cluster'
         )
 
 mae.map(
