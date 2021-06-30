@@ -126,5 +126,5 @@ mae.map(
         model        = mod,
         clim_mean    = pers,
         dim          = 'validation_time.season',
-        filename     = 'COMBO_vs_pers_cluster''
+        filename     = 'COMBO_vs_pers_cluster'
         )
