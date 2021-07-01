@@ -131,8 +131,8 @@ random_fc_a = xh.assign_validation_time(random_fc_a)
     
 observations = stacked_era_a
 model = hindcast_a
-clim_mean = clim_mean
-clim_std = clim_std
+clim_mean = xr.full_like(observations,0)
+
 
 
 dim='validation_time.month'
@@ -140,18 +140,20 @@ cc = []
 
 
 
+
+
 for lt in steps:
-#lt= steps[0]    
+
     mod = model.sel(step=pd.Timedelta(lt,'D'))
     obs = observations.sel(step=pd.Timedelta(lt,'D'))
     cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
-    cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
+    
    
   
     x_group = list(mod.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
     y_group = list(obs.groupby(dim))
     cm_group = list(cm.groupby(dim))
-    cs_group = list(cs.groupby(dim))
+  
 
  
     c = [] #lagar en ny xarray med score for kvar mnd
@@ -160,19 +162,30 @@ for lt in steps:
     
         ylabel,ydata   = y_group[n]
         cmlabel,cmdata = cm_group[n]
-        cslabel,csdata = cs_group[n]
+        
 
+        
+
+        
+        
         xdata  = xdata.unstack().sortby(['time']) #mod
         ydata  = ydata.unstack().sortby(['time']) # obs
         cmdata = cmdata.unstack().sortby(['time'])
-        csdata = csdata.unstack().sortby(['time'])
+        
 
-        xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
-
-        score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
-        score_clim   = xs.mae(cmdata,ydata,dim=[])
+        xdata,ydata,cmdata = xr.align(xdata,ydata,cmdata)
+        
+        score_mean   = xs.mae(
+            xdata.mean('member',skipna=True),
+            ydata,
+            dim=[])
+        score_clim   = xs.mae(
+            cmdata,
+            ydata,
+            dim=[])
    
         SS = 1 - score_mean/score_clim
+    
         SS = SS.median('time',skipna=True)
         
         
@@ -199,6 +212,7 @@ for lt in steps:
  
 
     cc.append(skill_score_step) # lagrar MAE for kvar mnd og kvar step
+    
 SS_step = xr.concat(cc,dim='step') 
 
 SS_group = list(SS_step.groupby('time_month'))
