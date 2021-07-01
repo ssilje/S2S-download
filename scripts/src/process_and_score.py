@@ -163,18 +163,14 @@ for lt in steps:
         ylabel,ydata   = y_group[n]
         cmlabel,cmdata = cm_group[n]
         
-
-        
-
-        
-        
         xdata  = xdata.unstack().sortby(['time']) #mod
         ydata  = ydata.unstack().sortby(['time']) # obs
         cmdata = cmdata.unstack().sortby(['time'])
         
 
         xdata,ydata,cmdata = xr.align(xdata,ydata,cmdata)
-        
+       
+    # Calculate MAE
         score_mean   = xs.mae(
             xdata.mean('member',skipna=True),
             ydata,
@@ -188,7 +184,8 @@ for lt in steps:
     
         SS = SS.median('time',skipna=True)
         
-        
+      # Calculate ACC
+    # Bruk  uncentered_acc(x,y): i S2S/scoring.py 
         time_month=xlabel
         #print(time_month)
         
