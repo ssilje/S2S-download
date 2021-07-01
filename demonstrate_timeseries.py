@@ -39,12 +39,22 @@ point_observations = BarentsWatch().load(
                                     ]
                                 )[var]
 
-point_observations = Observations(
-                            name='BarentsWatch',
-                            observations=point_observations,
+#point_observations = Observations(
+#                            name='BarentsWatch',
+#                            observations=point_observations,
+#                            forecast=grid_hindcast,
+#                            process=True
+#                            )
+
+era = ERA5(high_res=high_res)\
+                    .load(var,clim_t_start,clim_t_end,domainID)[var]
+grid_observations = Observations(
+                            name='Era',
+                            observations=era,
                             forecast=grid_hindcast,
                             process=True
                             )
+
 
 point_hindcast = Grid2Point(point_observations,grid_hindcast).correlation(
                                                         step_dependent=True

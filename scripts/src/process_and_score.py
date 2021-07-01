@@ -1,22 +1,18 @@
-import numpy as np
-import xarray as xr
 import pandas as pd
-import matplotlib.pyplot as plt
+import xarray as xr
 import xskillscore as xs
-import time as time_lib
-import gridpp
-import properscoring as ps
 import cartopy.crs as ccrs
-from matplotlib.colors import BoundaryNorm
-import matplotlib as mpl
-from S2S.local_configuration import config
-from S2S.data_handler        import ERA5, ECMWF_S2SH, Archive
+import matplotlib.pyplot as plt
+import numpy as np
+from S2S.data_handler import ERA5, BarentsWatch
+from S2S.process import Hindcast, Observations, Grid2Point
+
+from S2S.graphics import mae,crps,graphics as mae,crps,graphics
+from S2S import models
 
 import S2S.xarray_helpers    as xh
-import S2S.models            as models
-import S2S.graphics.graphics as gr
-from S2S.graphics import mae,crps,brier,spread_error
-import scripts.Henrik.create_domain_file
+
+
 
 def month(ii):
     """
@@ -63,98 +59,101 @@ def plot_months(
         ax.set_title(month(i))
     plt.suptitle(plot_title)
     plt.savefig(plot_save)
-
-
-
-path_e = 't2m/'
-long_name = 'absolute_t2m'
-Archive().make_dir(config['VALID_DB']+path_e)
-
-domainID = 'norwegian_coast'
-
+    
+bounds = (0,28,55,75)
 var      = 't2m'
-
-var1     = False
-var2     = False
-
-#var      = 'abs_wind'
-#var1     = 'u10'
-#var2     = 'v10'
 
 t_start  = (2019,7,1)
 t_end    = (2020,6,26)
-# t_end    = (2020,2,3)
-
+#t_end    = (2019,8,29)
 
 clim_t_start  = (1999,1,1)
 clim_t_end    = (2021,1,4)
 
-process_hindcast     = False
-process_era          = False
-make_time_series     = False
-
-plot_MAE             = True
-
-high_res             = False
-verify               = True
-
-# steps = pd.to_timedelta([7,14,23,30,37,44],'D')
+plot_MAE = True
+high_res = False
 steps = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
 
+grid_hindcast = Hindcast(
+                        var,
+                        t_start,
+                        t_end,
+                        bounds,
+                        high_res=high_res,
+                        steps=steps,
+                        process=True,
+                        download=False,
+                        split_work=True
+                    )
+#    absolute:      grid_hindcast.data
+#    anomalies:     grid_hindcast.data_a
+#    clim_mean:     grid_hindcast.mean
+#    clim_std:      grid_hindcast.std
 
-    
-###################
-#### Load data ####
-###################
-hindcast = xr.open_dataset(config['VALID_DB']+path_e+long_name+\
-                                '_hindcast.nc')[var]
-hindcast_a = xr.open_dataset(config['VALID_DB']+path_e+long_name+\
-                            '_anomalies_hindcast.nc')[var]
-stacked_era = xr.open_dataset(config['VALID_DB']+path_e+\
-                                            long_name + '_era.nc')[var]
-stacked_era_a = xr.open_dataset(config['VALID_DB']+path_e+\
-                                long_name + '_anomalies_era.nc')[var]
-clim_mean = xr.open_dataset(config['VALID_DB']+path_e+\
-                                long_name + '_era_mean.nc')[var]
-clim_std = xr.open_dataset(config['VALID_DB']+path_e+\
-                                long_name + '_era_std.nc')[var]
-random_fc = xr.open_dataset(config['VALID_DB']+path_e+\
-                                long_name + '_random-forecast.nc')[var]
-random_fc_a = xr.open_dataset(config['VALID_DB']+path_e+\
-                                long_name + '_random-forecast_anomalies.nc')[var]
+
+era = ERA5(high_res=high_res)\
+                        .load(var,clim_t_start,clim_t_end,bounds)[var]
 
 
 
+grid_observations = Observations(
+                            name='Era',
+                            observations=era,
+                            forecast=grid_hindcast,
+                            process=True
+                            )
 
-stacked_era = xh.assign_validation_time(stacked_era)
-stacked_era_a = xh.assign_validation_time(stacked_era_a)
-hindcast = xh.assign_validation_time(hindcast)
-hindcast_a = xh.assign_validation_time(hindcast_a)
-clim_mean = xh.assign_validation_time(clim_mean)
-clim_std = xh.assign_validation_time(clim_std)
+
+#    absolute:      grid_observationst.data
+#    anomalies:     grid_observationst.data_a
+#    clim_mean:     grid_observationst.mean
+#    clim_std:      grid_observationst.std
+
+print('\tGenerate random forecasts')
+random_fc_a = models.deterministic_gaussian_forecast(
+                                            xr.full_like(grid_observations.mean,0.),
+                                            xr.full_like(grid_observations.std,1.)
+                                            )
+random_fc   = models.deterministic_gaussian_forecast(
+                                            grid_observations.mean,
+                                            grid_observations.std
+                                            )
+
+
+stacked_era = xh.assign_validation_time(grid_observations.data)
+stacked_era_a = xh.assign_validation_time(grid_observations.data_a)
+hindcast = xh.assign_validation_time(grid_hindcast.data)
+hindcast_a = xh.assign_validation_time(grid_hindcast.data_a)
+clim_mean = xh.assign_validation_time(grid_observations.mean)
+clim_std = xh.assign_validation_time(grid_observations.std)
 random_fc = xh.assign_validation_time(random_fc)
 random_fc_a = xh.assign_validation_time(random_fc_a)
     
-observations = stacked_era
-model = hindcast
-clim_mean = clim_mean
-clim_std = clim_std
+observations = stacked_era_a
+model = hindcast_a
+clim_mean = xr.full_like(observations,0)
+
+
+
 dim='validation_time.month'
 cc = []
 
 
+
+
+
 for lt in steps:
-#lt= steps[0]    
+
     mod = model.sel(step=pd.Timedelta(lt,'D'))
     obs = observations.sel(step=pd.Timedelta(lt,'D'))
     cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
-    cs  = clim_std.sel(step=pd.Timedelta(lt,'D'))
+    
    
   
     x_group = list(mod.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
     y_group = list(obs.groupby(dim))
     cm_group = list(cm.groupby(dim))
-    cs_group = list(cs.groupby(dim))
+  
 
  
     c = [] #lagar en ny xarray med score for kvar mnd
@@ -163,22 +162,32 @@ for lt in steps:
     
         ylabel,ydata   = y_group[n]
         cmlabel,cmdata = cm_group[n]
-        cslabel,csdata = cs_group[n]
+        
 
+        
+
+        
+        
         xdata  = xdata.unstack().sortby(['time']) #mod
         ydata  = ydata.unstack().sortby(['time']) # obs
         cmdata = cmdata.unstack().sortby(['time'])
-        csdata = csdata.unstack().sortby(['time'])
+        
 
-        xdata,ydata,cmdata,csdata = xr.align(xdata,ydata,cmdata,csdata)
-
-        score_mean   = xs.mae(xdata.mean('member',skipna=True),ydata,dim=[])
-        score_clim   = xs.mae(cmdata,ydata,dim=[])
+        xdata,ydata,cmdata = xr.align(xdata,ydata,cmdata)
+        
+        score_mean   = xs.mae(
+            xdata.mean('member',skipna=True),
+            ydata,
+            dim=[])
+        score_clim   = xs.mae(
+            cmdata,
+            ydata,
+            dim=[])
    
         SS = 1 - score_mean/score_clim
+    
         SS = SS.median('time',skipna=True)
-        #time_month = np.empty(1) 
-        #print(time_month)
+        
         
         time_month=xlabel
         #print(time_month)
@@ -203,6 +212,7 @@ for lt in steps:
  
 
     cc.append(skill_score_step) # lagrar MAE for kvar mnd og kvar step
+    
 SS_step = xr.concat(cc,dim='step') 
 
 SS_group = list(SS_step.groupby('time_month'))
@@ -250,7 +260,3 @@ plot_months(
     plot_title  = 'last lead time with skill',
     plot_save   = 'test_SS_leadtime.png',
 )
-
-
-
-
