@@ -271,7 +271,7 @@ for lt in steps:
 
 SS_step  = xr.concat(cc,dim='step')
 Data_skill  = xr.concat(ACcc,dim='step') 
-Data_skill  = ACC_step.assign(MAESS=SS_step)
+Data_skill  = Data_skill.assign(MAESS=SS_step)
 
 Data_skill = Data_skill.assign(MAESS_best_lt=SS_best_lt(SS_data=SS_step).skill)
 
