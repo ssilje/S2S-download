@@ -12,7 +12,7 @@ from S2S import models
 
 import S2S.xarray_helpers    as xh
 
-from S2S.scoring import uncentered_acc, centered_acc
+from S2S.scoring import uncentered_acc, centered_acc, ACc
 
 def month(ii):
     """
