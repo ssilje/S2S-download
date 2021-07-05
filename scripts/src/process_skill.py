@@ -289,7 +289,7 @@ for lt in steps:
         label_text  = 'ACC',
         levels_cbar = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
         plot_title  = 'ACC',
-        fname       = 'hindcast_ACC_days_' + str(lt.days) + '.pdf',
+        fname       = 'hindcast_ACC_days_' + str(lt.days),
     )
 
     
@@ -299,7 +299,7 @@ for lt in steps:
         label_text  = 'MAESS',
         levels_cbar = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
         plot_title  = 'MAESS',
-        fname       = 'hindcast_MAESS_days_' + str(lt.days) + '.pdf',
+        fname       = 'hindcast_MAESS_days_' + str(lt.days),
     )
     
 plot_months(
@@ -308,5 +308,5 @@ plot_months(
         label_text  = 'lead time',
         levels_cbar = [7, 14, 21, 28, 35, 42],
         plot_title  = 'last lead time with skill',
-        fname       = 'hindcast_MAESS_best_lt.pdf',
+        fname       = 'hindcast_MAESS_best_lt',
     )
