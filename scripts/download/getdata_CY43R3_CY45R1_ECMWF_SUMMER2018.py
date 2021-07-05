@@ -60,7 +60,8 @@ meta = {
         'param': '166',  
         'levtype': 'sfc',
         'step': '/'.join(['%i'%i for i in range(0,1128,24)]) 
-    }
+    },
+    
     'sm20': {
         'param': '228086',  
         'levtype': 'sfc',
