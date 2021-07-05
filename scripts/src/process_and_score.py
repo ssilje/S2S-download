@@ -12,7 +12,7 @@ from S2S import models
 
 import S2S.xarray_helpers    as xh
 
-
+from S2S.scoring import uncentered_acc, centered_acc
 
 def month(ii):
     """
@@ -137,6 +137,7 @@ clim_mean = xr.full_like(observations,0)
 
 dim='validation_time.month'
 cc = []
+ACcc = []
 
 
 
@@ -157,6 +158,7 @@ for lt in steps:
 
  
     c = [] #lagar en ny xarray med score for kvar mnd
+    acc = [] #lagar en ny xarray med ACC for kvar mnd
     
     for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month. n går frå 0-11, xlabel 1-12, xdata: dataene
     
@@ -183,19 +185,27 @@ for lt in steps:
         SS = 1 - score_mean/score_clim
     
         SS = SS.median('time',skipna=True)
-        
-      # Calculate ACC
-    # Bruk  uncentered_acc(x,y): i S2S/scoring.py 
         time_month=xlabel
         #print(time_month)
         
         SS=SS.assign_coords(time_month=time_month)
         c.append(SS)
+        
+      # Calculate ACC
+         
+        ACC = ACc(xdata,ydata)
+    
+        
+        
+        ACC=ACC.assign_coords(time_month=time_month)
+        acc.append(ACC)
     
     skill_score = xr.concat(c,dim='time_month') ## må legge dei etter kvarandre med mnd
     skill_score_step = skill_score
     skill_score = skill_score.drop('step')
-  
+    
+    ACC_score = xr.concat(acc,dim='time_month') 
+    ACC_score_step = ACC_score 
     if plot_MAE:
         
         plot_months(
@@ -209,9 +219,9 @@ for lt in steps:
  
 
     cc.append(skill_score_step) # lagrar MAE for kvar mnd og kvar step
+    ACcc.append(ACC_score_step) 
     
 SS_step = xr.concat(cc,dim='step') 
-
 SS_group = list(SS_step.groupby('time_month'))
 
 c_ss =[] # ny xarray med siste lead time med skill 
