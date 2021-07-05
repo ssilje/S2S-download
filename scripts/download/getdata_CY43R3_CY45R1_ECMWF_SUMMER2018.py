@@ -61,17 +61,23 @@ meta = {
         'levtype': 'sfc',
         'step': '/'.join(['%i'%i for i in range(0,1128,24)]) 
     }
+    'sm20': {
+        'param': '228086',  
+        'levtype': 'sfc',
+        'step': '/'.join([final]) 
+    }
 }
 
 #2018-05-03
-dates_monday = pd.date_range("20180426", periods=20, freq="7D") # forecasts start Monday
-dates_thursday = pd.date_range("20180430", periods=20, freq="7D") # forecasts start Thursday
+dates_monday = pd.date_range("20180301", periods=20, freq="7D") # forecasts start Monday
+dates_thursday = pd.date_range("20180305", periods=20, freq="7D") # forecasts start Thursday
 dates_fcycle = dates_monday.union(dates_thursday)   
     
    # Program start
 for filename in (
     'tp',
     't2m',
+    'sm20',
 ):
     for prefix in (
         'pf',
@@ -91,7 +97,7 @@ for filename in (
                    dic[k] = v
                dic['date'] = d 
                dic['hdate'] = hdate
-               dic['number'] =  '0/to/10'
+               #dic['number'] =  '0/to/10'
                dic['type'] = prefix
                if ( product == 'hindcast' ):
                    dic['hdate'] = hdate
