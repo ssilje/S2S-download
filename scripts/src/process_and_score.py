@@ -14,6 +14,10 @@ import S2S.xarray_helpers    as xh
 
 from S2S.scoring import uncentered_acc, centered_acc, ACc
 
+
+
+
+
 def month(ii):
     """
     ii : integer
@@ -192,19 +196,47 @@ for lt in steps:
         c.append(SS)
         
       # Calculate ACC
-         
-        ACC = ACc(xdata,ydata)
+       
+        ds = xr.merge(
+                    [
+                        xdata.mean('member').rename('fc'),
+                        ydata.rename('obs')
+                    ],join='inner',compat='override'
+                )
+        ACC_dataset = []
+        acc_test = np.empty([xdata.lon.shape[0],xdata.lat.shape[0]])
+        acc_test[:] =np.NaN
+        for nlat,ilat in enumerate(ds.lat):
+            for nlon,ilon in enumerate(ds.lon): 
+                x = ds.fc.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat],drop=True)
+                y = ds.obs.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat],drop=True)
+
+               
+                ACC = uncentered_acc(x,y)
+                acc_test[nlon,nlat] = ACC
+                
+        ACC_dataset = xr.Dataset(
+            {
+                "ACC": (["lon", "lat"], acc_test),
+            },
+            coords={
+                "lon": (["lon",], xdata.lon),
+                "lat": (["lat"], xdata.lat),
+            },
+        )
+        time_month=xlabel
+        ACC_dataset=ACC_dataset.assign_coords(time_month=time_month)
+        
+        acc.append(ACC_dataset)
     
-        
-        
-        ACC=ACC.assign_coords(time_month=time_month)
-        acc.append(ACC)
+    
     
     skill_score = xr.concat(c,dim='time_month') ## må legge dei etter kvarandre med mnd
     skill_score_step = skill_score
     skill_score = skill_score.drop('step')
     
     ACC_score = xr.concat(acc,dim='time_month') 
+    ACC_score = ACC_score.assign_coords(step=lt)
     ACC_score_step = ACC_score 
     if plot_MAE:
         
@@ -221,7 +253,11 @@ for lt in steps:
     cc.append(skill_score_step) # lagrar MAE for kvar mnd og kvar step
     ACcc.append(ACC_score_step) 
     
-SS_step = xr.concat(cc,dim='step') 
+SS_step = xr.concat(cc,dim='step')
+ACC_step = xr.concat(ACcc,dim='step') 
+ACC_step.assign(MAESS=SS_step)
+
+
 SS_group = list(SS_step.groupby('time_month'))
 
 c_ss =[] # ny xarray med siste lead time med skill 
