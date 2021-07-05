@@ -81,7 +81,7 @@ grid_hindcast = Hindcast(
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=True,
+                        process=False,
                         download=False,
                         split_work=True
                     )
@@ -100,7 +100,7 @@ grid_observations = Observations(
                             name='Era',
                             observations=era,
                             forecast=grid_hindcast,
-                            process=True
+                            process=False
                             )
 
 
