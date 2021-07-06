@@ -429,14 +429,7 @@ plot_months(
         fname       = 'hindcast_MAESS_best_lt' + '_' + var,
     )
 
-plot_months(
-        varplot     = stacked_era.MAESS_best_lt,
-        levels_plot = [3.5, 10.5, 17.5, 24.5, 31.5, 38.5, 45.5],
-        label_text  = 'lead time',
-        levels_cbar = [7, 14, 21, 28, 35, 42],
-        plot_title  = 'last lead time with skill',
-        fname       = 'hindcast_MAESS_best_lt' + '_' + var,
-    )
+
 
 
 ### PLOTTING CLIMATOLOGY 
