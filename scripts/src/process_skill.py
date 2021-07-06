@@ -238,10 +238,7 @@ grid_observations = Observations(
 
 stacked_era = xh.assign_validation_time(grid_observations.data)
 stacked_era_a = xh.assign_validation_time(grid_observations.data_a)
-if var is t2m:
-      hindcast = hindcast.
-        h
-                + 273.15
+
 hindcast = xh.assign_validation_time(grid_hindcast.data)
 hindcast_a = xh.assign_validation_time(grid_hindcast.data_a)
 clim_mean = xh.assign_validation_time(grid_observations.mean)
