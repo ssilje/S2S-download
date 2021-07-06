@@ -238,6 +238,10 @@ grid_observations = Observations(
 
 stacked_era = xh.assign_validation_time(grid_observations.data)
 stacked_era_a = xh.assign_validation_time(grid_observations.data_a)
+if var is t2m:
+      hindcast = hindcast.
+        h
+                + 273.15
 hindcast = xh.assign_validation_time(grid_hindcast.data)
 hindcast_a = xh.assign_validation_time(grid_hindcast.data_a)
 clim_mean = xh.assign_validation_time(grid_observations.mean)
@@ -332,7 +336,7 @@ for lt in steps:
         acc.append(ACC_dataset)
         
         
-         # Calculate and plot climatology
+         # Calculate climatology
         era_mean = eradata.mean('time').drop('step').assign_coords(time_month=xlabel)
         era_tmp.append(era_mean)
         hc_mean  = hcdata.mean('member').mean('time').drop('step').assign_coords(time_month=xlabel)
@@ -440,7 +444,7 @@ plot_months(
         label_text  = 'K',
         levels_cbar = np.linspace(ERA_MEAN.min(),ERA_MEAN.max(),11),
         plot_title  = 'ERA Climatology',
-        fname       = 'ERA_Climatology_' + '_' + var,
+        fname       = 'ERA_Climatology_'  + var,
     )
 
 HC_MEAN = xr.concat(hc_tmp,dim='time_month') ## stacking the data along month dimension
@@ -450,5 +454,5 @@ plot_months(
         label_text  = 'K',
         levels_cbar = np.linspace(HC_MEAN.min(),HC_MEAN.max(),11),
         plot_title  = 'Hindcast Climatology',
-        fname       = 'HC_Climatology_' + '_' + var,
+        fname       = 'HC_Climatology_' + var,
     )
