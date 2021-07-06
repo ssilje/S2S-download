@@ -37,16 +37,15 @@ def plot_months(
         """
         
         
-    im = varplot.plot( 
-        x               = 'lon',
-        y               = 'lat',
-        col             = 'time_month',
-        col_wrap        = 3,
-        levels          = levels_plot,
-        subplot_kws     = dict(projection=ccrs.PlateCarree()),
-        transform       = ccrs.PlateCarree(),
-        cbar_kwargs     = {'label': label_text, 'ticks': levels_cbar}
-    
+    im = varplot.plot(
+            x               = 'lon',
+            y               = 'lat',
+            col             = 'time_month',
+            col_wrap        = 3,
+            levels          = levels_plot,
+            subplot_kws     = dict(projection=ccrs.PlateCarree()),
+            transform       = ccrs.PlateCarree(),
+            cbar_kwargs     = {'label': label_text, 'ticks': levels_cbar}
     )
   
     for i,ax in enumerate(im.axes.flat):
