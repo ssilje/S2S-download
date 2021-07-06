@@ -207,7 +207,7 @@ grid_hindcast = Hindcast(
                         high_res=high_res,
                         steps=steps,
                         process=True,
-                        download=False,
+                        download=True,
                         split_work=True
                     )
 #    absolute:      grid_hindcast.data
