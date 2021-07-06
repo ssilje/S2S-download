@@ -28,7 +28,7 @@ def plot_months(
         plot_title,
         fname,
 ):
-        #code
+        
         
         """
         # # PLOTTING # # 
@@ -60,7 +60,7 @@ def plot_months(
         plt.savefig(config['SAVEFIG']+\
                         fname+'.png',dpi='figure',bbox_inches='tight')
         plt.close()
-        print('Figure stored at: '+config['SAVEFIG']+filename+'.png')
+        print('Figure stored at: '+config['SAVEFIG']+fname+'.png')
    
 #graphics.save_fig(im,fname) 
 #plt.savefig(plot_save)
@@ -68,40 +68,55 @@ def plot_months(
 def ACC_grid(
         forecast,
         observations,
+        centered=False,
 ):
-    
-    ds = xr.merge(
-                    [
-                        forecast.mean('member').rename('fc'),
-                        observations.rename('obs')
-                    ],join='inner',compat='override'
-                )
+        
+        """
+        read in xarray.DataArray for: 
+        - forecast with dim: member, time, lon, lat (uses ensemble mean)
+        - obeservations with dim: time, lon, lat
+        return 
+        - ACC_dataset with dim lon, lat
+        
+        """
+        
+        
+        ds = xr.merge(
+                        [
+                            forecast.mean('member').rename('fc'),
+                            observations.rename('obs')
+                        ],join='inner',compat='override'
+                    )
        
       
-    ACC_dataset = []
-    acc_test = np.empty([xdata.lon.shape[0],xdata.lat.shape[0]])
-    acc_test[:] =np.NaN
-    for nlat,ilat in enumerate(ds.lat):
-        for nlon,ilon in enumerate(ds.lon): 
-             
-            x = ds.fc.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat],drop=True)
-            y = ds.obs.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat],drop=True)
+        ACC_dataset = []
+        acc_test    = np.empty([xdata.lon.shape[0],xdata.lat.shape[0]])
+        acc_test[:] = np.NaN
 
-               
-            ACC = uncentered_acc(x,y)
-            acc_test[nlon,nlat] = ACC
+        for nlat,ilat in enumerate(ds.lat):
+            for nlon,ilon in enumerate(ds.lon): 
+             
+                x = ds.fc.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat],drop=True)
+                y = ds.obs.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat],drop=True)
                 
-    ACC_dataset = xr.Dataset(
-        {
-            "ACC": (["lon", "lat"], acc_test),
-        },
-        coords={
-            "lon": (["lon",], xdata.lon),
-            "lat": (["lat"], xdata.lat),
-        },
-    )
+                if centered:
+                    ACC = centered_acc(x,y)
+                else:
+                    ACC = uncentered_acc(x,y)
+
+                acc_test[nlon,nlat] = ACC
+                
+        ACC_dataset = xr.Dataset(
+            {
+                "ACC": (["lon", "lat"], acc_test),
+            },
+            coords={
+                "lon": (["lon",], xdata.lon),
+                "lat": (["lat"], xdata.lat),
+            },
+        )
     
-    return ACC_dataset
+        return ACC_dataset
         
   
 def SS_best_lt(
@@ -271,6 +286,7 @@ for lt in steps:
         ACC_dataset = ACC_grid(
            forecast=xdata,
            observations=ydata,
+           centered=False
         )
   
         ACC_dataset=ACC_dataset.assign_coords(time_month=time_month)
