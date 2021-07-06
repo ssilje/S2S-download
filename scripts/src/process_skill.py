@@ -359,9 +359,9 @@ for lt in steps:
   
     plot_months(
         varplot     = Data_skill.ACC.sel(step=lt),
-        levels_plot = [-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1],
+        levels_plot = np.linspace(-1,1,21),
         label_text  = 'ACC',
-        levels_cbar = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
+        levels_cbar = np.linspace(-1,1,11),
         plot_title  = 'ACC',
         fname       = 'hindcast_ACC_days_' + str(lt.days) + '_' + var,
     )
@@ -369,18 +369,18 @@ for lt in steps:
     
     plot_months(
         varplot     = Data_skill.MAESS.sel(step=lt),
-        levels_plot = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
+        levels_plot = np.linspace(-1,1,21),
         label_text  = 'MAESS',
-        levels_cbar = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
+        levels_cbar = np.linspace(-1,1,11),
         plot_title  = 'MAESS',
         fname       = 'hindcast_MAESS_days_' + str(lt.days) + '_' + var,
     )
         
     plot_months(
         varplot     = Data_skill.MAE.sel(step=lt),
-        levels_plot = [0, 0.25, 0.5, 0.75, 1],
+        levels_plot = np.linspace(0,1,21),
         label_text  = 'MAE',
-        levels_cbar = [0, 0.25, 0.5, 0.75, 1],
+        levels_cbar = np.linspace(0,1,6),
         plot_title  = 'MAE',
         fname       = 'hindcast_MAE_days_' + str(lt.days) + '_' + var,
     )
