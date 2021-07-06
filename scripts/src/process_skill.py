@@ -28,6 +28,8 @@ def plot_months(
         plot_title,
         fname,
 ):
+        #code
+        
         """
         # # PLOTTING # # 
         Generates a figure with 12 subfigures (each month)
@@ -37,28 +39,28 @@ def plot_months(
         """
         
         
-    im = varplot.plot(
-            x               = 'lon',
-            y               = 'lat',
-            col             = 'time_month',
-            col_wrap        = 3,
-            levels          = levels_plot,
-            subplot_kws     = dict(projection=ccrs.PlateCarree()),
-            transform       = ccrs.PlateCarree(),
-            cbar_kwargs     = {'label': label_text, 'ticks': levels_cbar}
-    )
+        im = varplot.plot(
+                x               = 'lon',
+                y               = 'lat',
+               col             = 'time_month',
+               col_wrap        = 3,
+               levels          = levels_plot,
+               subplot_kws     = dict(projection=ccrs.PlateCarree()),
+               transform       = ccrs.PlateCarree(),
+               cbar_kwargs     = {'label': label_text, 'ticks': levels_cbar}
+        )
   
-    for i,ax in enumerate(im.axes.flat):
-        ax.coastlines(resolution = '10m', 
-                      color      = 'black',
-                      linewidth  = 0.2)
-        ax.set_title(graphics.month(i))
+        for i,ax in enumerate(im.axes.flat):
+            ax.coastlines(resolution = '10m', 
+                          color      = 'black',
+                          linewidth  = 0.2)
+            ax.set_title(graphics.month(i))
         
-    plt.suptitle(plot_title)
-    plt.savefig(config['SAVEFIG']+\
-                    fname+'.png',dpi='figure',bbox_inches='tight')
-    plt.close()
-    print('Figure stored at: '+config['SAVEFIG']+filename+'.png')
+        plt.suptitle(plot_title)
+        plt.savefig(config['SAVEFIG']+\
+                        fname+'.png',dpi='figure',bbox_inches='tight')
+        plt.close()
+        print('Figure stored at: '+config['SAVEFIG']+filename+'.png')
    
 #graphics.save_fig(im,fname) 
 #plt.savefig(plot_save)
