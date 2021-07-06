@@ -291,14 +291,11 @@ for lt in steps:
             dim=[])
    
         SS      = 1 - score_mean/score_clim
-    
-        SS      = SS.median('time',skipna=True)
-        SS      = SS.assign_coords(time_month=xlabel)
+        SS      = SS.median('time',skipna=True).assign_coords(time_month=xlabel)
         c.append(SS)
         
-        MAE_tmp     = score_mean.median('time',skipna=True)
-        MAE_tmp      = MAE_tmp.assign_coords(time_month=xlabel)
-        m.append(SS)
+        MAE_tmp      = score_mean.median('time',skipna=True).assign_coords(time_month=xlabel)      
+        m.append(MAE_tmp)
 
         
 
@@ -315,15 +312,17 @@ for lt in steps:
         
         acc.append(ACC_dataset)
         
-    skill_score = xr.concat(c,dim='time_month') ## må legge dei etter kvarandre med mnd
-    skill_score_step = skill_score
-    skill_score = skill_score.drop('step')
-    cc.append(skill_score_step) # lagrar MAE for kvar mnd og kvar step
+    # Done loop month    
+        
+    skill_score = xr.concat(c,dim='time_month') ## stacking the data along month dimension
+    #skill_score_step = skill_score
+    #skill_score = skill_score.drop('step')
+    cc.append(skill_score) # Saving MAESS for each month and step
      
-    MAE = xr.concat(m,dim='time_month') ## må legge dei etter kvarandre med mnd
-    MAE_step_tmp = MAE 
-    MAE  = MAE.drop('step')
-    mm.append(MAE_step_tmp) # lagrar MAE for kvar mnd og kvar step
+    MAE = xr.concat(m,dim='time_month') ## stacking the data along month dimension
+   # MAE_step_tmp = MAE 
+   # MAE  = MAE.drop('step')
+    mm.append(MAE) #  Saving MAE for each month and step
     
     ACC_score = xr.concat(acc,dim='time_month') 
     ACC_score = ACC_score.assign_coords(step=lt)
@@ -345,7 +344,12 @@ Data_skill  = Data_skill.assign(MAE=MAE_step)
 Data_skill = Data_skill.assign(MAESS_best_lt=SS_lt(SS_data=SS_step).skill)
 
 outfilename = 'hindcast_skill_' + var + '.nc'
-
+print('\t saving file with', \
+      'MAE', Data_skill.MAE.dims,\
+      'MAESS', Data_skill.MAESS.dims,\
+      'MAESS_best_lt', Data_skill.MAESS_best_lt.dims,\
+      'ACC', Data_skill.MAESS_best_lt.dims)
+      
 Data_skill.to_netcdf(path=outfilename , mode='w')
 
 
@@ -380,6 +384,8 @@ for lt in steps:
         plot_title  = 'MAE',
         fname       = 'hindcast_MAE_days_' + str(lt.days) + '_' + var,
     )
+
+
     
 
 
@@ -389,5 +395,5 @@ plot_months(
         label_text  = 'lead time',
         levels_cbar = [7, 14, 21, 28, 35, 42],
         plot_title  = 'last lead time with skill',
-        fname       = 'hindcast_MAESS_best_lt',
+        fname       = 'hindcast_MAESS_best_lt' + '_' + var,
     )
