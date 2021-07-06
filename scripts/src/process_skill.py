@@ -33,8 +33,10 @@ def plot_months(
         """
         # # PLOTTING # # 
         Generates a figure with 12 subfigures (each month)
+        varplot must be a xarray.DataArray with dimension time_month (12), lon (x), lat (y)
         
-    # Sjekk her: plottet blir det samme om eg brukar transpose eller ikkje. 
+    # TO DO: 
+    Sjekk her: plottet blir det samme om eg brukar transpose eller ikkje. 
     #im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
         """
         
@@ -73,7 +75,7 @@ def ACC_grid(
         
         """
         read in xarray.DataArray for: 
-        - forecast with dim: member, time, lon, lat (uses ensemble mean)
+        - forecast with dim: member, time, lon, lat (here ensemble mean is calculated)
         - obeservations with dim: time, lon, lat
         return 
         - ACC_dataset with dim lon, lat
@@ -90,8 +92,8 @@ def ACC_grid(
        
       
         ACC_dataset = []
-        acc_test    = np.empty([xdata.lon.shape[0],xdata.lat.shape[0]])
-        acc_test[:] = np.NaN
+        acc    = np.empty([xdata.lon.shape[0],xdata.lat.shape[0]])
+        acc[:] = np.NaN
 
         for nlat,ilat in enumerate(ds.lat):
             for nlon,ilon in enumerate(ds.lon): 
@@ -104,11 +106,11 @@ def ACC_grid(
                 else:
                     ACC = uncentered_acc(x,y)
 
-                acc_test[nlon,nlat] = ACC
+                acc[nlon,nlat] = ACC
                 
         ACC_dataset = xr.Dataset(
             {
-                "ACC": (["lon", "lat"], acc_test),
+                "ACC": (["lon", "lat"], acc),
             },
             coords={
                 "lon": (["lon",], xdata.lon),
@@ -119,67 +121,79 @@ def ACC_grid(
         return ACC_dataset
         
   
-def SS_best_lt(
+def SS_lt(
   SS_data,
 ):
-   # SS_data must be a dataset with calculated skill-score for lat,lon for each month and step
-  SS_group = list(SS_data.groupby('time_month'))
+        """
+        Reads in a dataset with calculated skill-score with dim step, time_month, lat,lon
+        returns a xarray.Dataset with last leadtime with skill (varname = skill) with dim lat, lon, time_month
+        """
+        
+  
+        SS_group = list(SS_data.groupby('time_month'))
 
-  c_ss =[] # ny xarray med siste lead time med skill 
+        c_ss     = [] # ny xarray med siste lead time med skill 
  
-  for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
+        for n,(xlabel,xdata) in enumerate(SS_group): # looping over each month
     
-      index = xdata.where(xdata.values >0) # finding data with skill
+            index       = xdata.where(xdata.values >0) # finding data with skill
     
-      ss_dataset = []
+            ss_dataset  = []
     
-      test = np.empty([xdata.lon.shape[0],xdata.lat.shape[0]])
-      test[:] =np.NaN
+            test        = np.empty([xdata.lon.shape[0],xdata.lat.shape[0]])
+            test[:]     = np.NaN
     
-      for nlat,ilat in enumerate(xdata.lat):
-          for nlon,ilon in enumerate(xdata.lon):
-              xdata_ss = xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat]).where(xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat])>0,drop=True) # find the time steps with skill
-              if xdata_ss.shape[0] == 0:
-                  test[nlon,nlat] = np.nan
-              else:
-                  test[nlon,nlat] = xdata_ss[-1].step.dt.days.item() 
+        for nlat,ilat in enumerate(xdata.lat):
+            for nlon,ilon in enumerate(xdata.lon):
+                
+                xdata_ss        = xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat]).where(xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat])>0,drop=True) # find the time steps with skill
+                
+                if xdata_ss.shape[0] == 0:
+                    test[nlon,nlat] = np.nan
+                else:
+                    test[nlon,nlat] = xdata_ss[-1].step.dt.days.item() 
     
-      ss_dataset = xr.Dataset(
-          {
-              "skill": (["lon", "lat"], test),
-          },
-          coords={
-              "lon": (["lon",], xdata.lon),
-              "lat": (["lat"], xdata.lat),
-          },
-      )
-      time_month=xlabel
-      ss_dataset=ss_dataset.assign_coords(time_month=time_month)
-      c_ss.append(ss_dataset)
+        ss_dataset      = xr.Dataset(
+            {
+                "skill": (["lon", "lat"], test),
+            },
+            coords      ={
+                "lon": (["lon",], xdata.lon),
+                "lat": (["lat"], xdata.lat),
+            },
+        )
+        
+       
+        ss_dataset      = ss_dataset.assign_coords(time_month=xlabel)
+        
+        c_ss.append(ss_dataset)
     
-  skill_score_at_lt = xr.concat(c_ss,dim='time_month')  
-  return skill_score_at_lt
+        skill_score_at_lt = xr.concat(c_ss,dim='time_month')  
+        
+        return skill_score_at_lt
   
   
   
 bounds = (0,28,55,75)
+
 var      = 't2m'
 
 t_start  = (2019,7,1)
 t_end    = (2020,6,26)
-#t_end    = (2019,8,29)
+
 
 clim_t_start  = (1999,1,1)
 clim_t_end    = (2021,1,4)
 
-plot_MAE = True
+
 high_res = False
+
 steps = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
 
 dim='validation_time.month'
+
 cc = []
 Data_skill = []
-
 ACcc = []
 
 
@@ -306,12 +320,15 @@ for lt in steps:
 # loop leadtime done
 
 SS_step  = xr.concat(cc,dim='step')
+
 Data_skill  = xr.concat(ACcc,dim='step') 
+
 Data_skill  = Data_skill.assign(MAESS=SS_step)
 
-Data_skill = Data_skill.assign(MAESS_best_lt=SS_best_lt(SS_data=SS_step).skill)
+Data_skill = Data_skill.assign(MAESS_best_lt=SS_lt(SS_data=SS_step).skill)
 
 outfilename = 'hindcast_skill_' + var + '.nc'
+
 Data_skill.to_netcdf(path=outfilename , mode='w')
 
 
@@ -321,7 +338,7 @@ for lt in steps:
   
     plot_months(
         varplot     = Data_skill.ACC.sel(step=lt),
-        levels_plot = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
+        levels_plot = [-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1],
         label_text  = 'ACC',
         levels_cbar = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
         plot_title  = 'ACC',
