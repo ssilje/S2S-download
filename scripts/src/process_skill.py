@@ -4,16 +4,21 @@ import xskillscore as xs
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
-from S2S.data_handler import ERA5, BarentsWatch
-from S2S.process import Hindcast, Observations, Grid2Point
+
+from S2S.data_handler import ERA5
+from S2S.process import Hindcast, Observations
 
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics
+
 from S2S import models
 
 import S2S.xarray_helpers    as xh
 
 from S2S.scoring import uncentered_acc, centered_acc
 
+from S2S.local_configuration import config
+
+## Routines that are used which can be moved to S2S-folder
 
 def plot_months(
         varplot,
@@ -23,27 +28,41 @@ def plot_months(
         plot_title,
         fname,
 ):
+        """
+        # # PLOTTING # # 
+        Generates a figure with 12 subfigures (each month)
+        
     # Sjekk her: plottet blir det samme om eg brukar transpose eller ikkje. 
     #im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
+        """
+        
+        
     im = varplot.plot( 
-        x='lon',
-        y='lat',
-        col='time_month',
-        col_wrap=3,
-        levels=levels_plot,
-        subplot_kws=dict(projection=ccrs.PlateCarree()),
-        transform=ccrs.PlateCarree(),
-        cbar_kwargs={'label': label_text,
-                 'ticks': levels_cbar}
+        x               = 'lon',
+        y               = 'lat',
+        col             = 'time_month',
+        col_wrap        = 3,
+        levels          = levels_plot,
+        subplot_kws     = dict(projection=ccrs.PlateCarree()),
+        transform       = ccrs.PlateCarree(),
+        cbar_kwargs     = {'label': label_text, 'ticks': levels_cbar}
+    
     )
   
     for i,ax in enumerate(im.axes.flat):
-        ax.coastlines(resolution='10m', color='black',\
-                      linewidth=0.2)
+        ax.coastlines(resolution = '10m', 
+                      color      = 'black',
+                      linewidth  = 0.2)
         ax.set_title(graphics.month(i))
+        
     plt.suptitle(plot_title)
-    graphics.save_fig(im,fname) 
-   # plt.savefig(plot_save)
+    plt.savefig(config['SAVEFIG']+\
+                    fname+'.png',dpi='figure',bbox_inches='tight')
+    plt.close()
+    print('Figure stored at: '+config['SAVEFIG']+filename+'.png')
+   
+#graphics.save_fig(im,fname) 
+#plt.savefig(plot_save)
 
 def ACC_grid(
         forecast,
