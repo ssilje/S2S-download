@@ -44,12 +44,12 @@ def plot_months(
         im = varplot.plot(
                 x               = 'lon',
                 y               = 'lat',
-               col             = 'time_month',
-               col_wrap        = 3,
-               levels          = levels_plot,
-               subplot_kws     = dict(projection=ccrs.PlateCarree()),
-               transform       = ccrs.PlateCarree(),
-               cbar_kwargs     = {'label': label_text, 'ticks': levels_cbar}
+               col              = 'time_month',
+               col_wrap         = 3,
+               levels           = levels_plot,
+               subplot_kws      = dict(projection=ccrs.PlateCarree()),
+               transform        = ccrs.PlateCarree(),
+               cbar_kwargs      = {'label': label_text, 'ticks': levels_cbar}
         )
   
         for i,ax in enumerate(im.axes.flat):
@@ -75,7 +75,7 @@ def ACC_grid(
         
         """
         read in xarray.DataArray for: 
-        - forecast with dim: member, time, lon, lat (here ensemble mean is calculated)
+        - forecast with dim: time, lon, lat (use the ensemble mean or split up for each member)
         - obeservations with dim: time, lon, lat
         return 
         - ACC_dataset with dim lon, lat
@@ -85,7 +85,8 @@ def ACC_grid(
         
         ds = xr.merge(
                         [
-                            forecast.mean('member').rename('fc'),
+                           # forecast.mean('member').rename('fc'),
+                            forecast.rename('fc'),    
                             observations.rename('obs')
                         ],join='inner',compat='override'
                     )
@@ -143,30 +144,30 @@ def SS_lt(
             test        = np.empty([xdata.lon.shape[0],xdata.lat.shape[0]])
             test[:]     = np.NaN
     
-        for nlat,ilat in enumerate(xdata.lat):
-            for nlon,ilon in enumerate(xdata.lon):
+            for nlat,ilat in enumerate(xdata.lat):
+                for nlon,ilon in enumerate(xdata.lon):
                 
-                xdata_ss        = xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat]).where(xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat])>0,drop=True) # find the time steps with skill
+                    xdata_ss        = xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat]).where(xdata.sel(lon=xdata.lon[nlon],lat=xdata.lat[nlat])>0,drop=True) # find the time steps with skill
                 
-                if xdata_ss.shape[0] == 0:
-                    test[nlon,nlat] = np.nan
-                else:
-                    test[nlon,nlat] = xdata_ss[-1].step.dt.days.item() 
+                    if xdata_ss.shape[0] == 0:
+                        test[nlon,nlat] = np.nan
+                    else:
+                        test[nlon,nlat] = xdata_ss[-1].step.dt.days.item() 
     
-        ss_dataset      = xr.Dataset(
-            {
-                "skill": (["lon", "lat"], test),
-            },
-            coords      ={
-                "lon": (["lon",], xdata.lon),
-                "lat": (["lat"], xdata.lat),
-            },
-        )
+            ss_dataset      = xr.Dataset(
+                {
+                    "skill": (["lon", "lat"], test),
+                },
+                coords      ={
+                    "lon": (["lon",], xdata.lon),
+                    "lat": (["lat"], xdata.lat),
+                },
+            )
         
        
-        ss_dataset      = ss_dataset.assign_coords(time_month=xlabel)
+            ss_dataset      = ss_dataset.assign_coords(time_month=xlabel)
         
-        c_ss.append(ss_dataset)
+            c_ss.append(ss_dataset)
     
         skill_score_at_lt = xr.concat(c_ss,dim='time_month')  
         
@@ -174,27 +175,28 @@ def SS_lt(
   
   
   
-bounds = (0,28,55,75)
+bounds          = (0,28,55,75)
 
-var      = 't2m'
+var             = 't2m'
 
-t_start  = (2019,7,1)
-t_end    = (2020,6,26)
-
-
-clim_t_start  = (1999,1,1)
-clim_t_end    = (2021,1,4)
+t_start         = (2019,7,1)
+t_end           = (2020,6,26)
 
 
-high_res = False
+clim_t_start    = (1999,1,1)
+clim_t_end      = (2021,1,4)
 
-steps = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
 
-dim='validation_time.month'
+high_res        = False
 
-cc = []
-Data_skill = []
-ACcc = []
+steps           = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
+
+dim             = 'validation_time.month'
+
+cc              = []
+mm              = []
+Data_skill      = []
+ACcc            = []
 
 
 grid_hindcast = Hindcast(
@@ -242,9 +244,9 @@ clim_mean = xh.assign_validation_time(grid_observations.mean)
 clim_std = xh.assign_validation_time(grid_observations.std)
 
     
-observations = stacked_era_a
-model = hindcast_a
-clim_mean = xr.full_like(observations,0)
+observations    = stacked_era_a
+model           = hindcast_a
+clim_mean       = xr.full_like(observations,0) ## Sjekk!
 
 
 
@@ -260,7 +262,7 @@ for lt in steps:
     y_group = list(obs.groupby(dim))
     cm_group = list(cm.groupby(dim))
   
-
+    m = []
     c = [] #lagar en ny xarray med score for kvar mnd
     acc = [] #lagar en ny xarray med ACC for kvar mnd
     
@@ -276,7 +278,8 @@ for lt in steps:
 
         xdata,ydata,cmdata = xr.align(xdata,ydata,cmdata)
         
-        # Calculate MAE
+        # Calculate MAE and MAESS
+        
         score_mean   = xs.mae(
             xdata.mean('member',skipna=True),
             ydata,
@@ -287,23 +290,28 @@ for lt in steps:
             ydata,
             dim=[])
    
-        SS = 1 - score_mean/score_clim
+        SS      = 1 - score_mean/score_clim
     
-        SS = SS.median('time',skipna=True)
-        time_month=xlabel
-        
-        
-        SS=SS.assign_coords(time_month=time_month)
+        SS      = SS.median('time',skipna=True)
+        SS      = SS.assign_coords(time_month=xlabel)
         c.append(SS)
+        
+        MAE_tmp     = score_mean.median('time',skipna=True)
+        MAE_tmp      = MAE_tmp.assign_coords(time_month=xlabel)
+        m.append(SS)
+
+        
 
         # Calculate ACC
+        
         ACC_dataset = ACC_grid(
-           forecast=xdata,
+           forecast=xdata.mean('member'),
            observations=ydata,
            centered=False
         )
-  
-        ACC_dataset=ACC_dataset.assign_coords(time_month=time_month)
+        
+        
+        ACC_dataset=ACC_dataset.assign_coords(time_month=xlabel)
         
         acc.append(ACC_dataset)
         
@@ -311,6 +319,11 @@ for lt in steps:
     skill_score_step = skill_score
     skill_score = skill_score.drop('step')
     cc.append(skill_score_step) # lagrar MAE for kvar mnd og kvar step
+     
+    MAE = xr.concat(m,dim='time_month') ## må legge dei etter kvarandre med mnd
+    MAE_step_tmp = MAE 
+    MAE  = MAE.drop('step')
+    mm.append(MAE_step_tmp) # lagrar MAE for kvar mnd og kvar step
     
     ACC_score = xr.concat(acc,dim='time_month') 
     ACC_score = ACC_score.assign_coords(step=lt)
@@ -321,9 +334,13 @@ for lt in steps:
 
 SS_step  = xr.concat(cc,dim='step')
 
+MAE_step  = xr.concat(mm,dim='step')
+
 Data_skill  = xr.concat(ACcc,dim='step') 
 
 Data_skill  = Data_skill.assign(MAESS=SS_step)
+
+Data_skill  = Data_skill.assign(MAE=MAE_step)
 
 Data_skill = Data_skill.assign(MAESS_best_lt=SS_lt(SS_data=SS_step).skill)
 
@@ -342,7 +359,7 @@ for lt in steps:
         label_text  = 'ACC',
         levels_cbar = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
         plot_title  = 'ACC',
-        fname       = 'hindcast_ACC_days_' + str(lt.days),
+        fname       = 'hindcast_ACC_days_' + str(lt.days) + '_' + var,
     )
 
     
@@ -352,9 +369,20 @@ for lt in steps:
         label_text  = 'MAESS',
         levels_cbar = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
         plot_title  = 'MAESS',
-        fname       = 'hindcast_MAESS_days_' + str(lt.days),
+        fname       = 'hindcast_MAESS_days_' + str(lt.days) + '_' + var,
+    )
+        
+    plot_months(
+        varplot     = Data_skill.MAE.sel(step=lt),
+        levels_plot = [0, 0.25, 0.5, 0.75, 1],
+        label_text  = 'MAE',
+        levels_cbar = [0, 0.25, 0.5, 0.75, 1],
+        plot_title  = 'MAE',
+        fname       = 'hindcast_MAE_days_' + str(lt.days) + '_' + var,
     )
     
+
+
 plot_months(
         varplot     = Data_skill.MAESS_best_lt,
         levels_plot = [3.5, 10.5, 17.5, 24.5, 31.5, 38.5, 45.5],
