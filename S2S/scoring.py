@@ -88,7 +88,7 @@ def ACc(forecast,observations,weights=None,centered=True):
         ufunc = uncentered_acc
 
     r = xr.apply_ufunc(
-            centered_acc,ds.fc,ds.obs,
+            ufunc,ds.fc,ds.obs,
             input_core_dims = [['lat','lon'],['lat','lon']],
             output_core_dims = [[]],
             vectorize=True,dask='parallelized'

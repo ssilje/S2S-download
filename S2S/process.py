@@ -352,6 +352,9 @@ class Observations:
             init_mean = init_mean.rename(self.var)
             init_std  = init_std.rename(self.var)
 
+            ####################################################################
+            # Deals with duplicates along time dimensions (can occur in
+            # stacking - restacking occuring o_climatology, does occur for ERA)
             _,c = np.unique(init_mean.time.values, return_counts=True)
             if len(c[c>1])>0:
                 init_mean = init_mean.groupby('time').mean(skipna=True)
@@ -359,6 +362,7 @@ class Observations:
             _,c = np.unique(init_std.time.values, return_counts=True)
             if len(c[c>1])>0:
                 init_std = init_std.groupby('time').mean(skipna=True)
+            ####################################################################
 
             init_obs_a = ( self.observations - init_mean ) / init_std
 
