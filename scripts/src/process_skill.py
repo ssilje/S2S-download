@@ -250,7 +250,7 @@ model           = hindcast_a
 
 
 
-clim_mean       = xr.full_like(observations,0) ## Sjekk!
+#clim_mean       = xr.full_like(observations,0) ## Sjekk!
 
 
 
