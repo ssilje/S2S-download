@@ -208,7 +208,7 @@ grid_hindcast_u = Hindcast(
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=False,
+                        process=True,
                         download=False,
                         split_work=True
                     )
@@ -220,7 +220,7 @@ grid_hindcast_v = Hindcast(
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=False,
+                        process=True,
                         download=False,
                         split_work=True
                     )
@@ -264,7 +264,7 @@ model           = hindcast_a
 
 
 
-clim_mean       = xr.full_like(observations,0) ## Sjekk!
+#clim_mean       = xr.full_like(observations,0) ## Sjekk!
 
 
 
