@@ -173,14 +173,20 @@ class Hindcast:
 
     def load_data(self):
 
-        return ECMWF_S2SH(high_res=self.high_res)\
+        data = ECMWF_S2SH(high_res=self.high_res)\
                         .load(
                                 self.var,
                                 self.t_start,
                                 self.t_end,
                                 self.bounds,
                                 self.download
-                            )[self.var]-272.15
+                            )[self.var]
+
+        # Converts Kelvin to degC, if this should be done here can be discussed?
+        if self.var == 'sst':
+            data = data - 272.15
+
+        return data
 
     @staticmethod
     def drop_unwanted_dimensions(data):
