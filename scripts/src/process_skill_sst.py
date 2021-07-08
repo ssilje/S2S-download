@@ -177,7 +177,9 @@ def SS_lt(
   
 bounds          = (0,28,55,75)
 
-var             = 'sst'
+var             = 'abs_wind'
+var1            = 'u10'
+var2            = 'v10'
 
 t_start         = (2019,7,1)
 t_end           = (2020,6,26)
@@ -198,18 +200,31 @@ mm              = []
 Data_skill      = []
 ACcc            = []
 
-
-grid_hindcast = Hindcast(
-                        var,
+## u10m
+grid_hindcast_u = Hindcast(
+                        var1,
                         t_start,
                         t_end,
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=True,
-                        download=True,
+                        process=False,
+                        download=False,
                         split_work=True
                     )
+## u10m
+grid_hindcast_v = Hindcast(
+                        var2,
+                        t_start,
+                        t_end,
+                        bounds,
+                        high_res=high_res,
+                        steps=steps,
+                        process=False,
+                        download=False,
+                        split_work=True
+                    )
+
 #    absolute:      grid_hindcast.data
 #    anomalies:     grid_hindcast.data_a
 #    clim_mean:     grid_hindcast.mean
