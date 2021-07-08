@@ -15,7 +15,20 @@ from . import latex
 
 def quick_map(da,point=None):
 
-    p = da.isel(member=0,time=0,step=0).transpose('lat','lon').plot(
+    try:
+        da = da.isel(member=0)
+    except ValueError:
+        pass
+    try:
+        da = da.isel(time=0)
+    except ValueError:
+        pass
+    try:
+        da = da.isel(step=0)
+    except ValueError:
+        pass
+
+    p = da.transpose('lat','lon').plot(
             subplot_kws=dict(projection=ccrs.PlateCarree(),
             facecolor="white"),
             transform=ccrs.PlateCarree(),
