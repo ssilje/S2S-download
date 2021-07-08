@@ -173,14 +173,20 @@ class Hindcast:
 
     def load_data(self):
 
-        return ECMWF_S2SH(high_res=self.high_res)\
+        data = ECMWF_S2SH(high_res=self.high_res)\
                         .load(
                                 self.var,
                                 self.t_start,
                                 self.t_end,
                                 self.bounds,
                                 self.download
-                            )[self.var]-272.15
+                            )[self.var]
+
+        # Converts Kelvin to degC, if this should be done here can be discussed?
+        if self.var == 'sst':
+            data = data - 272.15
+
+        return data
 
     @staticmethod
     def drop_unwanted_dimensions(data):
@@ -352,6 +358,9 @@ class Observations:
             init_mean = init_mean.rename(self.var)
             init_std  = init_std.rename(self.var)
 
+            ####################################################################
+            # Deals with duplicates along time dimensions (can occur in
+            # stacking - restacking occuring o_climatology, does occur for ERA)
             _,c = np.unique(init_mean.time.values, return_counts=True)
             if len(c[c>1])>0:
                 init_mean = init_mean.groupby('time').mean(skipna=True)
@@ -359,6 +368,7 @@ class Observations:
             _,c = np.unique(init_std.time.values, return_counts=True)
             if len(c[c>1])>0:
                 init_std = init_std.groupby('time').mean(skipna=True)
+            ####################################################################
 
             init_obs_a = ( self.observations - init_mean ) / init_std
 
