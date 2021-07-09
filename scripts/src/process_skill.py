@@ -311,8 +311,8 @@ for lt in steps:
         
         eradata,hcdata = xr.align(eradata,hcdata)
         
-        
-        print('\tCalculate MAE and MAESS')
+        #%s hours %s minutes %s seconds' % (int(hours),int(minutes),round(seconds)
+        print('\tCalculate MAE and MAESS for step %s month %s' % (int(lt)),(int(xlim)))
         score_mean   = xs.mae(
             xdata.mean('member',skipna=True),
             ydata,
@@ -333,7 +333,7 @@ for lt in steps:
         
 
         
-        print('\tCalculate ACC')
+        print('\tCalculate ACC for step %s month %s' % (int(lt)),(int(xlim)))
         ACC_dataset = ACC_grid(
            forecast=xdata.mean('member'),
            observations=ydata,
