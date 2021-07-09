@@ -35,9 +35,9 @@ def plot_months(
         Generates a figure with 12 subfigures (each month)
         varplot must be a xarray.DataArray with dimension time_month (12), lon (x), lat (y)
         
-    # TO DO: 
-    Sjekk her: plottet blir det samme om eg brukar transpose eller ikkje. 
-    #im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
+        # TO DO: 
+        Sjekk her: plottet blir det samme om eg brukar transpose eller ikkje. 
+        #im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
         """
         
         
@@ -64,8 +64,7 @@ def plot_months(
         plt.close()
         print('Figure stored at: '+config['SAVEFIG']+fname+'.png')
    
-#graphics.save_fig(im,fname) 
-#plt.savefig(plot_save)
+
 
 def ACC_grid(
         forecast,
@@ -85,7 +84,6 @@ def ACC_grid(
         
         ds = xr.merge(
                         [
-                           # forecast.mean('member').rename('fc'),
                             forecast.rename('fc'),    
                             observations.rename('obs')
                         ],join='inner',compat='override'
@@ -126,8 +124,10 @@ def SS_lt(
   SS_data,
 ):
         """
-        Reads in a dataset with calculated skill-score with dim step, time_month, lat,lon
-        returns a xarray.Dataset with last leadtime with skill (varname = skill) with dim lat, lon, time_month
+        Reads in: 
+        - a dataset with calculated skill-score with dim step, time_month, lat,lon
+        returns: 
+        - a xarray.Dataset with last leadtime with skill (varname = skill) with dim lat, lon, time_month
         """
         
   
@@ -312,7 +312,7 @@ for lt in steps:
         eradata,hcdata = xr.align(eradata,hcdata)
         
         #%s hours %s minutes %s seconds' % (int(hours),int(minutes),round(seconds)
-        print('\tCalculate MAE and MAESS for step %s month %s' % (int(lt)),(int(xlim)))
+        print('\tCalculate MAE and MAESS for step %s month %s' % (int(lt.days)),(int(xlim)))
         score_mean   = xs.mae(
             xdata.mean('member',skipna=True),
             ydata,
@@ -333,7 +333,7 @@ for lt in steps:
         
 
         
-        print('\tCalculate ACC for step %s month %s' % (int(lt)),(int(xlim)))
+        print('\tCalculate ACC for step %s month %s' % (int(lt.days)),(int(xlim)))
         ACC_dataset = ACC_grid(
            forecast=xdata.mean('member'),
            observations=ydata,
