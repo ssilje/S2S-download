@@ -197,6 +197,7 @@ cc              = []
 mm              = []
 Data_skill      = []
 ACcc            = []
+MAE_m_s         = []
 
 print('\tProcess Hindcast')
 grid_hindcast = Hindcast(
@@ -206,7 +207,7 @@ grid_hindcast = Hindcast(
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=True,
+                        process=False,
                         download=False,
                         split_work=True
                     )
@@ -246,6 +247,7 @@ clim_mean = xh.assign_validation_time(grid_observations.mean)
 clim_std = xh.assign_validation_time(grid_observations.std)
 
 print('\tGenerate random forecasts')
+
 random_fc_a = models.deterministic_gaussian_forecast(
         xr.full_like(clim_mean,0.),
         xr.full_like(clim_std,1.)
@@ -268,33 +270,37 @@ print('\tLoop through all steps')
 
 for lt in steps:
 
-    mod = model.sel(step=pd.Timedelta(lt,'D'))
-    obs = observations.sel(step=pd.Timedelta(lt,'D'))
-    cm  = xr.full_like(observations,0).sel(step=pd.Timedelta(lt,'D')) ## er null pga bruker anomalier
+    mod         = model.sel(step=pd.Timedelta(lt,'D'))
+    obs         = observations.sel(step=pd.Timedelta(lt,'D'))
+    cm          = xr.full_like(observations,0).sel(step=pd.Timedelta(lt,'D')) ## er null pga bruker anomalier
+    obs_random  = random_fc_a.sel(step=pd.Timedelta(lt,'D'))
 
-    era = stacked_era.sel(step=pd.Timedelta(lt,'D'))
-    hc  = hindcast.sel(step=pd.Timedelta(lt,'D'))
+    era         = stacked_era.sel(step=pd.Timedelta(lt,'D'))
+    hc          = hindcast.sel(step=pd.Timedelta(lt,'D'))
     
    
   
-    x_group = list(mod.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
-    y_group = list(obs.groupby(dim))
-    cm_group = list(cm.groupby(dim))
+    x_group     = list(mod.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
+    y_group     = list(obs.groupby(dim))
+    cm_group    = list(cm.groupby(dim))
+    yr_group    = list(obs_random.groupby(dim))
 
     era_group = list(era.groupby(dim))
     hc_group = list(hc.groupby(dim))
   
-    m = []
+    mae = []
     c = [] #lagar en ny xarray med score for kvar mnd
     acc = [] #lagar en ny xarray med ACC for kvar mnd
+    
     era_tmp = []
     hc_tmp = []    
 
     print('\tLoop through each month')
     for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month. n går frå 0-11, xlabel 1-12, xdata: dataene
     
-        ylabel,ydata   = y_group[n]
-        cmlabel,cmdata = cm_group[n]
+        ylabel,ydata    = y_group[n]
+        cmlabel,cmdata  = cm_group[n]
+        yrlabel,yrdata = yr_group[n]
         
         eralabel,eradata = era_group[n]
         hclabel,hcdata = hc_group[n]
@@ -302,17 +308,18 @@ for lt in steps:
         xdata  = xdata.unstack().sortby(['time']) #mod
         ydata  = ydata.unstack().sortby(['time']) # obs
         cmdata = cmdata.unstack().sortby(['time'])
+        yrdata = yrdata.unstack().sortby(['time']) # random forecast
         
         eradata  = eradata.unstack().sortby(['time'])
         hcdata  = hcdata.unstack().sortby(['time'])
         
 
-        xdata,ydata,cmdata = xr.align(xdata,ydata,cmdata)
+        xdata,ydata,cmdata,yrdata = xr.align(xdata,ydata,cmdata,yrdata)
         
         eradata,hcdata = xr.align(eradata,hcdata)
         
         #%s hours %s minutes %s seconds' % (int(hours),int(minutes),round(seconds)
-        print('\tCalculate MAE and MAESS for step %s month %s' % (int(lt.days)),(int(xlim)))
+        print('\tCalculate MAE and MAESS for step %s month %s' % (int(lt.days),int(xlabel)))
         score_mean   = xs.mae(
             xdata.mean('member',skipna=True),
             ydata,
@@ -323,27 +330,55 @@ for lt in steps:
             ydata,
             dim=[])
    
-        SS      = 1 - score_mean/score_clim
-        SS      = SS.median('time',skipna=True).assign_coords(time_month=xlabel)
-        c.append(SS)
+        SS_mae      = 1 - score_mean/score_clim
+        #SS      = SS.median('time',skipna=True).assign_coords(time_month=xlabel)
         
-        MAE_tmp      = score_mean.median('time',skipna=True).assign_coords(time_month=xlabel)      
-        m.append(MAE_tmp)
+        MAE_dataset = xr.merge(
+                             [
+                                 score_mean.median('time',skipna=True).rename('MAE'),
+                                 SS_mae.median('time',skipna=True).rename('MAESS')
+                             ],join='inner',compat='override'
+                         )
+        
+        #c.append(SS)
+        
+        MAE_dataset      = MAE_dataset.assign_coords(time_month=xlabel)      
+        mae.append(MAE_dataset)
 
         
 
         
-        print('\tCalculate ACC for step %s month %s' % (int(lt.days)),(int(xlim)))
-        ACC_dataset = ACC_grid(
+        print('\tCalculate ACC for step %s month %s' % (int(lt.days),int(xlabel)))
+        
+        ACC_grid_hc = ACC_grid(
            forecast=xdata.mean('member'),
            observations=ydata,
            centered=False
         )
         
+        ACC_grid_rf  = ACC_grid(
+           forecast=yrdata,
+           observations=ydata,
+           centered=False
+        )
+        
+        SS_acc      = 1 - ACC_grid_hc/ACC_grid_rf
+        
+        ACC_dataset = xr.merge(
+                             [
+                                 ACC_grid_hc.rename(ACC='ACC_hc'),
+                                 ACC_grid_rf.rename(ACC='ACC_rf'),
+                                 SS_acc.rename(ACC='ACCSS')
+                             ],join='inner',compat='override'
+                         )
+        
+        
         
         ACC_dataset=ACC_dataset.assign_coords(time_month=xlabel)
         
         acc.append(ACC_dataset)
+        
+        
         
         
          # Calculate climatology
@@ -359,42 +394,44 @@ for lt in steps:
 
 
 
-    skill_score = xr.concat(c,dim='time_month') ## stacking the data along month dimension
-    #skill_score_step = skill_score
-    #skill_score = skill_score.drop('step')
-    cc.append(skill_score) # Saving MAESS for each month and step
+    MAE_m = xr.concat(mae,dim='time_month') ## stacking the data along month dimension
+    MAE_m_s.append(MAE_m) # Saving MAESS for each month and step
      
-    MAE = xr.concat(m,dim='time_month') ## stacking the data along month dimension
-   # MAE_step_tmp = MAE 
-   # MAE  = MAE.drop('step')
-    mm.append(MAE) #  Saving MAE for each month and step
+    #MAE = xr.concat(m,dim='time_month') ## stacking the data along month dimension
+    #mm.append(MAE) #  Saving MAE for each month and step
     
-    ACC_score = xr.concat(acc,dim='time_month') 
-    ACC_score = ACC_score.assign_coords(step=lt)
-    ACC_score_step = ACC_score 
-    ACcc.append(ACC_score_step) 
+    ACC_m = xr.concat(acc,dim='time_month') 
+    ACC_m = ACC_m.assign_coords(step=lt)
+    ACC_m_s = ACC_m 
+    ACcc.append(ACC_m_s) 
 
 # loop leadtime done
 
-SS_step  = xr.concat(cc,dim='step')
-
-MAE_step  = xr.concat(mm,dim='step')
+MAE  = xr.concat(MAE_m_s,dim='step')
 
 Data_skill  = xr.concat(ACcc,dim='step') 
 
-Data_skill  = Data_skill.assign(MAESS=SS_step)
+Data_skill  = Data_skill.assign(MAESS=MAE.MAESS)
 
-Data_skill  = Data_skill.assign(MAE=MAE_step)
+Data_skill  = Data_skill.assign(MAE=MAE.MAE)
 
-Data_skill = Data_skill.assign(MAESS_best_lt=SS_lt(SS_data=SS_step).skill)
+ = Data_skill.assign(
+        MAESS_best_lt=SS_lt(
+                SS_data=MAE.MAESS
+        ).skill
+)
 
-print('\tSaving calculated scores as netcdf')
+
 outfilename = 'hindcast_skill_' + var + '.nc'
-print('\t saving file with', \
-      '\nMAE', Data_skill.MAE.dims,\
-      '\nMAESS', Data_skill.MAESS.dims,\
-      '\nMAESS_best_lt', Data_skill.MAESS_best_lt.dims,\
-      '\nACC', Data_skill.MAESS_best_lt.dims)
+print('\tSaving calculated scores as netcdf-file:  %s' %outfilename )
+
+print('\t Saving file with', \
+      '\nMAE           :', Data_skill.MAE.dims,\
+      '\nMAESS         :', Data_skill.MAESS.dims,\
+      '\nMAESS_best_lt :', Data_skill.MAESS_best_lt.dims,\
+      '\nACC_hc        :', Data_skill.ACC_hc.dims,\
+      '\nACC_rf        :', Data_skill.ACC_rf.dims,\
+      '\nACCSS         :', Data_skill.ACCSS.dims)
       
 Data_skill.to_netcdf(path=outfilename , mode='w')
 
@@ -404,13 +441,31 @@ print('\tPlotting')
 for lt in steps:
   
     plot_months(
-        varplot     = Data_skill.ACC.sel(step=lt),
+        varplot     = Data_skill.ACC_hc.sel(step=lt),
         levels_plot = np.linspace(-1,1,21),
         label_text  = 'ACC',
         levels_cbar = np.linspace(-1,1,11),
-        plot_title  = 'ACC',
-        fname       = 'hindcast_ACC_days_' + str(lt.days) + '_' + var,
+        plot_title  = 'ACC hindcast and ERA5',
+        fname       = 'hindcast_ERA5_ACC_step_' + str(lt.days) + '_' + var,
     )
+        
+    plot_months(
+        varplot     = Data_skill.ACC_rf.sel(step=lt),
+        levels_plot = np.linspace(-1,1,21),
+        label_text  = 'ACC',
+        levels_cbar = np.linspace(-1,1,11),
+        plot_title  = 'ACC random forecast and ERA5',
+        fname       = 'randomforecast_ERA5_ACC_step_' + str(lt.days) + '_' + var,
+    )  
+
+    plot_months(
+        varplot     = Data_skill.ACCSS.sel(step=lt),
+        levels_plot = np.linspace(-1,1,21),
+        label_text  = 'ACCSS',
+        levels_cbar = np.linspace(-1,1,11),
+        plot_title  = 'ACCSS of hindcast compared to a random forecast',
+        fname       = 'ACCSS_step_' + str(lt.days) + '_' + var,
+    )  
 
     
     plot_months(
