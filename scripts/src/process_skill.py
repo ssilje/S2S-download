@@ -198,7 +198,7 @@ mm              = []
 Data_skill      = []
 ACcc            = []
 
-
+print('\tProcess Hindcast')
 grid_hindcast = Hindcast(
                         var,
                         t_start,
@@ -215,7 +215,7 @@ grid_hindcast = Hindcast(
 #    clim_mean:     grid_hindcast.mean
 #    clim_std:      grid_hindcast.std
 
-
+print('\tProcess ERA5')
 era = ERA5(high_res=high_res)\
                         .load(var,clim_t_start,clim_t_end,bounds)[var]
 
@@ -236,13 +236,25 @@ grid_observations = Observations(
 
 
 
-stacked_era = xh.assign_validation_time(grid_observations.data)
-stacked_era_a = xh.assign_validation_time(grid_observations.data_a)
+stacked_era     = xh.assign_validation_time(grid_observations.data)
+stacked_era_a   = xh.assign_validation_time(grid_observations.data_a)
 
-hindcast = xh.assign_validation_time(grid_hindcast.data)
-hindcast_a = xh.assign_validation_time(grid_hindcast.data_a)
+hindcast        = xh.assign_validation_time(grid_hindcast.data)
+hindcast_a      = xh.assign_validation_time(grid_hindcast.data_a)
+
 clim_mean = xh.assign_validation_time(grid_observations.mean)
 clim_std = xh.assign_validation_time(grid_observations.std)
+
+print('\tGenerate random forecasts')
+random_fc_a = models.deterministic_gaussian_forecast(
+        xr.full_like(clim_mean,0.),
+        xr.full_like(clim_std,1.)
+)
+
+random_fc   = models.deterministic_gaussian_forecast(
+        clim_mean,
+        clim_std
+)
 
     
 observations    = stacked_era_a
@@ -250,15 +262,15 @@ model           = hindcast_a
 
 
 
-#clim_mean       = xr.full_like(observations,0) ## Sjekk!
 
 
+print('\tLoop through all steps')
 
 for lt in steps:
 
     mod = model.sel(step=pd.Timedelta(lt,'D'))
     obs = observations.sel(step=pd.Timedelta(lt,'D'))
-    cm  = clim_mean.sel(step=pd.Timedelta(lt,'D'))
+    cm  = xr.full_like(observations,0).sel(step=pd.Timedelta(lt,'D')) ## er null pga bruker anomalier
 
     era = stacked_era.sel(step=pd.Timedelta(lt,'D'))
     hc  = hindcast.sel(step=pd.Timedelta(lt,'D'))
@@ -277,7 +289,8 @@ for lt in steps:
     acc = [] #lagar en ny xarray med ACC for kvar mnd
     era_tmp = []
     hc_tmp = []    
-    
+
+    print('\tLoop through each month')
     for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month. n går frå 0-11, xlabel 1-12, xdata: dataene
     
         ylabel,ydata   = y_group[n]
@@ -298,8 +311,8 @@ for lt in steps:
         
         eradata,hcdata = xr.align(eradata,hcdata)
         
-        # Calculate MAE and MAESS
         
+        print('\tCalculate MAE and MAESS')
         score_mean   = xs.mae(
             xdata.mean('member',skipna=True),
             ydata,
@@ -319,8 +332,8 @@ for lt in steps:
 
         
 
-        # Calculate ACC
         
+        print('\tCalculate ACC')
         ACC_dataset = ACC_grid(
            forecast=xdata.mean('member'),
            observations=ydata,
@@ -375,6 +388,7 @@ Data_skill  = Data_skill.assign(MAE=MAE_step)
 
 Data_skill = Data_skill.assign(MAESS_best_lt=SS_lt(SS_data=SS_step).skill)
 
+print('\tSaving calculated scores as netcdf')
 outfilename = 'hindcast_skill_' + var + '.nc'
 print('\t saving file with', \
       '\nMAE', Data_skill.MAE.dims,\
@@ -385,7 +399,7 @@ print('\t saving file with', \
 Data_skill.to_netcdf(path=outfilename , mode='w')
 
 
-
+print('\tPlotting')
 ## Plotting
 for lt in steps:
   
