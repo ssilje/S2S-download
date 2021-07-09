@@ -415,11 +415,7 @@ Data_skill  = Data_skill.assign(MAESS=MAE.MAESS)
 
 Data_skill  = Data_skill.assign(MAE=MAE.MAE)
 
- = Data_skill.assign(
-        MAESS_best_lt=SS_lt(
-                SS_data=MAE.MAESS
-        ).skill
-)
+Data_skill  = Data_skill.assign(MAESS_best_lt=SS_lt(SS_data=MAE.MAESS).skill)
 
 
 outfilename = 'hindcast_skill_' + var + '.nc'
