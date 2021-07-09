@@ -415,22 +415,23 @@ Data_skill  = Data_skill.assign(MAESS=MAE.MAESS)
 
 Data_skill  = Data_skill.assign(MAE=MAE.MAE)
 
-Data_skill = Data_skill.assign(
+ = Data_skill.assign(
         MAESS_best_lt=SS_lt(
                 SS_data=MAE.MAESS
         ).skill
 )
 
+
 outfilename = 'hindcast_skill_' + var + '.nc'
 print('\tSaving calculated scores as netcdf-file:  %s' %outfilename )
 
-print('\t saving file with', \
-      '\nMAE', Data_skill.MAE.dims,\
-      '\nMAESS', Data_skill.MAESS.dims,\
-      '\nMAESS_best_lt', Data_skill.MAESS_best_lt.dims,\
-      '\nACC', Data_skill.ACC_hc.dims),\
-      '\nACC', Data_skill.ACC_rf.dims),\
-      '\nACC', Data_skill.ACCSS.dims)
+print('\t Saving file with', \
+      '\nMAE           :', Data_skill.MAE.dims,\
+      '\nMAESS         :', Data_skill.MAESS.dims,\
+      '\nMAESS_best_lt :', Data_skill.MAESS_best_lt.dims,\
+      '\nACC_hc        :', Data_skill.ACC_hc.dims,\
+      '\nACC_rf        :', Data_skill.ACC_rf.dims,\
+      '\nACCSS         :', Data_skill.ACCSS.dims)
       
 Data_skill.to_netcdf(path=outfilename , mode='w')
 
@@ -440,13 +441,31 @@ print('\tPlotting')
 for lt in steps:
   
     plot_months(
-        varplot     = Data_skill.ACC.sel(step=lt),
+        varplot     = Data_skill.ACC_hc.sel(step=lt),
         levels_plot = np.linspace(-1,1,21),
         label_text  = 'ACC',
         levels_cbar = np.linspace(-1,1,11),
-        plot_title  = 'ACC',
-        fname       = 'hindcast_ACC_days_' + str(lt.days) + '_' + var,
+        plot_title  = 'ACC hindcast and ERA5',
+        fname       = 'hindcast_ERA5_ACC_step_' + str(lt.days) + '_' + var,
     )
+        
+    plot_months(
+        varplot     = Data_skill.ACC_rf.sel(step=lt),
+        levels_plot = np.linspace(-1,1,21),
+        label_text  = 'ACC',
+        levels_cbar = np.linspace(-1,1,11),
+        plot_title  = 'ACC random forecast and ERA5',
+        fname       = 'randomforecast_ERA5_ACC_step_' + str(lt.days) + '_' + var,
+    )  
+
+    plot_months(
+        varplot     = Data_skill.ACCSS.sel(step=lt),
+        levels_plot = np.linspace(-1,1,21),
+        label_text  = 'ACCSS',
+        levels_cbar = np.linspace(-1,1,11),
+        plot_title  = 'ACCSS of hindcast compared to a random forecast',
+        fname       = 'ACCSS_step_' + str(lt.days) + '_' + var,
+    )  
 
     
     plot_months(
