@@ -347,7 +347,7 @@ class Observations:
                                 observations.time.max().dt.day.values
                             )
 
-        filename_absolute = self.filename_func('absolute')
+        filename_absolute = self.filename_func('absolute_' + self.var)
 
         if self.process or not os.path.exists(self.path+filename_absolute):
 
