@@ -177,8 +177,8 @@ def SS_lt(
   
 bounds          = (0,28,55,75)
 
-var             = 't2m'
-
+#var             = 't2m'
+var             = 'abs_wind'
 t_start         = (2019,7,1)
 t_end           = (2020,6,26)
 
@@ -216,9 +216,29 @@ grid_hindcast = Hindcast(
 #    clim_mean:     grid_hindcast.mean
 #    clim_std:      grid_hindcast.std
 
-print('\tProcess ERA5')
-era = ERA5(high_res=high_res)\
-                        .load(var,clim_t_start,clim_t_end,bounds)[var]
+print('\tLoad ERA')
+if var == 'abs_wind':
+    era_u = ERA5(high_res=high_res)\
+                         .load('u10',clim_t_start,clim_t_end,bounds)['u10']
+
+    era_v = ERA5(high_res=high_res)\
+                        .load('v10',clim_t_start,clim_t_end,bounds)['v10']
+
+    era_u,era_v = xr.align(era_u,era_v)
+
+    era = xr.apply_ufunc(
+                    xh.absolute,era_u,era_v,
+                    input_core_dims  = [[],[]],
+                    output_core_dims = [[]],
+                    vectorize=True,dask='parallelized'
+                )
+
+    era = era.rename(var)
+
+else:
+
+    era = ERA5(high_res=high_res)\
+                            .load(var,clim_t_start,clim_t_end,bounds)[var]
 
 
 
