@@ -134,7 +134,7 @@ class Hindcast:
                             vectorize=True,dask='parallelized'
                         )
                         self.var = 'abs_wind'
-                        hindcast = hindcast.rename(self.var)
+                        data = data.rename(self.var)
                         
                     else:    
                         print('\tLoad hindcast')
