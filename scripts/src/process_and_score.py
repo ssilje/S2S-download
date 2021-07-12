@@ -100,10 +100,10 @@ grid_hindcast = Hindcast(
 print('\tLoad ERA')
 if var == 'abs_wind':
     era_u = ERA5(high_res=high_res)\
-                         .load('u10',clim_t_start,clim_t_end,domainID)['u10]
+                         .load('u10',clim_t_start,clim_t_end,domainID)['u10']
 
     era_v = ERA5(high_res=high_res)\
-                        .load('v10',clim_t_start,clim_t_end,domainID)['v10]
+                        .load('v10',clim_t_start,clim_t_end,domainID)['v10']
 
     era_u,era_v = xr.align(era_u,era_v)
 
