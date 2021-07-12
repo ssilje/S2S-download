@@ -65,7 +65,8 @@ def plot_months(
     plt.savefig(plot_save)
     
 bounds = (0,28,55,75)
-var      = 't2m'
+#var      = 't2m'
+var      = 'abs_wind'
 
 t_start  = (2019,7,1)
 t_end    = (2020,6,26)
