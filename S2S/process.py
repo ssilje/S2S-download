@@ -96,19 +96,60 @@ class Hindcast:
 
                 # until end time is reached; load one month at the time
                 while self.smaller_than(self.t_end,t_end):
-
-                    print('\tLoad hindcast')
-                    raw = self.load_data()
-
-                    print('\tApply 7D running mean along lead time dimension')
-                    data = raw.rolling(step=7,center=True).mean()
-
-                    if self.steps is not None:
+                    
+                    if self.var == 'abs_wind':
+                        print('\tread in u10 and v10 to calculate ' self.var)
+                        
+                        self.var = 'u10'
+                        print('\tLoad hindcast' self.var)
+                        raw = self.load_data()
+                        print('\tApply 7D running mean along lead time dimension')
+                        data = raw.rolling(step=7,center=True).mean()
+                        if self.steps is not None:
                         print('\tKeep only specified lead times')
-                        data = data.where(
+                        data_u = data.where(
                                         data.step.isin(self.steps),
                                         drop=True
                                     )
+                        
+                        
+                        self.var = 'v10'
+                        print('\tLoad hindcast' self.var)
+                        raw = self.load_data()
+                        print('\tApply 7D running mean along lead time dimension')
+                        data = raw.rolling(step=7,center=True).mean()
+                        if self.steps is not None:
+                        print('\tKeep only specified lead times')
+                        data_v = data.where(
+                                        data.step.isin(self.steps),
+                                        drop=True
+                                    )
+                        print('\tCompute absolute wind')
+                        data_u,data_v = xr.align(data_u,data_v)
+                        
+                        data = xr.apply_ufunc(
+                            xh.absolute,data_u,data_v,
+                            input_core_dims  = [[],[]],
+                            output_core_dims = [[]],
+                            vectorize=True,dask='parallelized'
+                        )
+                        self.var = 'abs_wind'
+                        hindcast = hindcast.rename(self.var)
+                        
+                    else:    
+                        print('\tLoad hindcast')
+                        raw = self.load_data()
+
+                        print('\tApply 7D running mean along lead time dimension')
+                        data = raw.rolling(step=7,center=True).mean()
+
+                        if self.steps is not None:
+                            print('\tKeep only specified lead times')
+                            data = data.where(
+                                            data.step.isin(self.steps),
+                                            drop=True
+                                        )
+                            
 
                     # update times to the next month
                     self.t_start = self.t_end
