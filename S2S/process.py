@@ -226,8 +226,8 @@ class Hindcast:
         # Converts Kelvin to degC, if this should be done here can be discussed?
         if self.var == 'sst':
             data = data - 272.15
-        print(self.var)
-        print(data.shape)
+       # print(self.var)
+       # print(data.shape)
 
         return data
 
