@@ -106,11 +106,11 @@ class Hindcast:
                         print('\tApply 7D running mean along lead time dimension')
                         data = raw.rolling(step=7,center=True).mean()
                         if self.steps is not None:
-                        print('\tKeep only specified lead times')
-                        data_u = data.where(
-                                        data.step.isin(self.steps),
-                                        drop=True
-                                    )
+                            print('\tKeep only specified lead times')
+                            data_u = data.where(
+                                            data.step.isin(self.steps),
+                                            drop=True
+                                        )
                         
                         
                         self.var = 'v10'
@@ -119,11 +119,11 @@ class Hindcast:
                         print('\tApply 7D running mean along lead time dimension')
                         data = raw.rolling(step=7,center=True).mean()
                         if self.steps is not None:
-                        print('\tKeep only specified lead times')
-                        data_v = data.where(
-                                        data.step.isin(self.steps),
-                                        drop=True
-                                    )
+                            print('\tKeep only specified lead times')
+                            data_v = data.where(
+                                            data.step.isin(self.steps),
+                                            drop=True
+                                        )
                         print('\tCompute absolute wind')
                         data_u,data_v = xr.align(data_u,data_v)
                         
