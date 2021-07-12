@@ -369,9 +369,9 @@ class Observations:
 
         self.data = self.load(filename_absolute)
 
-        filename_anomalies = self.filename_func('anomalies')
-        filename_mean      = self.filename_func('obs_mean')
-        filename_std       = self.filename_func('obs_std')
+        filename_anomalies = self.filename_func('anomalies_' + self.var)
+        filename_mean      = self.filename_func('obs_mean_'  + self.var)
+        filename_std       = self.filename_func('obs_std_' + self.var)
 
         if self.process or not os.path.exists(self.path+filename_anomalies):
 
