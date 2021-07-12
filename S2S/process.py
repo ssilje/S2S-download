@@ -98,10 +98,10 @@ class Hindcast:
                 while self.smaller_than(self.t_end,t_end):
                     
                     if self.var == 'abs_wind':
-                        print('\tread in u10 and v10 to calculate ' self.var)
+                        print('\tread in u10 and v10 to calculate ' + self.var)
                         
                         self.var = 'u10'
-                        print('\tLoad hindcast' self.var)
+                        print('\tLoad hindcast' + self.var)
                         raw = self.load_data()
                         print('\tApply 7D running mean along lead time dimension')
                         data = raw.rolling(step=7,center=True).mean()
@@ -114,7 +114,7 @@ class Hindcast:
                         
                         
                         self.var = 'v10'
-                        print('\tLoad hindcast' self.var)
+                        print('\tLoad hindcast' + self.var)
                         raw = self.load_data()
                         print('\tApply 7D running mean along lead time dimension')
                         data = raw.rolling(step=7,center=True).mean()
