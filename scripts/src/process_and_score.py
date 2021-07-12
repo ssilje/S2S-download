@@ -96,10 +96,30 @@ grid_hindcast = Hindcast(
 #    clim_std:      grid_hindcast.std
 
 
-era = ERA5(high_res=high_res)\
-                        .load(var,clim_t_start,clim_t_end,bounds)[var]
 
+print('\tLoad ERA')
+if var == 'abs_wind':
+    era_u = ERA5(high_res=high_res)\
+                         .load(var1,clim_t_start,clim_t_end,domainID)[var1]
 
+    era_v = ERA5(high_res=high_res)\
+                        .load(var2,clim_t_start,clim_t_end,domainID)[var2]
+
+    era_u,era_v = xr.align(era_u,era_v)
+
+    era = xr.apply_ufunc(
+                    xh.absolute,era_u,era_v,
+                    input_core_dims  = [[],[]],
+                    output_core_dims = [[]],
+                    vectorize=True,dask='parallelized'
+                )
+
+    era = era.rename(var)
+
+else:
+
+    era = ERA5(high_res=high_res)\
+                            .load(var,clim_t_start,clim_t_end,bounds)[var]
 
 grid_observations = Observations(
                             name='Era',
