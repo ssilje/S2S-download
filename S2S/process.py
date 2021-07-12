@@ -391,7 +391,7 @@ class Observations:
         self.mean   = self.load(filename_mean)
         self.std    = self.load(filename_std)
 
-        filename_init = self.filename_func('init')
+        filename_init = self.filename_func('init' + self.var)
 
         if self.process or not os.path.exists(self.path+filename_init):
 
