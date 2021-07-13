@@ -522,7 +522,7 @@ for lt in steps:
         label_text  = 'm/s',
         levels_cbar = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),11),
         plot_title  = 'ERA Climatology',
-        fname       = 'ERA_Climatology_'  + str(lt.days) '_' + var,
+        fname       = 'ERA_Climatology_'  + str(lt.days) + '_' + var,
     )
         
         ### PLOTTING CLIMATOLOGY 
@@ -533,7 +533,7 @@ for lt in steps:
         label_text  = 'm/s',
         levels_cbar = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),11),
         plot_title  = 'HC Climatology',
-        fname       = 'HC_Climatology_' + str(lt.days) '_' + var,
+        fname       = 'HC_Climatology_' + str(lt.days) + '_' + var,
     )
 
 
