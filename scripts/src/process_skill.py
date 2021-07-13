@@ -449,9 +449,6 @@ Data_skill  = Data_skill.assign(MAESS_best_lt=SS_lt(SS_data=MAE.MAESS).skill)
 Data_skill  = Data_skill.assign(hcCLIM=xr.concat(CLIM_hc_s,dim='step'))
 Data_skill  = Data_skill.assign(eraCLIM=xr.concat(CLIM_era_s,dim='step'))
 
-
-Data_skill  = Data_skill.assign(HC_clim=CLIMATOLOGY_hc.abs_wind)
-
 outfilename = 'hindcast_skill_' + var + '.nc'
 print('\tSaving calculated scores as netcdf-file:  %s' %outfilename )
 
@@ -461,7 +458,8 @@ print('\t Saving file with', \
       '\nMAESS_best_lt :', Data_skill.MAESS_best_lt.dims,\
       '\nACC_hc        :', Data_skill.ACC_hc.dims,\
       '\nACC_rf        :', Data_skill.ACC_rf.dims,\
-      '\nACCSS         :', Data_skill.ACCSS.dims)
+      '\nhcCLIM        :', Data_skill.hcCLIM.dims,\
+      '\neraCLIM       :', Data_skill.eraCLIM.dims)
       
 Data_skill.to_netcdf(path=outfilename , mode='w')
 
