@@ -1,108 +1,480 @@
 import xarray as xr
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
 
-def clim_mean(x):
-    result = []
-    for n in range(x.shape[0]):
-        result.append(np.nanmean(np.delete(x,n,axis=0)))
-    return np.array(result)
+from S2S.local_configuration import config
 
-def clim_std(x):
-    result = []
-    for n in range(x.shape[0]):
-        result.append(np.nanstd(np.delete(x,n,axis=0)))
-    return np.array(result)
+from S2S.graphics import graphics as gr
 
-def clim_mean_c(x):
-    return np.nanmean(x)
-
-def clim_std_c(x):
-    return np.nanstd(x)
-
-def o_climatology(da,dim):
-    print('\t performing xarray_helpers.o_climatology()')
-    dim_name = dim.split('.')[0]
-    mean,std = [],[]
-    for label,data in list(da.groupby(dim)):
-        mean.append(
-                    xr.apply_ufunc(
-                        clim_mean, data,
-                        input_core_dims  = [[dim_name]],
-                        output_core_dims = [[dim_name]],
-                        vectorize=True, dask='parallelized'
-                    )
-                )
-        std.append(
-                    xr.apply_ufunc(
-                        clim_std, data,
-                        input_core_dims  = [[dim_name]],
-                        output_core_dims = [[dim_name]],
-                        vectorize=True, dask='parallelized'
-                    )
-                )
-
-    return xr.concat(mean,dim_name).sortby(dim_name),\
-                xr.concat(std,dim_name).sortby(dim_name)
-
-def c_climatology(da,dim):
-    print('\txarray_helpers.c_climatology()')
-    dim_name = dim.split('.')[0]
-    subgroup = dim.split('.')[1]
-    mean,std = [],[]
-    subgroup_label = []
-    for label,data in list(da.groupby(dim)):
-        subgroup_label.append(label)
-        data = data.unstack()
-        mean.append(
-                    xr.apply_ufunc(
-                        clim_mean_c, data,
-                        input_core_dims  = [['time','member']],
-                        output_core_dims = [[]],
-                        vectorize=True, dask='parallelized'
-                    )
-                )
-        std.append(
-                    xr.apply_ufunc(
-                        clim_std_c, data,
-                        input_core_dims  = [['time','member']],
-                        output_core_dims = [[]],
-                        vectorize=True, dask='parallelized'
-                    )
-                )
-
-    mean = xr.concat(mean,pd.Index(subgroup_label,name=subgroup))
-    std  = xr.concat(std,pd.Index(subgroup_label,name=subgroup))
-    return mean,std
-
-def climatology_to_validation_time(da,validation_time):
+def print_progress(n,N,i='',e=''):
     """
-    TODO: Vectorize, incredibly slow routine but haven't figured out how to do
-    this in a smart way yet...
+    Print progression
 
     args:
-        da:              xr.DataArray with step and month dimension
-        validation_time: xr.DataArray with step + time dimension
+        n: float or int, current step
+        N: float or int, total number of steps
+    """
+    print('\t\t'+i+str(round((n/N)*100,1))+' % done'+e,end='\r')
+
+def running_clim(x,index,window=30):
+    """
+    Computes mean and standard deviation over x keeping dim -1. Dim -1 must be
+    'dayofyear', with the corresponding days given in index.
+
+    args:
+        x:      np.array of float, with day of year as index -1
+        index:  np.array of int, 1-dimensional holding dayofyear corresponding
+                to dim -1 of x
+
+    returns
+        mean:   np.array of float, with day of year as index -1 and year as
+                dim -2
+        std:   np.array of float, with day of year as index -1 and year as
+                dim -2
+
+    dimensions requirements:
+        name            dim
+
+        dayofyear      -1
+
+        member          0
+    """
+    mean  = []
+    std   = []
+
+    pad   = window//2
+
+    x     = np.pad(x,pad,mode='wrap')[pad:-pad,pad:-pad,:]
+    index = np.pad(index,pad,mode='wrap')
+
+    index[-pad:] += index[-pad-1]
+    index[:pad]  -= index[-pad-1]
+
+    for ii,idx in enumerate(index[pad:-pad]):
+
+        # pool all values that falls within window
+        pool = x[...,np.abs(index-idx)<=pad]
+
+        if np.isfinite(pool).sum() > 1:
+            mean.append(np.full_like(pool[0][...,0],np.nanmean(pool)))
+            std.append(np.full_like(pool[0][...,0],np.nanstd(pool)))
+        else:
+            mean.append(np.full_like(pool[0][...,0],np.nan))
+            std.append(np.full_like(pool[0][...,0],np.nan))
+
+    return np.stack(mean,axis=-1),np.stack(std,axis=-1)
+
+def running_clim_CV(x,index,window=30):
+    """
+    Like running_clim() but leaves out current year in computation for
+    cross validation
+
+    Computes mean and standard deviation over x keeping dim -1 and -2.
+    Dim -1 must be 'dayofyear', with the corresponding days given in index.
+    Dim -2 must be 'year'.
+
+    args:
+        x:      np.array of float, with day of year as index -1 and year as
+                index -2
+        index:  np.array of int, 1-dimensional holding dayofyear corresponding
+                to dim -1 of x
+
+    returns
+        mean:   np.array of float, with day of year as index -1 and year as
+                dim -2
+        std:   np.array of float, with day of year as index -1 and year as
+                dim -2
+
+    dimensions requirements:
+        name            dim
+
+        year            -2
+        dayofyear       -1
+    """
+    mean  = []
+    std   = []
+
+    pad   = window//2
+
+    x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+    index = np.pad(index,pad,mode='wrap')
+
+    index[-pad:] += index[-pad-1]
+    index[:pad]  -= index[-pad-1]
+
+    for ii,idx in enumerate(index[pad:-pad]):
+
+        # pool all values that falls within window
+        pool = x[...,np.abs(index-idx)<=pad]
+
+        ymean,ystd = [],[]
+        for yy in range(pool.shape[-2]):
+
+            # delete the relevant year from pool (for cross validation)
+            filtered_pool = np.delete(pool,yy,axis=-2)
+
+            if np.isfinite(filtered_pool).sum() > 1:
+                ymean.append(np.nanmean(filtered_pool))
+                ystd.append(np.nanstd(filtered_pool))
+            else:
+                ymean.append(np.nan)
+                ystd.append(np.nan)
+
+        mean.append(np.array(ymean))
+        std.append(np.array(ystd))
+
+    return np.stack(mean,axis=-1),np.stack(std,axis=-1)
+
+def o_climatology(da,window=30):
+    """
+    Climatology with centered initialization time, using cross validation
+    using a 30-day window.
+
+    args:
+        da: xarray.DataArray with 'time' dimension
 
     returns:
-        climatology stacked to match validation time: xarray.DataArray
-    """
-    print('\txarray_helpers.climatology_to_validation_time()')
-    time = validation_time.time
-    step = validation_time.step
+        mean: xarray.DataArray, like da
+        std: xarray.DataArray, like da
 
-    tout = []
-    for t in time:
-        sout = []
-        for s in step:
-            sout.append(da.sel(month=pd.Timestamp((t+s).values).month,step=s))
-        tout.append(xr.concat(sout,'step').drop('month'))
-        p = 1-((time[-1]-t)/(time[-1]-time[0])).values
-        print(str(round(p*100,1))+' % done',end='\r')
-    return xr.concat(tout,time)
+    time: datetime-like
+    """
+
+    print('\t\txarray_helpers.o_climatology()')
+
+    da = unstack_time(da)
+
+    # to all year,dayofyear matrices in da, apply runnning_clim_CV
+    mean,std = xr.apply_ufunc(
+            running_clim_CV, da, da.dayofyear,window,
+            input_core_dims  = [['year','dayofyear'],['dayofyear'],[]],
+            output_core_dims = [['year','dayofyear'],['year','dayofyear']],
+            vectorize=True
+        )
+
+    # re-assing time dimension to da from year,dayofyear
+    return stack_time(mean),stack_time(std)
+
+def c_climatology(da):
+    """
+    Climatology with centered initialization time
+    """
+
+    print('\t\txarray_helpers.c_climatology()')
+
+    da = unstack_time(da)
+
+    # to all year,dayofyear matrices in da, apply runnning_clim
+    mean,std = xr.apply_ufunc(
+            running_clim, da, da.dayofyear,
+            input_core_dims  = [['member','year','dayofyear'],['dayofyear']],
+            output_core_dims = [['year','dayofyear'],['year','dayofyear']],
+            vectorize=True
+        )
+
+    # re-assing time dimension to da from year,dayofyear
+    return stack_time(mean),stack_time(std)
+
+def unstack_time(da):
+    """
+    Splits time dimension in da into a 'year' and a 'dayofyear' dimension.
+    Coordinate time must be datetime-like.
+
+    args:
+        da: xarray.DataArray, requires dims: time
+
+    returns:
+        da: xarray.DataArray, new dimensions: year, dayofyear
+    """
+    da   = da.sortby('time')
+    time = da.time
+
+    # create an mulitindex mapping time -> (year,dayofyear)
+    stacked_time = pd.MultiIndex.from_arrays(
+                                            [
+                                                da.time.dt.year.to_pandas(),
+                                                da.time.dt.dayofyear.to_pandas()
+                                            ],names=('year','dayofyear')
+                                        )
+
+    # re-assing time from datetime like to multiindex (year,dayofyear) and
+    # and split mutliindex into year and dauofyear dimension
+    return da.assign_coords(time=stacked_time).unstack('time')
+
+def stack_time(da):
+    """
+    Stacks 'year' and 'dayofyear' dimensions in a xarray.DataArray to a 'time'
+    dimension.
+
+    args:
+        da: xarray.DataArray, requires dims: year and dayofyear
+
+    returns:
+        da: xarray.DataArray, new dimension: time
+    """
+
+    da = da.stack(time=('year','dayofyear'))
+
+    time = []
+    for year,dayofyear in zip(da.year.values,da.dayofyear.values):
+        year       = pd.to_datetime(year, format='%Y')
+        dayofyear  = pd.Timedelta(dayofyear-1,'D')
+        time.append(year+dayofyear)
+
+    da = da.assign_coords(time=time)
+
+    return da
 
 def assign_validation_time(ds):
+    """
+    Add validation_time coordinates to xarray.Dataset/DataArray with 'time' and
+    'step' dimensions.
+
+    validation_time = time + step
+
+    time: datetime-like
+    step: pd.Timedelta
+
+    args:
+        ds: xarray.Dataset/DataArray with 'time' and 'step' dimensions
+
+    returns:
+        ds: xarray.Dataset/DataArray with 'validation_time' dimension
+    """
     return ds.assign_coords(validation_time=ds.time+ds.step)
+
+def store_by_location(da,filename):
+    """
+    Store file with location dim, per location
+
+    args:
+        da: xarray.DataArray or xarray.Dataset, dims required: location
+        filename: str
+    """
+    print('\txarray_helpers.store_by_location()')
+
+    if not hasattr(da.location,'__iter__'):
+        loc = da.location
+        da.to_netcdf(config['VALID_DB']+'/'+loc+'_'+filename+'.nc')
+
+    else:
+        N   = len(da.location)
+        out = []
+
+        for n,loc in enumerate(da.location.values):
+
+            print_progress(n,N)
+
+            da.sel(location=loc)\
+                .to_netcdf(config['VALID_DB']+'/'+loc+'_'+filename+'.nc')
+
+def load_by_location(location,filename):
+    """
+    Load file with location in in filename and concatinate along location dim
+
+    args:
+        location: str
+        filename: str
+
+    returns:
+        da: xarray.DataArray or xarray.Dataset
+    """
+    print('\txarray_helpers.load_by_location()')
+    N   = len(location)
+    out = []
+
+    for n,loc in enumerate(location.values):
+
+        print_progress(n,N)
+
+        try:
+            out.append(
+                xr.open_dataset(config['VALID_DB']+'/'+loc+'_'+filename+'.nc')
+                )
+        except FileNotFoundError:
+            pass
+
+    return xr.concat(out,'location')
+
+def xtrapolate_NAN(x):
+    """
+    Underfunction of extrapolate_land_mask
+
+    Inter/extrapolate NaN values by meaning over the sorrounding grid points
+    ignoring NaN values.
+
+    if x at grid point [i,j] equals NaN, if x[i,j] == NaN, then
+
+        x[i,j] = np.nanmean( x[i-1,j], x[i+1,j], x[i,j-1], x[i,j+1] )
+
+    if all x[i-1,j], x[i+1,j], x[i,j-1], x[i,j+1] are NaN values, then
+    x[i,j] = NaN
+
+    args:
+        x: np.array 2-dimensional
+
+    returns:
+        x: np.array 2-dimensional
+
+    """
+
+    x = np.pad(x,pad_width=1,mode='constant',constant_values=np.nan)
+
+    x_int = np.nanmean(
+                    np.stack(
+                        [x[1:-1,:-2],x[1:-1,2:],x[:-2,1:-1],x[2:,1:-1]]
+                ),axis=0
+            )
+
+    idx = np.isnan(x)[1:-1,1:-1]
+
+    x.setflags(write=1)
+
+    x[1:-1,1:-1][idx] = x_int[idx]
+
+    x = x[1:-1,1:-1]
+
+    # continue until grid is full
+    if np.isnan(np.sum(x)):
+        x = xtrapolate_NAN(x)
+
+    return x
+
+def extrapolate_land_mask(da):
+    """
+    Fill/extrapolate NaN values by linearly interpolating neighbouring values.
+    Routine is repeated until all NaN (except boundaries) are filled in.
+
+    args:
+        da: xarray.DataArray or xarray.Dataset, dims required: lat,lon
+
+    returns:
+        da: NaNs filled in by linearly interpolating neighbours
+    """
+    return xr.apply_ufunc(
+        xtrapolate_NAN, da,
+        input_core_dims  = [['lon','lat']],
+        output_core_dims = [['lon','lat']],
+        vectorize=True
+    )
+
+def interp_to_loc(observations,hindcast):
+    """
+    Interpolate gridded hindcast to point locations specified by location
+    dimension in observations. Returns hindcast with location dimension.
+
+    args:
+        observations: xarray.DataArray or xarray.Dataset, dims required: location,lat,lon
+        hindcast: xarray.DataArray or xarray.Dataset, dims required: lat,lon
+
+    returns:
+        hindcast: xarray.DataArray or xarray.Dataset
+    """
+    N        = len(observations.location)
+    out      = []
+
+    for n,loc in enumerate(observations.location):
+
+        print_progress(n,N)
+
+        o = observations.sel(location=loc)
+
+        lon = xr.ufuncs.fabs(hindcast.lon - o.lon)
+        lat = xr.ufuncs.fabs(hindcast.lat - o.lat)
+
+        h = hindcast.where(lon<2,drop=True)
+        h = h.where(lat<2,drop=True)
+
+        out.append(
+                h.interp(
+                    lon=o.lon,
+                    lat=o.lat,
+                    method='linear'
+                    )
+                )
+    return xr.concat(out,'location')
+
+def step_at_zero(ss,step):
+    idx = np.argmin(abs(ss))
+    if 0 < step[idx]:
+        return step[idx+1]
+    else:
+        return step[idx]
+
+def return_lead_time_at_ss_zero(ss):
+    """
+    ss: xarray.DataArray must contain step dimension
+    """
+    return xr.apply_ufunc(
+                step_at_zero,ss,ss.step,
+                input_core_dims  = [
+                                    ['step'],
+                                    ['step']
+                                ],
+                output_core_dims = [[]],
+                vectorize=True,dask='parallelized'
+    )
+# def isolate_highest_r(x,y,index,window=30):
+#     """
+#     """
+#     # Flatten grid
+#     y = y.reshape(y.shape[0],y.shape[1],y.shape[2],-1)
+#
+#     # keep y with member dim
+#     Y = y
+#
+#     # mean over member dim
+#     y = y.mean(2)
+#
+#     pad = window//2
+#
+#     x     = np.pad(x,pad,mode='wrap')[pad:-pad,:]
+#     y     = np.pad(y,pad,mode='wrap')[pad:-pad,:,pad:-pad]
+#
+#     index = np.pad(index,pad,mode='wrap')
+#
+#     index[-pad:] += index[-pad-1]
+#     index[:pad]  -= index[-pad-1]
+#
+#     ys = [] # for each dayofyear
+#     for ii,idx in enumerate(index[pad:-pad]):
+#
+#         # pool all values that falls within window around respective dayofyear
+#         xpool = x[:,np.abs(index-idx)<=pad]
+#         ypool = y[:,np.abs(index-idx)<=pad]
+#
+#         # flatten year and dayofyear
+#         xpool = xpool.reshape(-1)
+#         ypool = ypool.reshape(-1,ypool.shape[-1])
+#
+#         r = [] # for each gridpoint
+#         for ii_y in range(ypool.shape[-1]):
+#
+#             # keep only nonnan forecast-observation pairs
+#             idx_bool = ~np.logical_or(
+#                                 np.isnan(xpool),
+#                                 np.isnan(ypool[:,ii_y])
+#                             )
+#
+#             xp = xpool[idx_bool]
+#             yp = ypool[idx_bool,ii_y]
+#
+#             # if all nan (most likely landmask) give -99 as correlation coef.
+#             if idx_bool.sum()==0:
+#                 r.append(-99)
+#             # otherwise pearsons r
+#             else:
+#                 r.append(stats.pearsonr(xp,yp)[0])
+#
+#         r = np.array(r)
+#
+#         # pick the gridpoint of highest correlation to represent the observation
+#         # at the respective dayofyear
+#         ys.append(Y[:,ii,:,np.argmax(r)])
+#
+#     # stack along dayofyear dimension
+#     return np.stack(ys,axis=1)
 
 def at_validation(obs,vt,ddays=1):
     """
@@ -135,240 +507,174 @@ def at_validation(obs,vt,ddays=1):
     out = xr.concat(out,time).sortby(['time','step'])
     return assign_validation_time(out)
 
+def running_mean(hindcast,window):
+    """
+    Apply runnning mean on hindcast per location. Labels centered in the window.
+
+    args:
+        hindcast: xarray.DataArray with step dimension
+        window:   number of steps included in window
+
+    returns:
+        hindcast: xarray.DataArray
+    """
+
+    N   = len(hindcast.location)
+    out = []
+
+    for n,loc in enumerate(hindcast.location):
+
+        print_progress(n,N)
+
+        h = hindcast.sel(location=loc)
+
+        out.append(h.rolling(step=window,center=True)\
+                .mean().dropna('step'))
+    return xr.concat(out,'location')
+
+def absolute(u,v):
+    """
+    Compute the absoulte value of two horizontal components.
+
+    U = sqrt( u**2 + v**2 )
+
+    args:
+        u: np.array n-dimensional
+        v: np.array n-dimensional
+
+    returns:
+        U: np.array n-dimensional
+    """
+    return np.sqrt( u**2 + v**2 )
+
+def cor_map(x, y):
+    """Correlate each n with each m.
+
+    Parameters
+    ----------
+    x : np.array
+      Shape N X T.
+
+    y : np.array
+      Shape M X T.
+
+    Returns
+    -------
+    np.array
+      N X M array in which each element is a correlation coefficient.
+
+    Written by stackoverflow user: dbliss,
+    Dowloaded June 25 2021 from https://stackoverflow.com/a/30145770
+    """
+    mu_x = x.mean(1)
+    mu_y = y.mean(1)
+    n = x.shape[1]
+    if n != y.shape[1]:
+        raise ValueError('x and y must ' +
+                         'have the same number of timepoints.')
+    s_x = x.std(1, ddof=n - 1)
+    s_y = y.std(1, ddof=n - 1)
+    cov = np.dot(x,
+                 y.T) - n * np.dot(mu_x[:, np.newaxis],
+                                  mu_y[np.newaxis, :])
+    return cov / np.dot(s_x[:, np.newaxis], s_y[np.newaxis, :])
 ################################################################################
-#######################  FUNCTIONS BELOW ARE DEPRICATED  #######################
 ################################################################################
-def c_by_vt(da):
-    out = []
-    # da.expand_dims('validation_time')\
-    #         .assign_coords(validation_time=da.time+da.step)
-    for label,data in list(da.groupby('time.dayofyear')):
-        out.append(
-                    xr.apply_ufunc(
-                        standard, data.unstack(),
-                        input_core_dims  = [['time','member','step']],
-                        output_core_dims = [['time','member','step']],
-                        vectorize=True
-                    ).rename('mean')
-                )
-
-    return xr.concat(out,'time').sortby(['time','step'])
-
-def c_standardize_D(da,dim):
-
-    print('\txarray_helpers.c_standardize()')
-    dim_name = dim.split('.')[0]
-    out = []
-    for label,data in list(da.groupby(dim)):
-
-        stack_name = list(data.dims)[-1]
-        stack_dims = tuple(stack_name.split('_')[1:])
-        stack_idx  = data[stack_name]
-
-        data = data.unstack()
-        out.append(
-                    xr.apply_ufunc(
-                        standard, data,
-                        input_core_dims  = [['time','member']],
-                        output_core_dims = [['time','member']],
-                        vectorize=True
-                    ).stack({stack_name:stack_dims})\
-                        .assign_coords({stack_name:stack_idx})
-                )
-    return xr.concat(out,stack_name).unstack()
-
-def c_standardize(da,dim):
-
-    print('\txarray_helpers.c_standardize()')
-    dim_name = dim.split('.')[0]
-    out = []
-    for label,data in list(da.groupby(dim)):
-
-        data = data.unstack()
-        out.append(
-                    xr.apply_ufunc(
-                        standard, data,
-                        input_core_dims  = [['time','member']],
-                        output_core_dims = [['time','member']]
-                    )
-                )
-        print()
-    return xr.concat(out,stack_name).unstack()
-
-def ca_standardize(da):
-    stack_name = list(da.dims)[-1]
-    stack_dims = tuple(stack_name.split('_')[1:])
-    da = da.unstack()
-
-    out = xr.apply_ufunc(
-        standard, da,
-        input_core_dims  = [['time','member']],
-        output_core_dims = [['time','member']],
-        vectorize=True
-    )
-    return out.stack({stack_name:stack_dims})
-
-def standard(x):
-    return (x-np.nanmean(x))/np.nanstd(x)
-
-def get_groups(ds,dim,keys):
-    dim_name     = dim.split('.')[0]
-    groups       = []
-    grouped_data = ds.groupby(dim).groups
-    for key in keys:
-        idx = grouped_data[np.int64(key.values)]
-        groups.append(ds.isel({dim_name:idx}))
-    return xr.concat(groups,dim_name)
-
-def keep_groups_of(ds,dim,members=5):
-    dim_name     = dim.split('.')[0]
-    groups       = []
-    grouped_data = ds.groupby(dim).groups
-    for key in list(grouped_data):
-        idx = grouped_data[key]
-        if len(idx) < members:
-            pass
-        else:
-            groups.append(ds.isel({dim_name:idx}))
-    return xr.concat(groups,dim_name).sortby(dim_name)
-
-def match_times(cast,obs):
+################################################################################
+def climatology_to_validation_time(da,validation_time):
     """
-    Match cast to obs and stack obs like cast
+    TODO: Vectorize, incredibly slow routine but haven't figured out how to do
+    this in a smart way yet...
 
     args:
-        cast: xarray.Dataset with time and step dimension
-        obs: xarray.Dataset with time dimension
+        da:              xr.DataArray with step and month dimension
+        validation_time: xr.DataArray with step + time dimension
 
-    returns
-        obs: xarray.Dataset with time and step dimension
+    returns:
+        climatology stacked to match validation time: xarray.DataArray
     """
-    print('\t performing xarray_helpers.match_times()')
+    print('\t\txarray_helpers.climatology_to_validation_time()')
+    time = validation_time.time
+    step = validation_time.step
 
-    step  = cast.step.sortby('step').to_pandas()
-    obs   = obs.sortby('time')
+    tout = []
+    for t in time:
+        sout = []
+        for s in step:
+            # can switch pd.Timestamp((t+s).values).month with (t+s).dt.month (?)
+            sout.append(da.sel(month=pd.Timestamp((t+s).values).month,step=s))
+        tout.append(xr.concat(sout,'step').drop('month'))
 
-    start = obs.time[0].to_pandas()
-    end   = obs.time[-1].to_pandas()-step.max()
+        print_progress((t-(time[0])).values,(time[-1]-time[0]).values)
 
-    cast = cast.sortby('time').sel(
-                                time=slice(
-                                    start,
-                                    end
-                                )
-                            )
-    out_obs  = []
-    obs = obs.reindex(
-            time=pd.date_range(
-                start=start,
-                end=end+step.max(),
-                freq=step[2]-step[1]
-            )
-        )
+    return xr.concat(tout,time)
 
-    for time in cast.time:
-        out_obs.append(obs.sel(time=time+cast.step).drop('time'))
-    return cast,xr.concat(out_obs,cast.time)
+def running_mean_o(observations,window):
 
-
-
-def match_core(obs,times,steps):
-    """
-    args:
-        obs: xarray.Dataset with time dimension
-        times: xarray.DataArray
-        steps: xarray.DataArray
-    returns
-        obs: xarray.Dataset with time and step dimension
-    """
-    print('\t\txarray_helpers.match_core()')
-
-    obs     = obs.sortby('time')
-    steps   = steps.sortby(steps)
-    times   = times.sortby(times)
-    times   = times.sel(time=slice(
-                                obs.time.min(),
-                                obs.time.max()-steps.max()
-                                )
-                            )
+    N   = len(observations.location)
     out = []
-    for time in times:
-        out.append(obs.sel(time=time+steps).drop('time'))
-    return xr.concat(out,times).sortby('time')
 
-def stack_model(clim,cast):
-    """
-    Stack model like cast
-    """
-    print('\t performing xarray_helpers.stack_model(), an incredibly slow routine')
-    clim   = clim.sortby('dayofyear')
-    clim   = clim.reindex(dayofyear=np.arange(1,367,1,dtype='int'))
-    t_out  = []
-    for time in cast.time:
-        date = pd.to_datetime(
-                        xr.DataArray(
-                            time.variable
-                        ).to_pandas()
-                    )
-        t_out.append(clim.sel(dayofyear=date.day_of_year))
-    return xr.concat(t_out,cast.time)
+    for n,loc in enumerate(observations.location):
 
-def stack_clim(clim,cast):
-    """
-    Stack climatology like cast
-    """
-    print('\t performing xarray_helpers.stack_clim(), an incredibly slow routine')
-    clim   = clim.sortby('month')
-    clim   = clim.reindex(month=np.arange(1,13,1,dtype='int'))
-    t_out  = []
-    for time in cast.time:
-        s_out = []
-        for step in cast.step:
-            date = pd.to_datetime(
-                            xr.DataArray(
-                                time.variable+step.variable
-                            ).to_pandas()
-                        )
-            s_out.append(clim.sel(month=date.month))
-        t_out.append(xr.concat(s_out,cast.step))
-    return xr.concat(t_out,cast.time)
+        print_progress(n,N)
 
-def stack_like(obs,cast):
-    """
-    Match cast to obs and stack obs like cast
+        h = observations.sel(location=loc)
 
-    args:
-        cast: xarray.Dataset with time and step dimension
-        obs: xarray.Dataset with time dimension
+        out.append(h.rolling(time=window,center=True,min_periods=1)\
+                .mean().dropna('time'))
 
-    returns
-        obs: xarray.Dataset with time and step dimension
+    return xr.concat(out,'location',join='outer')
 
-    Difference from match_time() indicated by *
-    """
-    print('\t performing xarray_helpers.stack_like()')
-    obs = obs.sortby('time')
-    cast = cast.sortby('time')
+# def depricated_clim_c():
+#     dim_name = dim.split('.')[0]
+#     subgroup = dim.split('.')[1]
+#     mean,std = [],[]
+#     subgroup_label = []
+#     for label,data in list(da.groupby(dim)):
+#         subgroup_label.append(label)
+#         data = data.unstack()
+#         mean.append(
+#                     xr.apply_ufunc(
+#                         clim_mean_c, data,
+#                         input_core_dims  = [['time','member']],
+#                         output_core_dims = [[]],
+#                         vectorize=True, dask='parallelized'
+#                     )
+#                 )
+#         std.append(
+#                     xr.apply_ufunc(
+#                         clim_std_c, data,
+#                         input_core_dims  = [['time','member']],
+#                         output_core_dims = [[]],
+#                         vectorize=True, dask='parallelized'
+#                     )
+#                 )
+#
+#     mean = xr.concat(mean,pd.Index(subgroup_label,name=subgroup))
+#     std  = xr.concat(std,pd.Index(subgroup_label,name=subgroup))
+#     return mean,std
 
-    step  = cast.step.to_pandas()
-    time  = obs.time.to_pandas()
-
-    start = time.min()
-    end   = time.max()
-
-    cast = cast.sel(time=slice(start,end-step.max()))
-
-    obs = obs.reindex(
-            time=pd.date_range(
-                start=start,
-                end=end,
-                freq='D'
-            )
-        )
-
-    out_obs  = []
-    dims  = cast.dims['step']
-    steps = cast.sortby('step').step
-    for time in cast.time:
-        out_obs.append(xr.concat([obs.sel(time=time).drop('time')]*dims,steps))
-    return xr.concat(out_obs,cast.time)
+# def depricated_o_climatology(da,dim):
+#     print('\t\txarray_helpers.o_climatology()')
+#     dim_name = dim.split('.')[0]
+#     mean,std = [],[]
+#     for label,data in list(da.groupby(dim)):
+#         mean.append(
+#                     xr.apply_ufunc(
+#                         clim_mean, data,
+#                         input_core_dims  = [[dim_name]],
+#                         output_core_dims = [[dim_name]],
+#                         vectorize=True, dask='parallelized'
+#                     )
+#                 )
+#         std.append(
+#                     xr.apply_ufunc(
+#                         clim_std, data,
+#                         input_core_dims  = [[dim_name]],
+#                         output_core_dims = [[dim_name]],
+#                         vectorize=True, dask='parallelized'
+#                     )
+#                 )
+#
+#     return xr.concat(mean,dim_name).sortby(dim_name),\
+#                 xr.concat(std,dim_name).sortby(dim_name)

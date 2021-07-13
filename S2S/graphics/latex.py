@@ -31,6 +31,17 @@ def diverge_map(high=(0.565, 0.392, 0.173), low=(0.094, 0.310, 0.635)):
     if isinstance(high, str): high = c(high)
     return make_colormap([low, c('white'), 0.5, c('white'), high])
 
+def diverge_map_custom(high=(0.565, 0.392, 0.173),low=(0.094, 0.310, 0.635),sep='white'):
+    '''
+    low and high are colors that will be used for the two
+    ends of the spectrum. they can be either color strings
+    or rgb color tuples
+    '''
+    c = mcolors.ColorConverter().to_rgb
+    if isinstance(low, str): low = c(low)
+    if isinstance(high, str): high = c(high)
+    return make_colormap([low, c(sep), 0.5, c(sep), high])
+
 def diverge_map_grey(high=(0.565, 0.392, 0.173), low=(0.094, 0.310, 0.635)):
     '''
     low and high are colors that will be used for the two
@@ -50,6 +61,9 @@ def cm_ETH_yb():
 
 def cm_ETH_rgb():
     return diverge_map_grey(high=(168/255, 50/255, 45/255), low=(0/255, 122/255, 150/255))
+
+def cm_rgc(c='green'):
+    return diverge_map_custom(high=(168/255, 50/255, 45/255), low=(0/255, 122/255, 150/255),sep=c)
 
 def set_style(style='white'):
 

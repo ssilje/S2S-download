@@ -9,6 +9,7 @@ import json
 from S2S.local_configuration import config
 import S2S.handle_datetime as dt
 import scripts.Henrik.organize_barentzwatch as organize_barentzwatch
+from . import xarray_helpers as xh
 
 class Archive:
     """
@@ -38,37 +39,66 @@ class Archive:
         date = kwargs['date']
 
         var = {
-                'sst':'sea_surface_temperature'
+                'sst':'sea_surface_temperature',
+                'u10':'10m_u_component_of_wind',
+                'v10':'10m_v_component_of_wind',
+                't2m':'2m_temperature'
             }[var]
         return '_'.join([var,date.strftime('%Y%m%d')])+'.nc'
 
     @staticmethod
     def S2S_in_filename(**kwargs):
-
+        """
+        Returns filename to load from the S2S database
+        """
         var   = kwargs['var']
         date  = kwargs['date']
         run   = kwargs['run']
         ftype = kwargs['ftype']
 
-        if kwargs['high_res']:
+        if var=='sst':
+
+            if kwargs['high_res']:
+                return var+'/'+'_'.join(
+                        [
+                            var,
+                            'CY46R1_CY47R1',
+                            '05x05',
+                            date.strftime('%Y-%m-%d'),
+                            run,
+                            ftype
+                        ]
+                    ) + '.grb'
+            else:
+                return var+'/'+'_'.join(
+                        [
+                            var,
+                            'CY46R1_CY47R1',
+                            date.strftime('%Y-%m-%d'),
+                            run,
+                            ftype
+                        ]
+                    ) + '.grb'
+
+        elif var[1:]=='10':
+
             return var+'/'+'_'.join(
                     [
                         var,
-                        'CY46R1_CY47R1',
-                        '05x05',
+                        'CY46R1',
                         date.strftime('%Y-%m-%d'),
-                        run,
-                        ftype
+                        run
                     ]
                 ) + '.grb'
-        else:
+
+        elif var=='t2m':
+
             return var+'/'+'_'.join(
                     [
                         var,
-                        'CY46R1_CY47R1',
+                        'CY46R1',
                         date.strftime('%Y-%m-%d'),
-                        run,
-                        ftype
+                        run
                     ]
                 ) + '.grb'
 
@@ -80,13 +110,13 @@ class Archive:
         return '_'.join(['barentswatch',str(location)])+'.nc'
 
     @staticmethod
-    def out_filename(var,start,end,domainID,label):
+    def out_filename(var,start,end,bounds,label):
         return '%s_%s-%s_%s_%s%s'%(
                             var,
                             dt.to_datetime(start).strftime('%Y-%m-%d'),
                             dt.to_datetime(end).strftime('%Y-%m-%d'),
                             label,
-                            domainID,
+                            '%s_%s-%s_%s'%(bounds),
                             '.nc'
                         )
 
@@ -101,12 +131,14 @@ class Archive:
         if not os.path.exists(path):
             os.makedirs(path)
 
+    # These two functions are depricated after stopped usign domains.json
     @staticmethod
     def get_bounds(domainID):
         with open(config['DOMAINS'], 'r') as file:
             domain_dict = json.load(file)
         return domain_dict[domainID]['bounds']
 
+    # These two functions are depricated after stopped usign domains.json
     @staticmethod
     def get_domain(domainID):
         with open(config['DOMAINS'], 'r') as file:
@@ -159,6 +191,10 @@ class LoadLocal:
         return ds
 
     def filename(self,key='in'):
+        """
+        Returns functions returning filenames dependent on self.label and 'key'
+        argument
+        """
 
         label = self.label
 
@@ -178,6 +214,16 @@ class LoadLocal:
             return Archive().out_filename
 
     def load_frequency(self):
+        """
+        Returns a list like item of pandas.Datetime
+        from self.start_time to self.end_time. Frequency dependent on input.
+        """
+
+        # Only the option 'daily' is used so far.
+        # self.excecute_loading_sequence checks if file exists.
+        # Consider deleting the remaining options, in case this function
+        # is deprocated and dt.days_from(self.start_time,self.end_time) could be
+        # called directly.
 
         option = self.loading_options['load_time']
 
@@ -193,7 +239,10 @@ class LoadLocal:
             raise KeyError
             exit()
 
-    def execute_loading_sequence(self):
+    def execute_loading_sequence(self,x_landmask=False):
+
+        # Consider removing x_landmask option unless filling dataset holes
+        # become something we want to do in the future
 
         chunk = []
 
@@ -206,7 +255,7 @@ class LoadLocal:
         ftype       = Archive().ftype[self.label]
 
         filename_func = self.filename(key='in')
-        
+
         for time in self.load_frequency():
 
             runs   = ['pf','cf'] if control_run else [None]
@@ -256,6 +305,9 @@ class LoadLocal:
                     if resample:
                         open_data = open_data.resample(time=resample).mean()
 
+                    if x_landmask:
+                        open_data = xh.extrapolate_land_mask(open_data)
+
                     if run=='cf':
                         open_data = open_data.expand_dims('member')\
                                         .assign_coords(member=pd.Index([0]))
@@ -271,7 +323,16 @@ class LoadLocal:
 
         return xr.concat(chunk,dimension)
 
-    def load(self,var,start_time,end_time,domainID,download=False,prnt=True):
+    def load(
+                self,
+                var,
+                start_time,
+                end_time,
+                bounds,
+                download=False,
+                prnt=True,
+                x_landmask=False
+            ):
 
         archive = Archive()
 
@@ -280,14 +341,13 @@ class LoadLocal:
         self.var          = var
         self.start_time   = start_time
         self.end_time     = end_time
-        self.domainID     = domainID
-        self.bounds       = archive.get_bounds(domainID)
+        self.bounds       = bounds
         self.download     = download
         self.out_filename = archive.out_filename(
                                                 var=var,
                                                 start=start_time,
                                                 end=end_time,
-                                                domainID=domainID,
+                                                bounds=bounds,
                                                 label=archive.ftype[self.label]
                                                 )
 
@@ -296,12 +356,13 @@ class LoadLocal:
 
             archive.make_dir(self.out_path)
 
-            data = self.execute_loading_sequence()
+            data = self.execute_loading_sequence(x_landmask=x_landmask)
 
             if self.label=='ERA5':
                 data.transpose('time','lon','lat').to_netcdf(self.out_path
                                                             +self.out_filename)
             elif self.label=='S2SH':
+
                 data.transpose(
                             'member','step','time',
                             'lon','lat'
@@ -381,7 +442,10 @@ class BarentsWatch:
 
         self.path['DATA'] = config['BW']
 
-    def load(self,location,data_label='DATA'):
+    def load(self,location,no=400,data_label='DATA'):
+
+        if location=='all':
+            location = self.all_locs(number_of_observations=no)
 
         archive = Archive()
 
@@ -395,8 +459,7 @@ class BarentsWatch:
         if isinstance(location[0],str):
             for loc in location:
                 location_2.append(archive.get_domain(loc)['localityNo'])
-
-        location = location_2
+            location = location_2
 
         if not os.path.exists(self.path['DATA']+\
                                 archive.BW_in_filename(location=location[0])):
@@ -409,6 +472,27 @@ class BarentsWatch:
 
         return xr.concat(chunk,'location')
 
+    @staticmethod
+    def all_locs(number_of_observations=400):
+        with open(config['BW']+'temp_BW.json', 'r') as file:
+            data = json.load(file)
+            out  = []
+            i    = 0
+            for loc,dat in data.items():
+                values = np.array(dat['value'],dtype='float32')
+                if np.count_nonzero(~np.isnan(values))>number_of_observations:
+                    i += 1
+                    print(dat['name'])
+                    out.append(int(dat['localityNo']))
+
+            print(
+                    '\n...',
+                    i,
+                    'locations, with',
+                    number_of_observations,
+                    'observations or more, included\n'
+                )
+        return out
 
     @staticmethod
     def load_barentswatch(path,location):
@@ -418,6 +502,25 @@ class BarentsWatch:
         open_data = xr.open_dataset(path+filename)
 
         return open_data
+
+class IMR:
+
+    def __init__(self):
+
+        self.path = config['IMR']
+
+    def load(self,location):
+
+        chunk = []
+        for loc in location:
+
+            filename = loc+'_organized.nc'
+
+            data = xr.open_dataset(self.path+filename)
+            data = data.sortby('time').resample(time='D',skipna=True).mean()
+            chunk.append(data)
+
+        return xr.concat(chunk,'location',join='outer')
 
 class SST:
     """

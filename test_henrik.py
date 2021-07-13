@@ -1,40 +1,72 @@
-# import scripts.Henrik.create_domain_file
-# import scripts.Henrik.download_imr
+import pandas as pd
 
-# import scripts.Henrik.organize_barentzwatch as ob
-# ob.organize_files()
+from S2S.data_handler import ERA5, BarentsWatch
+from S2S.process import Hindcast, Observations, Grid2Point
 
-# import scripts.Henrik.get_eide
-import scripts.Henrik.vpf_rawEC
-import scripts.Henrik.vpf_ppEC
-# import scripts.Henrik.vpf_combo_ERA
-# import scripts.Henrik.verify_point_forecast_clean
-# import scripts.Henrik.map
-# import scripts.Henrik.verify_point_forecast_onbw
+domainID = 'norwegian_coast'
+var      = 'sst'
 
-# import scripts.Henrik.test_domain
-# import scripts.Henrik.geographic_overview
+t_start  = (2020,1,23)
+t_end    = (2021,1,4)
 
-# import scripts.Henrik.figure_receipts
-# import scripts.Henrik.s2s2local
+clim_t_start  = (2000,1,1)
+clim_t_end    = (2021,1,4)
 
-# import xarray as xr
-# path = '/nird/projects/NS9853K/DATA//SFE/hindcast/ECMWF/sst/sst_CY46R1_2020-05-18_hindcast.grb'
-# data = xr.open_dataset(local_path+filename[0], engine='cfgrib')
-# print(data)
 
-# from scripts.Henrik.data_handler import ERA5,ECMWF_S2SH
+high_res = True
+steps    = pd.to_timedelta([9,16,23,30,37],'D')
+
+hindcast = Hindcast(
+                        var,
+                        t_start,
+                        t_end,
+                        domainID,
+                        high_res=high_res,
+                        steps=steps,
+                        process=True,
+                        download=False,
+                        split_work=True
+                    )
+
+# observations must be weekly mean values with a time dimension
+observations = BarentsWatch().load(
+                                    [
+                                        'Hisdalen',
+                                        'Stokkvika'
+                                    ]
+                                )[var]
+
+observations = Observations(
+                            name='BarentsWatch',
+                            observations=observations,
+                            forecast=hindcast,
+                            process=False
+                            )
+
+point_hindcast = Grid2Point(observations,hindcast).correlation(
+                                                        step_dependent=True
+                                                            )
+
+
+# import S2S.graphics.graphics as gr
 #
-# domainID = 'NVK'
+# gr.timeseries()
+
+# # import scripts.Henrik.create_domain_file
+# # import S2S.organize_IMR
 #
-# t_start  = (2020,1,23)
-# t_end    = (2021,1,14)
+# # from S2S.organize_barentzwatch import organize_files
+# # organize_files()
 #
-# clim_t_start  = (2000,1,1)
-# clim_t_end    = (2004,1,4)
+# import scripts.Henrik.process_point_location
 #
+# # import scripts.Henrik.vpf_sb
+# # import scripts.Henrik.score_pf
 #
-# for key in ERA5().load('sst',clim_t_start,clim_t_end,domainID).dims:
-#     print(key)
+# # import scripts.Henrik.process_hindcast_wind
 #
-# print(ECMWF_S2SH().load('sst',t_start,t_end,domainID))
+# # import scripts.Henrik.vpf_rawEC
+# # import scripts.Henrik.vpf_ppEC_test
+# # import scripts.Henrik.vpf_combo_ERA
+#
+# # import scripts.Henrik.aggregate_skill
