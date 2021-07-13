@@ -177,8 +177,9 @@ def SS_lt(
   
 bounds          = (0,28,55,75)
 
-#var             = 't2m'
-var             = 'abs_wind'
+var             = 't2m'
+clabel          = 'K'
+#var             = 'abs_wind'
 t_start         = (2019,7,1)
 t_end           = (2020,6,26)
 
@@ -507,7 +508,7 @@ for lt in steps:
     plot_months(
         varplot     = Data_skill.eraCLIM.sel(step=lt),
         levels_plot = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),21),
-        label_text  = 'm/s',
+        label_text  = clabel,
         levels_cbar = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),11),
         plot_title  = 'ERA Climatology',
         fname       = 'ERA_Climatology_'  + str(lt.days) + '_' + var,
@@ -518,7 +519,7 @@ for lt in steps:
     plot_months(
         varplot     = Data_skill.hcCLIM.sel(step=lt),
         levels_plot = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),21), # same plotting range as era
-        label_text  = 'm/s',
+        label_text  = clabel,
         levels_cbar = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),11),
         plot_title  = 'HC Climatology',
         fname       = 'HC_Climatology_' + str(lt.days) + '_' + var,
