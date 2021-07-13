@@ -195,9 +195,17 @@ dim             = 'validation_time.month'
 
 cc              = []
 mm              = []
+
 Data_skill      = []
+
 ACcc            = []
 MAE_m_s         = []
+
+CLIM_era_s      = []
+CLIM_hc_s       = []
+
+CLIMATOLOGY     = []
+
 
 print('\tProcess Hindcast')
 grid_hindcast = Hindcast(
@@ -398,32 +406,34 @@ for lt in steps:
         
         acc.append(ACC_dataset)
         
-        
-        
-        
          # Calculate climatology
-        era_mean = eradata.mean('time').drop('step').assign_coords(time_month=xlabel)
+        #era_mean = eradata.mean('time').drop('step').assign_coords(time_month=xlabel)
+        era_mean = eradata.mean('time').assign_coords(time_month=xlabel)
+        print(eradata.step)
         era_tmp.append(era_mean)
-        hc_mean  = hcdata.mean('member').mean('time').drop('step').assign_coords(time_month=xlabel)
+        #hc_mean  = hcdata.mean('member').mean('time').drop('step').assign_coords(time_month=xlabel)
+        hc_mean  = hcdata.mean('member').mean('time').assign_coords(time_month=xlabel)
+        print(hcdata.step)
         hc_tmp.append(hc_mean)   
         
     # Done loop month    
      
-    
-
-
-
-
     MAE_m = xr.concat(mae,dim='time_month') ## stacking the data along month dimension
     MAE_m_s.append(MAE_m) # Saving MAESS for each month and step
      
     #MAE = xr.concat(m,dim='time_month') ## stacking the data along month dimension
     #mm.append(MAE) #  Saving MAE for each month and step
     
-    ACC_m = xr.concat(acc,dim='time_month') 
-    ACC_m = ACC_m.assign_coords(step=lt)
-    ACC_m_s = ACC_m 
+    ACC_m       = xr.concat(acc,dim='time_month') 
+    ACC_m       = ACC_m.assign_coords(step=lt)
+    ACC_m_s     = ACC_m 
     ACcc.append(ACC_m_s) 
+    
+    CLIM_hc     = xr.concat(hc_tmp,dim='time_month') 
+    CLIM_hc_s.append(CLIM_hc)
+    CLIM_era    =xr.concat(era_tmp,dim='time_month') 
+    CLIM_era_s.append(CLIM_era)
+
 
 # loop leadtime done
 
@@ -436,7 +446,11 @@ Data_skill  = Data_skill.assign(MAESS=MAE.MAESS)
 Data_skill  = Data_skill.assign(MAE=MAE.MAE)
 
 Data_skill  = Data_skill.assign(MAESS_best_lt=SS_lt(SS_data=MAE.MAESS).skill)
+Data_skill  = Data_skill.assign(hcCLIM=xr.concat(CLIM_hc_s,dim='step'))
+Data_skill  = Data_skill.assign(eraCLIM=xr.concat(CLIM_era_s,dim='step'))
 
+
+Data_skill  = Data_skill.assign(HC_clim=CLIMATOLOGY_hc.abs_wind)
 
 outfilename = 'hindcast_skill_' + var + '.nc'
 print('\tSaving calculated scores as netcdf-file:  %s' %outfilename )
@@ -502,6 +516,27 @@ for lt in steps:
         fname       = 'hindcast_MAE_days_' + str(lt.days) + '_' + var,
     )
 
+    plot_months(
+        varplot     = Data_skill.eraCLIM.sel(step=lt),
+        levels_plot = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),21),
+        label_text  = 'm/s',
+        levels_cbar = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),11),
+        plot_title  = 'ERA Climatology',
+        fname       = 'ERA_Climatology_'  + str(lt.days) '_' + var,
+    )
+        
+        ### PLOTTING CLIMATOLOGY 
+
+    plot_months(
+        varplot     = Data_skill.hcCLIM.sel(step=lt),
+        levels_plot = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),21), # same plotting range as era
+        label_text  = 'm/s',
+        levels_cbar = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),11),
+        plot_title  = 'HC Climatology',
+        fname       = 'HC_Climatology_' + str(lt.days) '_' + var,
+    )
+
+
 
     
 
@@ -518,23 +553,6 @@ plot_months(
 
 
 
-### PLOTTING CLIMATOLOGY 
-ERA_MEAN = xr.concat(era_tmp,dim='time_month') ## stacking the data along month dimension
-plot_months(
-        varplot     = ERA_MEAN,
-        levels_plot = np.linspace(ERA_MEAN.min(),ERA_MEAN.max(),21),
-        label_text  = 'K',
-        levels_cbar = np.linspace(ERA_MEAN.min(),ERA_MEAN.max(),11),
-        plot_title  = 'ERA Climatology',
-        fname       = 'ERA_Climatology_'  + var,
-    )
 
-HC_MEAN = xr.concat(hc_tmp,dim='time_month') ## stacking the data along month dimension
-plot_months(
-        varplot     = HC_MEAN,
-        levels_plot = np.linspace(HC_MEAN.min(),HC_MEAN.max(),21),
-        label_text  = 'K',
-        levels_cbar = np.linspace(HC_MEAN.min(),HC_MEAN.max(),11),
-        plot_title  = 'Hindcast Climatology',
-        fname       = 'HC_Climatology_' + var,
-    )
+
+
