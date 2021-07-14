@@ -20,28 +20,11 @@ t_end           = (2020,6,26)
 
 clim_t_start    = (1999,1,1)
 clim_t_end      = (2021,1,4)
-#bounds = (0,28,55,75)
+bounds = (0,28,55,75)
 
 
 high_res = False
 steps           = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
-
-# observations must be weekly mean values with a time dimension
-# load grid for catchment
-data_path = '/nird/projects/NS9853K/PROJECTS/STATKRAFT/DATA/'
-
-with open(data_path+"catchment_boundaries_wgs84.p", "rb") as stream:
-    polygon_dict = pickle.load(stream)
-
-for k in polygon_dict:
-     
-    minlon,minlat,maxlon,maxlat = polygon_dict[k].bounds 
-    bounds = (minlon,maxlon,minlat,maxlat)
-
-## la den lese inn fult område, også velg ut område etterpå.    
-    
-
-
 
 grid_hindcast     = Hindcast(
                         var,
@@ -55,12 +38,40 @@ grid_hindcast     = Hindcast(
                         split_work=True
                     )
 
-point_observations = Observations(
-                            name='BarentsWatch',
-                            observations=point_observations,
+era = ERA5(high_res=high_res)\
+                            .load(var,clim_t_start,clim_t_end,bounds)[var]
+
+grid_observations = Observations(
+                            name='Era',
+                            observations=era,
                             forecast=grid_hindcast,
-                            process=True
+                            process=False
                             )
 
-point_hindcast     = Grid2Point(point_observations,grid_hindcast)\
-                            .correlation(step_dependent=True)
+
+## woring with anomalies
+hindcast    = grid_hindcast.data_a
+obs         = grid_observations.data_a
+
+# load grid for catchment
+data_path = '/nird/projects/NS9853K/PROJECTS/STATKRAFT/DATA/'
+
+with open(data_path+"catchment_boundaries_wgs84.p", "rb") as stream:
+    polygon_dict = pickle.load(stream)
+
+for k in polygon_dict:
+    print(k) 
+    
+    minlon,minlat,maxlon,maxlat = polygon_dict[k].bounds 
+    bounds                      = (round(minlon-0.5),round(maxlon+0.5),round(minlat-0.5),round(maxlat+0.5))
+    
+    hindcast_sel    = hindcast.sel(lon=slice(bounds[0],bounds[1]),lat=slice(bounds[2],bounds[3]))
+    hindcast_sel    = hindcast_sel.assign_coords(location=k)
+    hindcast_sel    = hindcast_sel.mean('lon').mean('lat')
+    
+    obs_sel         = obs.sel(lon=slice(bounds[0],bounds[1]),lat=slice(bounds[2],bounds[3]))
+    obs_sel         = obs_sel.assign_coords(location=k)
+    obs_sel         = obs_sel.mean('lon').mean('lat')
+    
+    
+    
