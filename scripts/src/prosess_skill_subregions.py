@@ -16,14 +16,13 @@ def loc(name):
     return str(location_cluster.loc_from_name(name))
 
 
-def plot_skill(
-    dim,
-    var1,
-    var2=None,
-    fname,
-    var1_data,
-    var2_data=None,
-    title_fig
+def plot_skill(dim,
+               var1,
+               var2,
+               fname,
+               var1_data,
+               var2_data,
+               title_fig
 ):
     """
     write something here
