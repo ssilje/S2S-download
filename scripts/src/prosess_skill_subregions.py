@@ -11,7 +11,7 @@ from S2S.graphics import latex
 
 from S2S import models, location_cluster
 from S2S.local_configuration import config
-
+from S2S.scoring import uncentered_acc, centered_acc
 def loc(name):
     return str(location_cluster.loc_from_name(name))
 
