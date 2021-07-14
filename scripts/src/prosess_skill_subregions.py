@@ -82,6 +82,9 @@ with open(data_path+"catchment_boundaries_wgs84.p", "rb") as stream:
     polygon_dict = pickle.load(stream)
 
 print('\tLoop through all steps')
+CLIM_l_m_s = []
+ACC_l_m_s = []
+MAE_l_m_s = []
 
 for lt in steps:
 
@@ -102,6 +105,10 @@ for lt in steps:
 
     era_group   = list(era.groupby(dim))
     hc_group    = list(hc.groupby(dim))
+    
+    mae_l_m     = []
+    acc_l_m     = []
+    clim_l_m    =[]
     
     for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month. n går frå 0-11, xlabel 1-12, xdata: dataene
     
@@ -128,8 +135,8 @@ for lt in steps:
         
         mae         = []
         acc         = []
-        era_tmp     = []
-        hc_tmp      = []
+        clim        = []
+        
     
         for k in polygon_dict:
             print(k) 
@@ -197,7 +204,37 @@ for lt in steps:
             acc.append(ACC_dataset)
         
             eraclim_sel_mean = eraclim_sel.mean('time').assign_coords(time_month=xlabel) 
-            era_tmp.append(eraclim_sel_mean)
             hcclim_sel_mean  = hcclim_sel.mean('member').mean('time').assign_coords(time_month=xlabel)
-            hc_tmp.append(hcclim_sel_mean)  
+            
+            
+            CLIM_dataset = xr.merge(
+                                 [
+                                  eraclim_sel_mean.rename('ClimERA'),
+                                  hcclim_sel_mean.rename('ClimHC')
+                               ],join='inner',compat='override'
+                             )
+            
+            clim.append(CLIM_dataset)
+            
+        # Done loop catchment   
+     
+        mae_l   = xr.concat(mae,dim='location') 
+        mae_l_m.append(mae_l)
+        acc_l   = xr.concat(acc,dim='location') 
+        acc_l_m.append(acc_l)
+        clim_l  = xr.concat(clim,dim='location') 
+        clim_l_m.append(clim_l)
+    # Done loop month 
+    mae_l_m_s   = xr.concat(mae_l_m,dim='time_month') 
+    MAE_l_m_s.append(mae_l_m_s)
+    
+    acc_l_m_s   = xr.concat(acc_l_m,dim='time_month') 
+    ACC_l_m_s.append(acc_l_m_s)
+    
+    clim_l_m_s   = xr.concat(clim_l_m,dim='time_month') 
+    CLIM_l_m_s.append(clim_l_m_s)
+ # Done loop step 
+MAE   = xr.concat(MAE_l_m_s,dim='step')
+ACC   = xr.concat(ACC_l_m_s,dim='step')
+CLIM  = xr.concat(CLIM_l_m_s,dim='step')
             
