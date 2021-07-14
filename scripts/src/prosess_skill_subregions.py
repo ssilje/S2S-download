@@ -6,12 +6,74 @@ import pickle
 import S2S.xarray_helpers    as xh
 from S2S.data_handler import ERA5, BarentsWatch
 from S2S.process import Hindcast, Observations, Grid2Point
+from S2S.graphics import mae,crps,graphics as mae,crps,graphics
+from S2S.graphics import latex
 
-from S2S.graphics import mae,crps,graphics
 from S2S import models, location_cluster
+from S2S.local_configuration import config
 
 def loc(name):
     return str(location_cluster.loc_from_name(name))
+
+
+def plot_skill(
+    dim,
+    var1,
+    var2=None,
+    fname,
+    var1_data,
+    var2_data=None,
+    title_fig
+):
+    """
+    write something here
+    """
+    
+
+    latex.set_style(style='white')
+    
+    subplots = (3, 4)
+    fig,axes = plt.subplots(subplots[0],subplots[1],
+                            figsize=latex.set_size(width='thesis',
+                            subplots=(subplots[0],subplots[1]))
+                           )
+    axes = axes.flatten()
+
+    x_group = list(var1_data.groupby(dim))
+    y_group = list(var2_data.groupby(dim))
+
+
+    for n,(xlabel,xdata) in enumerate(x_group):
+        ylabel,ydata = y_group[n]
+        
+        xdata = xdata.unstack().sortby(['step'])
+        ydata = ydata.unstack().sortby(['step'])
+        
+        xdata,ydata = xr.align(xdata,ydata)
+        
+        xx = xdata
+        yy = ydata
+
+        x = np.array([td.days for td in xx.step.to_pandas()])
+        xx = xx.values.transpose() #nødvindig?
+        yy = yy.values.transpose()
+
+        ax = axes[n]
+        ax.set_title(graphics.month(xlabel))
+        ax.set_xlabel('lead time [D]')
+    
+
+        ax.plot(x,xx,'o-',alpha=0.4,ms=1,label=var1)
+        ax.plot(x,yy,'o-',alpha=0.4,ms=1,label=var2)
+        
+        ax.legend()
+        
+
+        fig.suptitle(title_fig)
+        plt.savefig(config['SAVEFIG']+\
+                        fname+'.png',dpi='figure',bbox_inches='tight')
+    
+    
 
 var             = 't2m'
 clabel          = 'K'
@@ -237,4 +299,55 @@ for lt in steps:
 MAE   = xr.concat(MAE_l_m_s,dim='step')
 ACC   = xr.concat(ACC_l_m_s,dim='step')
 CLIM  = xr.concat(CLIM_l_m_s,dim='step')
-            
+
+
+# plotting
+
+for k in polygon_dict:
+    plot_skill(
+        dim         = 'time_month',
+        var1        = 'ACC_hc',
+        var2        = 'ACC_rf',
+        fname       = 'ACC_' + k,
+        var1_data   = ACC.ACC_hc.sel(location=k),
+        var2_data   = ACC.ACC_rf.sel(location=k),
+        title_fig   = 'ACC'
+    )
+    
+    plot_skill(
+        dim         = 'time_month',
+        var1        = 'ClimERA',
+        var2        = 'CLIM',
+        fname       = 'CLIM_' + k,
+        var1_data   = CLIM.ClimERA.sel(location=k),
+        var2_data   = CLIM.ClimHC.sel(location=k),
+        title_fig   = 'CLIMATOLOGY'
+        )
+    
+    plot_skill(
+        dim         = 'time_month',
+        var1        = 'MAE',
+        var2        = 'MAESS',
+        fname       = 'MAE_' + k,
+        var1_data   = MAE.MAE.sel(location=k),
+        var2_data   = MAE.MAESS.sel(location=k),
+        title_fig   = 'MAE'
+        )
+    
+    
+   
+    
+    
+    
+    
+    
+   
+
+   
+        
+        
+        
+        
+        
+        
+    
