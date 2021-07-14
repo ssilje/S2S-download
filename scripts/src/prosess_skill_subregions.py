@@ -3,6 +3,7 @@ import xarray as xr
 import xskillscore as xs
 import pickle
 import matplotlib.pyplot as plt
+import numpy as np
 
 import S2S.xarray_helpers    as xh
 from S2S.data_handler import ERA5, BarentsWatch
