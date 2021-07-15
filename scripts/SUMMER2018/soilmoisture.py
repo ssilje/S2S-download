@@ -71,7 +71,7 @@ levels_cbar = np.linspace(-0.1,0.1,11)
 plot_title  = '2018 anomaly ' + dataopen_ymonmean.swvl1.long_name
 fname       = 'Soilmoisture_swvl1_2018_anom'
 label_text  = dataopen_ymonmean.swvl1.units
-
+cmap_reversed = plt.cm.get_cmap('seismic_r')
 im = varplot.plot(
   x               = 'lon',
   y               = 'lat',
@@ -80,7 +80,8 @@ im = varplot.plot(
   levels           = levels_plot,
   subplot_kws      = dict(projection=ccrs.PlateCarree()),
   transform        = ccrs.PlateCarree(),
-  cbar_kwargs      = {'label': label_text, 'ticks': levels_cbar}
+  cbar_kwargs      = {'label': label_text, 'ticks': levels_cbar},
+  cmap             = cmap_reversed,
         )
 
   
