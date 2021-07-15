@@ -56,7 +56,7 @@ grid_hindcast = Hindcast(
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=True,
+                        process=False,
                         download=False,
                         split_work=True
                     )
@@ -69,5 +69,57 @@ grid_observations = Observations(
                             forecast=grid_hindcast,
                             process=False
                             )
+
+
+
+stacked_era       = xh.assign_validation_time(grid_observations.data)
+stacked_era_a     = xh.assign_validation_time(grid_observations.data_a)
+stacked_era_mean  = xh.assign_validation_time(grid_observations.mean)
+stacked_era_std   = xh.assign_validation_time(grid_observations.std)
+
+hindcast          = xh.assign_validation_time(grid_hindcast.data)
+hindcast_a        = xh.assign_validation_time(grid_hindcast.data_a)
+hindcast_mean     = xh.assign_validation_time(grid_hindcast.mean)
+hindcast_std      = xh.assign_validation_time(grid_hindcast.std)
+
+forecast          = xh.assign_validation_time(grid_forecast.data)
+forecast_a        = forecast - hindcast_mean
+#forecast_a        = xh.assign_validation_time(grid_forecast.data_a)
+#forecast_mean     = xh.assign_validation_time(grid_forecast.mean)
+#forecast_std      = xh.assign_validation_time(grid_forecast.std)
+
+
+
+print('\tLoop through all steps')
+
+for lt in steps:
+
+    mod         = model.sel(step=pd.Timedelta(lt,'D'))
+    obs         = observations.sel(step=pd.Timedelta(lt,'D'))
+    cm          = xr.full_like(observations,0).sel(step=pd.Timedelta(lt,'D')) ## er null pga bruker anomalier
+    obs_random  = random_fc_a.sel(step=pd.Timedelta(lt,'D'))
+
+    era         = stacked_era.sel(step=pd.Timedelta(lt,'D'))
+    hc          = hindcast.sel(step=pd.Timedelta(lt,'D'))
+    
+   
+  
+    x_group     = list(mod.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
+    y_group     = list(obs.groupby(dim))
+    cm_group    = list(cm.groupby(dim))
+    yr_group    = list(obs_random.groupby(dim))
+
+    era_group   = list(era.groupby(dim))
+    hc_group    = list(hc.groupby(dim))
+  
+    mae         = []
+    c           = [] #lagar en ny xarray med score for kvar mnd
+    acc         = [] #lagar en ny xarray med ACC for kvar mnd
+    
+    era_tmp     = []
+    hc_tmp      = []    
+
+
+
 
 
