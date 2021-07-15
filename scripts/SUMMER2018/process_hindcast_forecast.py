@@ -35,7 +35,7 @@ high_res        = False
 steps           = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
 
 print('\tProcess Forecast')
-grid_hindcast = Forecast(
+grid_forecast = Forecast(
                         var,
                         t_start,
                         t_end,
@@ -61,41 +61,13 @@ grid_hindcast = Hindcast(
                         split_work=True
                     )
 
-
-dim             = 'validation_time.month'
-
-
-
-print('\tLoad ERA')
-if var == 'abs_wind':
-    era_u = ERA5(high_res=high_res)\
-                         .load('u10',clim_t_start,clim_t_end,bounds)['u10']
-
-    era_v = ERA5(high_res=high_res)\
-                        .load('v10',clim_t_start,clim_t_end,bounds)['v10']
-
-    era_u,era_v = xr.align(era_u,era_v)
-
-    era = xr.apply_ufunc(
-                    xh.absolute,era_u,era_v,
-                    input_core_dims  = [[],[]],
-                    output_core_dims = [[]],
-                    vectorize=True,dask='parallelized'
-                )
-
-    era = era.rename(var)
-
-else:
-
-    era = ERA5(high_res=high_res)\
+era = ERA5(high_res=high_res)\
                             .load(var,clim_t_start,clim_t_end,bounds)[var]
-
-
-
 grid_observations = Observations(
                             name='Era',
                             observations=era,
                             forecast=grid_hindcast,
                             process=False
                             )
+
 
