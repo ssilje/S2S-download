@@ -83,9 +83,20 @@ hindcast_std      = xh.assign_validation_time(grid_hindcast.std)
 
 forecast          = xh.assign_validation_time(grid_forecast.data)
 
-fc_group      = list(forecast.groupby('member'))
+fc_group_m          = list(forecast.groupby('member'))
+
+
+for n,(nn,fcdata_m) in enumerate(fc_group_m):
+    fc_group_m_t          = list(fcdata_m.groupby(dim)) 
+    for nm,(nnm,fcdata_m_t) in enumerate(fc_group_m_t):
+        print(nm)
+        print(fcdata_m_t.step)
+  
+  forecast_a        = fcdata - hindcast_mean.sel(time='2017')
+
+
 ## loop through each member to calculate the anomaly
-  forecast_a        = forecast - hindcast_mean
+  
 #forecast_a        = xh.assign_validation_time(grid_forecast.data_a)
 #forecast_mean     = xh.assign_validation_time(grid_forecast.mean)
 #forecast_std      = xh.assign_validation_time(grid_forecast.std)
