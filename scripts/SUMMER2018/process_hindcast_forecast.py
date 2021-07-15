@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from S2S.data_handler import ERA5
-from S2S.process import Hindcast, Observations
+from S2S.process import Hindcast, Observations, Forecast
+
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics
 from S2S import models
 import S2S.xarray_helpers    as xh
@@ -33,6 +34,19 @@ high_res        = False
 
 steps           = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
 
+print('\tProcess Forecast')
+grid_hindcast = Forecast(
+                        var,
+                        t_start,
+                        t_end,
+                        bounds,
+                        high_res=high_res,
+                        steps=steps,
+                        process=True,
+                        download=False,
+                        split_work=True
+                    )
+
 
 print('\tProcess Hindcast')
 grid_hindcast = Hindcast(
@@ -49,3 +63,39 @@ grid_hindcast = Hindcast(
 
 
 dim             = 'validation_time.month'
+
+
+
+print('\tLoad ERA')
+if var == 'abs_wind':
+    era_u = ERA5(high_res=high_res)\
+                         .load('u10',clim_t_start,clim_t_end,bounds)['u10']
+
+    era_v = ERA5(high_res=high_res)\
+                        .load('v10',clim_t_start,clim_t_end,bounds)['v10']
+
+    era_u,era_v = xr.align(era_u,era_v)
+
+    era = xr.apply_ufunc(
+                    xh.absolute,era_u,era_v,
+                    input_core_dims  = [[],[]],
+                    output_core_dims = [[]],
+                    vectorize=True,dask='parallelized'
+                )
+
+    era = era.rename(var)
+
+else:
+
+    era = ERA5(high_res=high_res)\
+                            .load(var,clim_t_start,clim_t_end,bounds)[var]
+
+
+
+grid_observations = Observations(
+                            name='Era',
+                            observations=era,
+                            forecast=grid_hindcast,
+                            process=False
+                            )
+
