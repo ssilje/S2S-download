@@ -64,10 +64,10 @@ print('Figure stored at: '+fname+'.png')
 ## Plotting 2018 anomaly
 
 varplot = dataopen_monmean.swvl1 
-levels_plot = np.linspace(round(np.nanmin(varplot)),round(np.nanmax(varplot)),21)
-levels_cbar = np.linspace(round(np.nanmin(varplot)),round(np.nanmax(varplot)),11)
-#levels_plot = np.linspace(0.2,0.6,21)
-#levels_cbar = np.linspace(0.2,0.6,11)
+#levels_plot = np.linspace(np.nanmin(varplot),np.nanmax(varplot),21)
+#levels_cbar = np.linspace(np.nanmin(varplot),np.nanmax(varplot),11)
+levels_plot = np.linspace(-0.1,0.1,21)
+levels_cbar = np.linspace(-0.1,0.1,11)
 plot_title  = '2018 anomaly ' + dataopen_ymonmean.swvl1.long_name
 fname       = 'Soilmoisture_swvl1_2018_anom'
 label_text  = dataopen_ymonmean.swvl1.units
