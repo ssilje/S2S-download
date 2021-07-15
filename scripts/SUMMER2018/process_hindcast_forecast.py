@@ -21,7 +21,6 @@ bounds          = (0,28,55,75)
 
 var             = 't2m'
 clabel          = 'K'
-#var             = 'abs_wind'
 t_start         = (2018,3,1)
 t_end           = (2018,9,24)
 
@@ -33,7 +32,7 @@ clim_t_end      = (2019,12,31)
 high_res        = False
 
 steps           = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
-
+dim             = 'validation_time.month'
 print('\tProcess Forecast')
 grid_forecast = Forecast(
                         var,
@@ -56,7 +55,7 @@ grid_hindcast = Hindcast(
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=False,
+                        process=True,
                         download=False,
                         split_work=True
                     )
@@ -94,32 +93,18 @@ print('\tLoop through all steps')
 
 for lt in steps:
 
-    mod         = model.sel(step=pd.Timedelta(lt,'D'))
-    obs         = observations.sel(step=pd.Timedelta(lt,'D'))
-    cm          = xr.full_like(observations,0).sel(step=pd.Timedelta(lt,'D')) ## er null pga bruker anomalier
-    obs_random  = random_fc_a.sel(step=pd.Timedelta(lt,'D'))
-
-    era         = stacked_era.sel(step=pd.Timedelta(lt,'D'))
-    hc          = hindcast.sel(step=pd.Timedelta(lt,'D'))
+    fc_a          = forecast_a.sel(step=pd.Timedelta(lt,'D'))
+    era_a         = stacked_era_a.sel(step=pd.Timedelta(lt,'D'))
+    hc_c          = hindcast_a.sel(step=pd.Timedelta(lt,'D'))
+    
     
    
   
-    x_group     = list(mod.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
-    y_group     = list(obs.groupby(dim))
-    cm_group    = list(cm.groupby(dim))
-    yr_group    = list(obs_random.groupby(dim))
-
-    era_group   = list(era.groupby(dim))
-    hc_group    = list(hc.groupby(dim))
-  
-    mae         = []
-    c           = [] #lagar en ny xarray med score for kvar mnd
-    acc         = [] #lagar en ny xarray med ACC for kvar mnd
+    fc_group      = list(fc_a.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
+    era_group     = list(era_a.groupby(dim))
+    hc_group      = list(hc_c.groupby(dim))
     
-    era_tmp     = []
-    hc_tmp      = []    
-
-
+   
 
 
 
