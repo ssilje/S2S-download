@@ -13,8 +13,8 @@ from S2S.local_configuration import config
 
 dir = '/nird/projects/NS9001K/sso102/SOILMOISTURE/'
 
-file_monmean = 'ERA_soilmoisture_eur_2018_monmean_anom.nc'
-file_ymonmean = 'ERA_soilmoisture_eur_1999_2019_ymonmean.nc'
+file_monmean = 'ERA_soilmoisture_EUROPE_2018_monanom.nc'
+file_ymonmean = 'ERA_soilmoisture_EUROPE_1999_2019_ymonmean.nc'
 
 dataopen_monmean = xr.open_dataset(dir + file_monmean)
 dataopen_ymonmean = xr.open_dataset(dir + file_ymonmean)

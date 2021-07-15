@@ -163,7 +163,9 @@ class Forecast:
                 self.data = xr.concat(data_list,'time')
 
                 # deal with duplicates along time dimesion
-                self.data = self.data.groupby('time').mean()
+                print(self.data.shape)
+                print(self.data.dims)
+                #self.data = self.data.groupby('time').mean()
 
                 # restore original times of loading
                 self.t_start = t_start
