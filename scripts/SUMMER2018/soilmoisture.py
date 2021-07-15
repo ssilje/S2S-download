@@ -30,7 +30,7 @@ varplot = dataopen_ymonmean.swvl1
 #levels_cbar = np.linspace(round(np.nanmin(dataopen_ymonmean.swvl1)),round(np.nanmax(dataopen_ymonmean.swvl1)),11)
 levels_plot = np.linspace(0.2,0.6,21)
 levels_cbar = np.linspace(0.2,0.6,11)
-plot_title  = 'Climatology (1999-2019) ' dataopen_ymonmean.swvl1.long_name 
+plot_title  = 'Climatology (1999-2019) ' + dataopen_ymonmean.swvl1.long_name 
 fname       = 'Soilmoisture_swvl1'
 label_text  = dataopen_ymonmean.swvl1.units
 
@@ -68,8 +68,8 @@ levels_plot = np.linspace(round(np.nanmin(varplot)),round(np.nanmax(varplot)),21
 levels_cbar = np.linspace(round(np.nanmin(varplot)),round(np.nanmax(varplot)),11)
 #levels_plot = np.linspace(0.2,0.6,21)
 #levels_cbar = np.linspace(0.2,0.6,11)
-plot_title  = '2018 anomaly ' dataopen_ymonmean.swvl1.long_name
-fname       = 'Soilmoisture_swvl1'
+plot_title  = '2018 anomaly ' + dataopen_ymonmean.swvl1.long_name
+fname       = 'Soilmoisture_swvl1_2018_anom'
 label_text  = dataopen_ymonmean.swvl1.units
 
 im = varplot.plot(
