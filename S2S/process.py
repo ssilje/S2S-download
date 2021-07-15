@@ -282,7 +282,7 @@ class Forecast:
                             dt.to_datetime(self.t_start).strftime('%Y-%m-%d'),
                             dt.to_datetime(self.t_end).strftime('%Y-%m-%d'),
                             '%s_%s-%s_%s'%(self.bounds),
-                            'hindcast'
+                            'forecast'
                         ]
                     ) + '.nc'
 
