@@ -621,12 +621,12 @@ class Observations:
         self.process        = process
         
         try:
-            var_name = forecast.data.name
+            self.var = forecast.data.name
             
         except AttributeError:
             pass
         try:
-            var_name = forecast.name
+            self.var = forecast.name
         except AttributeError:
             pass    
         #self.var            = forecast.data.name
