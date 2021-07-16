@@ -384,7 +384,7 @@ class LoadLocal:
                             'lon','lat'
                             ).to_netcdf(self.out_path+self.out_filename)
                 
-            else: # TODO make option for forecast
+            else: # TODO make option for forecast --> check if above is OK
 
                 data.to_netcdf(self.out_path+self.out_filename)
 
