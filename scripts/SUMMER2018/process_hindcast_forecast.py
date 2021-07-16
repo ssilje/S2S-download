@@ -42,7 +42,7 @@ grid_forecast = Forecast(
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=True,
+                        process=False,
                         download=False,
                         split_work=True
                     )
@@ -56,18 +56,35 @@ grid_hindcast = Hindcast(
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=True,
+                        process=False,
                         download=False,
                         split_work=True
                     )
+
+grid_hindcast = Hindcast(
+                        var,
+                        t_start,
+                        t_end,
+                        bounds,
+                        high_res=high_res,
+                        steps=steps,
+                        process=False,
+                        download=False,
+                        split_work=True
+                    )
+hc_fc = []
+hc_fc.append(grid_forecast.data)
+hc_fc.append(grid_hindcast.data)
+hindcast_full = xr.concat(hc_fc,dim='time') ## stacking the data along month dimension
+hindcast_full = hindcast_full.rename(var)
 
 era = ERA5(high_res=high_res)\
                             .load(var,clim_t_start,clim_t_end,bounds)[var]
 grid_observations = Observations(
                             name='Era',
                             observations=era,
-                            forecast=grid_hindcast,
-                            process=False
+                            forecast=hindcast_full,
+                            process=True
                             )
 
 
