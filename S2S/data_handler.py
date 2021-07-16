@@ -378,17 +378,16 @@ class LoadLocal:
                             'member','step','time',
                             'lon','lat'
                             ).to_netcdf(self.out_path+self.out_filename)
-<<<<<<< HEAD
-            elif self.label=='S2SF':
-=======
+
+
             elif self.label=='S2SF': ## need to check if OK
->>>>>>> 10c12c6ef98748936f6e457dfcd7b777375e74b1
+
                 data.transpose(
                             'member','step','time',
                             'lon','lat'
                             ).to_netcdf(self.out_path+self.out_filename)
                 
-            else: # TODO make option for forecast
+            else:
 
                 data.to_netcdf(self.out_path+self.out_filename)
 
