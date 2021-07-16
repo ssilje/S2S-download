@@ -728,7 +728,8 @@ class Observations:
             init_obs_a = ( self.observations - init_mean ) / init_std
 
             init_obs_a = init_obs_a.reindex(
-                            {'time':forecast.data.time},
+                           # {'time':forecast.data.time},
+                            {'time':forecast.time},
                             method='pad',
                             tolerance='7D'
                         ).broadcast_like(self.data)
