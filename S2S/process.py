@@ -619,15 +619,17 @@ class Observations:
         self.observations   = observations.sortby('time')
         self.forecast       = forecast
         self.process        = process
+        
         try:
             var_name = hindcast_full.data.name
-            except AttributeError:
-                pass
+            
+        except AttributeError:
+            pass
         try:
             var_name = hindcast_full.name
-            except AttributeError:
-                pass    
-        self.var            = forecast.data.name
+        except AttributeError:
+            pass    
+        #self.var            = forecast.data.name
         self.path           = config['VALID_DB']
 
         self.forecast.data  = self.forecast.data.sortby(['time','step'])
