@@ -631,8 +631,19 @@ class Observations:
             pass    
         #self.var            = forecast.data.name
         self.path           = config['VALID_DB']
+        
+        try: 
 
-        self.forecast.data  = self.forecast.data.sortby(['time','step'])
+            self.forecast.data  = self.forecast.data.sortby(['time','step'])
+        except AttributeError:
+            pass
+        
+        try: 
+
+            self.forecast.data  = self.forecast.sortby(['time','step'])
+        except AttributeError:
+            pass
+        
 
         self.t_start        = (
                                 observations.time.min().dt.year.values,
