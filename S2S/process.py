@@ -644,6 +644,7 @@ class Observations:
         except AttributeError:
             pass
         
+        print(self.forecast.data.dims)
 
         self.t_start        = (
                                 observations.time.min().dt.year.values,
