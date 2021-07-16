@@ -31,8 +31,9 @@ clim_t_end      = (2019,12,31)
 
 high_res        = False
 
-steps           = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
-dim             = 'validation_time.month'
+#steps           = pd.to_timedelta([7, 14, 21, 28, 35, 42],'D')
+steps           = pd.to_timedelta(np.linspace(1,46,46),'D')
+
 print('\tProcess Forecast')
 grid_forecast = Forecast(
                         var,
@@ -83,14 +84,34 @@ hindcast_std      = xh.assign_validation_time(grid_hindcast.std)
 
 forecast          = xh.assign_validation_time(grid_forecast.data)
 
-fc_group_m          = list(forecast.groupby('member'))
+fc_member          = list(forecast.groupby('member'))
 
 
-for n,(nn,fcdata_m) in enumerate(fc_group_m):
-    fc_group_m_t          = list(fcdata_m.groupby(dim)) 
+for n,(nn,fcdata_m) in enumerate(fc_member): # loop through each member
+  
+  
+    for lt in steps:
+      
+        fcdata_steps        = fcdata_m.sel(step=pd.Timedelta(lt,'D')) #loop through each month
+        hc_steps            = hindcast_mean.sel(step=pd.Timedelta(lt,'D'))
+        
+        dim                 = 'validation_time.month'
+        x_group             = list(fcdata_steps.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
+        y_group             = list(hc_steps.groupby(dim))
+        
+        for m,(mm,xdata) in enumerate(x_group): # loop through each member
+            mm_y,ydata          = y_group[m]
+            
+            dim                 = 'validation_time.day'
+            x_group_day             = list(xdata.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
+            y_group_day             = list(ydata.groupby(dim))
+
+    
+    
+    fc_group_m_t          = list(fcdata_m.groupby(dim)) #loop through each month
     for nm,(nnm,fcdata_m_t) in enumerate(fc_group_m_t):
         print(nm)
-        print(fcdata_m_t.step)
+        print(fcdata_m_t.dims)
   
   forecast_a        = fcdata - hindcast_mean.sel(time='2017')
 
