@@ -621,12 +621,12 @@ class Observations:
         self.process        = process
         
         try:
-            var_name = hindcast_full.data.name
+            var_name = forecast.data.name
             
         except AttributeError:
             pass
         try:
-            var_name = hindcast_full.name
+            var_name = forecast.name
         except AttributeError:
             pass    
         #self.var            = forecast.data.name
