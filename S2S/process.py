@@ -7,18 +7,15 @@ import os
 import scipy.stats as stats
 
 from S2S.local_configuration import config
-from S2S.data_handler        import BarentsWatch, ERA5, ECMWF_S2SH, Archive, ECMWF_S2SF
+from S2S.data_handler        import BarentsWatch, ERA5, ECMWF_S2SH, Archive
 
 import S2S.xarray_helpers    as xh
 import S2S.models            as models
 import S2S.handle_datetime   as dt
 
-
-
 class Hindcast:
     """
     Loads hindcast from S2S database, computes weekly means and then provides
-
         self.data:      the absolute values of the hindcast (xarray.DataArray)
         self.data_a:    the anomlies of the data relative to model climatology
                         (xarray.DataArray)
@@ -26,9 +23,7 @@ class Hindcast:
                         (xarray.DataArray)
         self.std:       the model std climatology (over 30-day running window)
                         (xarray.DataArray)
-
     Arguments to __init__
-
         var:        the name of the variable, should correspond to filenames in
                     the S2S database (string)
         t_start:    start time of files to load (tuple of int; (year,monty,day))
@@ -296,7 +291,6 @@ class Observations:
     Stacks observations along step (lead time) dimension to match forecast
     for matrix operations. Further computes climatology using a 30-day running
     window with cross validation (leaving out the current year). Produces:
-
         self.data:      the absolute values of the observations
                         (xarray.DataArray)
         self.data_a:    the anomalies of the data relative to climatology
@@ -308,9 +302,7 @@ class Observations:
         self.init_a     the observed value at forecast initialization time,
                         stacked along step (lead time) dimension. Given as
                         anomlies.
-
     Arguments to __init__
-
         name:           name of the observation data, to create temporary files
         observations:   xarray.DataArray with required dimension time. Must
                         be seven day means.
@@ -450,12 +442,9 @@ class Grid2Point:
     with corresponding dimensions to observations.
     The routine selects the highest correlated (Pearson) gridpoint to represent
     each dimension in observations, respectively.
-
     Arguments to __init__
-
         observations:   process.Observations like object
         forecast:       process.Hindcast like object
-
         Note:
             - observations and forecast must have common dimensions:
             time and step
@@ -472,11 +461,9 @@ class Grid2Point:
         Returns a forecast (process.Hindcast like) with corresponding dimensions
         to observations. The routine selects the highest correlated (Pearson)
         gridpoint to represent each dimension in observations, respectively.
-
         args:
             step_dependent: if True, correlation is done respectively of each
                             step (lead time). Default is False.
-
         returns:
             process.Hindcast like object with 'regridded' to dimensions of
             observations, additional to time and step.
