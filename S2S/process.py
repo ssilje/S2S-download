@@ -143,6 +143,7 @@ class Forecast:
 
                         print('\tApply 7D running mean along lead time dimension')
                         data = raw.rolling(step=7,center=True).mean()
+                        
 
                         if self.steps is not None:
                             print('\tKeep only specified lead times')
@@ -177,7 +178,8 @@ class Forecast:
                 self.raw = self.load_data()
 
                 print('\tApply 7D running mean along lead time dimension')
-                self.data = self.raw.rolling(step=7,center=True).mean()
+                #self.data = self.raw.rolling(step=7,center=True).mean()
+                self.data = self.raw
 
                 if self.steps is not None:
                     print('\tKeep only specified lead times')
@@ -462,7 +464,8 @@ class Hindcast:
                 self.raw = self.load_data()
 
                 print('\tApply 7D running mean along lead time dimension')
-                self.data = self.raw.rolling(step=7,center=True).mean()
+                #self.data = self.raw.rolling(step=7,center=True).mean()
+                self.data = self.raw
 
                 if self.steps is not None:
                     print('\tKeep only specified lead times')
