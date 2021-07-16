@@ -644,7 +644,7 @@ class Observations:
         except AttributeError:
             pass
         
-        print(self.forecast.data)
+        #print(self.forecast.data)
 
         self.t_start        = (
                                 observations.time.min().dt.year.values,
@@ -666,9 +666,11 @@ class Observations:
                 os.makedirs(self.path)
 
             print('\tAssign step dimension to observations')
+             
             self.data = xh.at_validation(
                                         self.observations,
-                                        forecast.data.time + forecast.data.step,
+                                        #forecast.data.time + forecast.data.step,
+                                        forecast.time + forecast.step,
                                         ddays=1
                                         )
 
