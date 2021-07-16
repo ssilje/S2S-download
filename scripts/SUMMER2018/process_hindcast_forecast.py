@@ -61,17 +61,7 @@ grid_hindcast = Hindcast(
                         split_work=True
                     )
 
-grid_hindcast = Hindcast(
-                        var,
-                        t_start,
-                        t_end,
-                        bounds,
-                        high_res=high_res,
-                        steps=steps,
-                        process=False,
-                        download=False,
-                        split_work=True
-                    )
+
 hc_fc = []
 hc_fc.append(grid_forecast.data)
 hc_fc.append(grid_hindcast.data)
@@ -89,39 +79,41 @@ grid_observations = Observations(
 
 
 
-stacked_era       = xh.assign_validation_time(grid_observations.data)
-stacked_era_a     = xh.assign_validation_time(grid_observations.data_a)
-stacked_era_mean  = xh.assign_validation_time(grid_observations.mean)
-stacked_era_std   = xh.assign_validation_time(grid_observations.std)
-
-hindcast          = xh.assign_validation_time(grid_hindcast.data)
-hindcast_a        = xh.assign_validation_time(grid_hindcast.data_a)
-hindcast_mean     = xh.assign_validation_time(grid_hindcast.mean)
-hindcast_std      = xh.assign_validation_time(grid_hindcast.std)
-
-forecast          = xh.assign_validation_time(grid_forecast.data)
-
-fc_member          = list(forecast.groupby('member'))
+reanalysis         = xh.assign_validation_time(grid_observations.data)
 
 
-for n,(nn,fcdata_m) in enumerate(fc_member): # loop through each member
+hindcast           = xh.assign_validation_time(grid_hindcast.data)
+
+
+forecast           = xh.assign_validation_time(grid_forecast.data)
+
+#fc_member          = list(forecast.groupby('member'))
+
+
+#for n,(nn,fcdata_m) in enumerate(fc_member): # loop through each member
   
-  
-    for lt in steps:
-      
-        fcdata_steps        = fcdata_m.sel(step=pd.Timedelta(lt,'D')) #loop through each month
-        hc_steps            = hindcast_mean.sel(step=pd.Timedelta(lt,'D'))
+for lt in steps:
+      fc_steps          = forecast.sel(step=pd.Timedelta(lt,'D')) #loop through each month
+      hc_steps          = hindcast.sel(step=pd.Timedelta(lt,'D'))
         
-        dim                 = 'validation_time.month'
-        x_group             = list(fcdata_steps.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
-        y_group             = list(hc_steps.groupby(dim))
+      dim               = 'validation_time.month'
+      fc_group          = list(fc_steps.groupby(dim)) 
+      hc_group          = list(hc_steps.groupby(dim))
         
-        for m,(mm,xdata) in enumerate(x_group): # loop through each member
-            mm_y,ydata          = y_group[m]
+      for m,(mf,fcdata) in enumerate(fc_group): #loop through each month
+          mh,hcdata          = hc_group[m]
             
-            dim                 = 'validation_time.day'
-            x_group_day             = list(xdata.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
-            y_group_day             = list(ydata.groupby(dim))
+          dim                 = 'validation_time.day'
+          fc_group_day        = list(fcdata.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
+          hc_group_day        = list(hcdata.groupby(dim))
+          
+          for mm,(mmf,fcdata_m) in enumerate(fc_group_day): #loop through each month
+              mmh,hcdata_m          = hc_group_day[mm]
+              
+              for 
+              
+              hcdata_m.mean('time').mean('member') - fcdata_m.mean('member')
+          
 
     
     
