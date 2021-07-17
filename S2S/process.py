@@ -688,6 +688,184 @@ class Observations:
     def load(self,filename):
         return xr.open_dataset(self.path+filename)[self.var]
 
+class Observations_hcfc:
+    """
+    Stacks observations along step (lead time) dimension to match forecast
+    for matrix operations. Further computes climatology using a 30-day running
+    window with cross validation (leaving out the current year). Produces:
+        self.data:      the absolute values of the observations
+                        (xarray.DataArray)
+        self.data_a:    the anomalies of the data relative to climatology
+                        (xarray.DataArray)
+        self.mean:      the mean climatology (over 30-day running window)
+                        (xarray.DataArray)
+        self.std:       the std climatology (over 30-day running window)
+                        (xarray.DataArray)
+        self.init_a     the observed value at forecast initialization time,
+                        stacked along step (lead time) dimension. Given as
+                        anomlies.
+    Arguments to __init__
+        name:           name of the observation data, to create temporary files
+        observations:   xarray.DataArray with required dimension time. Must
+                        be seven day means.
+        forecast:       process.Hindcast like object. Assimilates the
+                        observations to the attributes of this input.
+        process:        Forces data processing even if temporary files are
+                        found. Temporary file names are not so flexible at the
+                        moment, can be smart to keep this option on if input
+                        observations are changed.
+    """
+    def __init__(
+                    self,
+                    name,
+                    observations,
+                    forecast,
+                    process=False
+                ):
+
+        self.name           = name
+        self.observations   = observations.sortby('time')
+        self.forecast       = forecast
+        self.process        = process
+        
+        try:
+            self.var = forecast.data.name
+            
+        except AttributeError:
+            pass
+        try:
+            self.var = forecast.name
+        except AttributeError:
+            pass    
+        #self.var            = forecast.data.name
+        self.path           = config['VALID_DB']
+        
+        try: 
+
+            self.forecast.data  = self.forecast.data.sortby(['time','step'])
+        except AttributeError:
+            pass
+        
+        try: 
+
+            self.forecast.data  = self.forecast.sortby(['time','step'])
+        except AttributeError:
+            pass
+        
+        #print(self.forecast.data)
+
+        self.t_start        = (
+                                observations.time.min().dt.year.values,
+                                observations.time.min().dt.month.values,
+                                observations.time.min().dt.day.values
+                            )
+        self.t_end          = (
+                                observations.time.max().dt.year.values,
+                                observations.time.max().dt.month.values,
+                                observations.time.max().dt.day.values
+                            )
+
+        filename_absolute = self.filename_func('absolute_' + self.var)
+
+        if self.process or not os.path.exists(self.path+filename_absolute):
+
+            print('Process observations')
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
+
+            print('\tAssign step dimension to observations')
+             
+            self.data = xh.at_validation(
+                                        self.observations,
+                                        #forecast.data.time + forecast.data.step,
+                                        forecast.time + forecast.step,
+                                        ddays=1
+                                        )
+
+            self.data = self.data.rename(self.var)
+            self.data = self.data.drop('validation_time')
+
+            self.store(self.data,filename_absolute)
+
+        self.data = self.load(filename_absolute)
+
+        filename_anomalies = self.filename_func('anomalies_' + self.var)
+        filename_mean      = self.filename_func('obs_mean_'  + self.var)
+        filename_std       = self.filename_func('obs_std_' + self.var)
+
+        if self.process or not os.path.exists(self.path+filename_anomalies):
+
+            print('\tCompute climatology')
+            self.mean,self.std = xh.o_climatology(self.data)
+
+            self.mean = self.mean.rename(self.var)
+            self.std  = self.std.rename(self.var)
+
+            self.data_a = ( self.data - self.mean ) / self.std
+
+            self.store(self.data_a,filename_anomalies)
+            self.store(self.mean,  filename_mean)
+            self.store(self.std,   filename_std)
+
+        self.data_a = self.load(filename_anomalies)
+        self.mean   = self.load(filename_mean)
+        self.std    = self.load(filename_std)
+
+        filename_init = self.filename_func('init_' + self.var)
+
+        if self.process or not os.path.exists(self.path+filename_init):
+
+            print('\tGather observations at model initalization')
+            init_mean,init_std = xh.o_climatology(self.observations)
+
+            init_mean = init_mean.rename(self.var)
+            init_std  = init_std.rename(self.var)
+
+            ####################################################################
+            # Deals with duplicates along time dimensions (can occur in
+            # stacking - restacking occuring o_climatology, does occur for ERA)
+            _,c = np.unique(init_mean.time.values, return_counts=True)
+            if len(c[c>1])>0:
+                init_mean = init_mean.groupby('time').mean(skipna=True)
+
+            _,c = np.unique(init_std.time.values, return_counts=True)
+            if len(c[c>1])>0:
+                init_std = init_std.groupby('time').mean(skipna=True)
+            ####################################################################
+
+            init_obs_a = ( self.observations - init_mean ) / init_std
+
+            init_obs_a = init_obs_a.reindex(
+                           # {'time':forecast.data.time},
+                            {'time':forecast.time},
+                            method='pad',
+                            tolerance='7D'
+                        ).broadcast_like(self.data)
+
+            self.store(init_obs_a,filename_init)
+
+        self.init_a = self.load(filename_init)
+
+    def filename_func(self,filename):
+        return '_'.join(
+                        [
+                            self.name,
+                            filename,
+                            dt.to_datetime(self.t_start).strftime('%Y-%m-%d'),
+                            dt.to_datetime(self.t_end).strftime('%Y-%m-%d'),
+                            'observations'
+                        ]
+                    ) + '.nc'
+
+    def store(self,file,filename):
+        file.to_netcdf(self.path+filename)
+
+    def load(self,filename):
+        return xr.open_dataset(self.path+filename)[self.var]
+
+    
+    
+    
 class Grid2Point:
     """
     Class rountine correlation() returns a forecast (process.Hindcast like)
