@@ -106,6 +106,8 @@ class Forecast:
 
                         print('\tApply 7D running mean along lead time dimension')
                         data = raw.rolling(step=7,center=True).mean()
+                        print(data.dims)
+                        print(data.shape)
 
                         if self.steps is not None:
                             print('\tKeep only specified lead times')
@@ -126,7 +128,10 @@ class Forecast:
                 self.data = xr.concat(data_list,'time')
 
                 # deal with duplicates along time dimesion
-                self.data = self.data.groupby('time').mean()
+                #self.data = self.data.groupby('time').mean()
+                print(self.data.dims)
+                print(self.data.shape)
+                self.data = self.data
 
                 # restore original times of loading
                 self.t_start = t_start
