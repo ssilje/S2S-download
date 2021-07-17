@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from S2S.data_handler import ERA5
-from S2S.process import Hindcast, Observations, Forecast
+from S2S.process import Hindcast, Observations, Forecast, Observations_hcfc
 
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics
 from S2S import models
