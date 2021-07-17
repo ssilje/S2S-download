@@ -163,9 +163,9 @@ for lt in steps:
             
             hcc = []
             for ensm in range(0,11,1):
-                hc_anom = hcdata_m.mean('time').mean('member') - hcdata_m.sel(member=ensm)
-                  
-                hcc.append(hc_anom)
+                hc_anom = hcdata_m.mean('time').mean('member') - hcdata_m.mean('time').sel(member=ensm) # sjekk om man bør ta mean over ens istaden og beholde kvart år
+                hc_anom = hc_anom.assign_coords(time=fcc_member.time[0].values)  
+                hc_anom = hcc.append(hc_anom)
             hcc_member = xr.concat(hcc,dim='member')    
             hcc_day.append(hcc_member)
             
@@ -195,6 +195,23 @@ for lt in steps:
 era_anom = xr.concat(re_step,dim='step')    
 forecast_anom = xr.concat(fcc_step,dim='step')
 hindcast_anom = xr.concat(hcc_step,dim='step') 
+
+
+
+era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(time='2018-04').sel(step='14 days').drop('time').to_dataframe()
+fig, ax = plt.subplots(figsize = (12,6))
+
+fig = sns.scatterplot(data=era_sel,
+                      x="validation_time",
+                      y="t2m", 
+                      ax = ax)
+
+x_dates = era_sel['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+
+ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+plt.savefig('test.png',dpi='figure',bbox_inches='tight')
+
+
 
 
 
