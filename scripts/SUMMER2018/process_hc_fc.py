@@ -53,6 +53,7 @@ grid_forecast = Forecast(
                         t_end,
                         bounds,
                         high_res=high_res,
+                        steps=steps,
                         process=False,
                         download=False,
                         split_work=False
@@ -99,7 +100,7 @@ grid_observations = Observations_hcfc(
                             name='Era',
                             observations=era,
                             forecast=hindcast_full,
-                            process=True
+                            process=False
                             )
 
 
@@ -191,9 +192,34 @@ for lt in steps:
     
     
     
-    
+era_anom = xr.concat(re_step,dim='step')    
 forecast_anom = xr.concat(fcc_step,dim='step')
 hindcast_anom = xr.concat(hcc_step,dim='step') 
+
+
+
+
+## 
+era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(step='14 days')
+era_sel.plot(
+x=validation_time)
+era_sel.plot(
+x='validation_time')
+plt.savefig('test.png',dpi='figure',bbox_inches='tight')
+era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(step='14 days').sel(validation_time = 2018)
+era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(step='14 days').sel(time = 2018)
+era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(step='14 days').sel(time = '2018')
+era_sel
+era_sel.plot(
+x='validation_time')
+plt.savefig('test.png',dpi='figure',bbox_inches='tight')
+ plt.close()
+era_sel.plot(
+x='validation_time')
+plt.savefig('test.png',dpi='figure',bbox_inches='tight')
+
+
+
       
                  # fc_anom=fc_anom.assign_coords(time_month=xlabel)
           
