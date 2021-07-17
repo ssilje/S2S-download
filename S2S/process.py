@@ -132,24 +132,24 @@ class Forecast:
                 self.t_start = t_start
                 self.t_end   = t_end
 
-           else:
+            else:
 
-               print('\tLoad forecast')
-               self.raw = self.load_data()
+                print('\tLoad forecast')
+                self.raw = self.load_data()
+ 
+                print('\tApply 7D running mean along lead time dimension')
+                self.data = self.raw.rolling(step=7,center=True).mean()
 
-               print('\tApply 7D running mean along lead time dimension')
-               self.data = self.raw.rolling(step=7,center=True).mean()
+                if self.steps is not None:
+                    print('\tKeep only specified lead times')
+                    self.data = self.data.where(
+                                            self.data.step.isin(self.steps),
+                                            drop=True
+                                        )
 
-               if self.steps is not None:
-                   print('\tKeep only specified lead times')
-                   self.data = self.data.where(
-                                           self.data.step.isin(self.steps),
-                                           drop=True
-                                       )
+            self.data = self.drop_unwanted_dimensions(self.data)
 
-           self.data = self.drop_unwanted_dimensions(self.data)
-
-           self.store(self.data,filename_absolute)
+            self.store(self.data,filename_absolute)
 
         self.data = self.load(filename_absolute)
 
