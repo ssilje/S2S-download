@@ -155,7 +155,7 @@ for lt in steps:
              
             fcc = []
             for ensm in range(0,51,1):
-                fc_anom = hcdata_m.mean('time').mean('member') - fcdata_m.sel(member=ensm)
+                fc_anom = fcdata_m.sel(member=ensm) - hcdata_m.mean('time').mean('member')  
                   
                 fcc.append(fc_anom)
             fcc_member = xr.concat(fcc,dim='member')    
@@ -163,13 +163,13 @@ for lt in steps:
             
             hcc = []
             for ensm in range(0,11,1):
-                hc_anom = hcdata_m.mean('time').mean('member') - hcdata_m.mean('time').sel(member=ensm) # sjekk om man bør ta mean over ens istaden og beholde kvart år
+                hc_anom = hcdata_m.mean('time').sel(member=ensm) - hcdata_m.mean('time').mean('member')  # sjekk om man bør ta mean over ens istaden og beholde kvart år
                 hc_anom = hc_anom.assign_coords(time=fcc_member.time[0].values)  
                 hc_anom = hcc.append(hc_anom)
             hcc_member = xr.concat(hcc,dim='member')    
             hcc_day.append(hcc_member)
             
-            re_anom = redata_m.mean('time') - redata_m
+            re_anom = redata_m - redata_m.mean('time')  
             rcc_day.append(re_anom)
             
         fcc_member_day = xr.concat(fcc_day,dim='time')
@@ -205,15 +205,116 @@ forecast_anom_sel = forecast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(ste
 forecast_anom_sel = forecast_anom_sel.mean('lon').mean('lat').drop('step')
 forecast_anom_df = forecast_anom_sel.to_dataframe().reset_index(level =1,drop=True).reset_index(level=0)
 
+hindcast_anom_sel = hindcast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='14 days')
+hindcast_anom_sel = hindcast_anom_sel.mean('lon').mean('lat').drop('step')
+hindcast_anom_df = hindcast_anom_sel.to_dataframe().reset_index(level =0,drop=True).reset_index(level=0)
+
+pieces = {"fc": forecast_anom_df, "hc": hindcast_anom_df}
+result = pd.concat(pieces)
+test = result.reset_index(level=0)
+
+plt.close()
+fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
+ax = sns.boxplot(x="validation_time", y="t2m", data=test,hue='level_0', ax=axes)
+x_dates = test['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+plt.savefig('fc_hc_test_step14.png',dpi='figure',bbox_inches='tight')
+####
+
+forecast_anom_sel = forecast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='7 days')
+forecast_anom_sel = forecast_anom_sel.mean('lon').mean('lat').drop('step')
+forecast_anom_df = forecast_anom_sel.to_dataframe().reset_index(level =1,drop=True).reset_index(level=0)
+
+hindcast_anom_sel = hindcast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='7 days')
+hindcast_anom_sel = hindcast_anom_sel.mean('lon').mean('lat').drop('step')
+hindcast_anom_df = hindcast_anom_sel.to_dataframe().reset_index(level =0,drop=True).reset_index(level=0)
+
+pieces = {"fc": forecast_anom_df, "hc": hindcast_anom_df}
+result = pd.concat(pieces)
+test = result.reset_index(level=0)
+
+plt.close()
+fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
+ax = sns.boxplot(x="validation_time", y="t2m", data=test,hue='level_0', ax=axes)
+x_dates = test['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+plt.savefig('fc_hc_test_step7.png',dpi='figure',bbox_inches='tight')
+
+
+####
+
+forecast_anom_sel = forecast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='21 days')
+forecast_anom_sel = forecast_anom_sel.mean('lon').mean('lat').drop('step')
+forecast_anom_df = forecast_anom_sel.to_dataframe().reset_index(level =1,drop=True).reset_index(level=0)
+
+hindcast_anom_sel = hindcast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='21 days')
+hindcast_anom_sel = hindcast_anom_sel.mean('lon').mean('lat').drop('step')
+hindcast_anom_df = hindcast_anom_sel.to_dataframe().reset_index(level =0,drop=True).reset_index(level=0)
+
+pieces = {"fc": forecast_anom_df, "hc": hindcast_anom_df}
+result = pd.concat(pieces)
+test = result.reset_index(level=0)
+
+plt.close()
+fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
+ax = sns.boxplot(x="validation_time", y="t2m", data=test,hue='level_0', ax=axes)
+x_dates = test['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+plt.savefig('fc_hc_test_step21.png',dpi='figure',bbox_inches='tight')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+anom_df = forecast_anom_df.rename(columns={'t2m':'fc-t2m'})
+anom_df = hindcast_anom_df.rename(columns={'t2m':'hc-t2m'})
+
+#pd.concat([anom_df,hindcast_anom_df.rename(columns={'t2m':'hc_t2m'})])
+##anom_df.append(hc_anom,sort=False)
+
+#pieces = {"fc": anom_df, "hc": hc_anom}
+#result = pd.concat(pieces)
+
 
 ax = sns.boxplot(x="validation_time", y="t2m", data=forecast_anom_df, linewidth=2.5)
 x_dates = forecast_anom_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
 ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
 plt.savefig('fc_step14.png',dpi='figure',bbox_inches='tight')
 
-hindcast_anom_sel = hindcast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='14 days')
-hindcast_anom_sel = hindcast_anom_sel.mean('lon').mean('lat').drop('step')
-hindcast_anom_df = hindcast_anom_sel.to_dataframe().reset_index(level =1,drop=True).reset_index(level=0)
+
 
 ax = sns.boxplot(x="validation_time", y="t2m", data=hindcast_anom_df, linewidth=2.5)
 x_dates = hindcast_anom_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
