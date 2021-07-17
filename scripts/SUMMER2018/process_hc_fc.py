@@ -53,9 +53,9 @@ grid_forecast = Forecast(
                         t_end,
                         bounds,
                         high_res=high_res,
-                        process=True,
+                        process=False,
                         download=False,
-                        split_work=True
+                        split_work=False
                     )
 
 
@@ -79,9 +79,10 @@ grid_hindcast = Hindcast(
                         t_end,
                         bounds,
                         high_res=high_res,
-                        process=True,
+                        steps=steps,  
+                        process=False,
                         download=False,
-                        split_work=True
+                        split_work=False
                     )
 
 ## Sjekk - dataene blir berre nan. loopen under ser ok ut. 
