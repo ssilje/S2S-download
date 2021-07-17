@@ -192,11 +192,51 @@ for lt in steps:
     
     
     
-era_anom = xr.concat(re_step,dim='step')    
+era_anom = xr.concat(re_step,dim='step')
+era_anom = era_anom.sel(time='2018')
 forecast_anom = xr.concat(fcc_step,dim='step')
 hindcast_anom = xr.concat(hcc_step,dim='step') 
+hindcast_anom = xh.assign_validation_time(hindcast_anom)
 
 
+
+
+forecast_anom_sel = forecast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='14 days')
+forecast_anom_sel = forecast_anom_sel.mean('lon').mean('lat').drop('step')
+forecast_anom_df = forecast_anom_sel.to_dataframe().reset_index(level =1,drop=True).reset_index(level=0)
+
+
+ax = sns.boxplot(x="validation_time", y="t2m", data=forecast_anom_df, linewidth=2.5)
+x_dates = forecast_anom_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+plt.savefig('fc_step14.png',dpi='figure',bbox_inches='tight')
+
+hindcast_anom_sel = hindcast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='14 days')
+hindcast_anom_sel = hindcast_anom_sel.mean('lon').mean('lat').drop('step')
+hindcast_anom_df = hindcast_anom_sel.to_dataframe().reset_index(level =1,drop=True).reset_index(level=0)
+
+ax = sns.boxplot(x="validation_time", y="t2m", data=hindcast_anom_df, linewidth=2.5)
+x_dates = hindcast_anom_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+plt.savefig('hc_step14.png',dpi='figure',bbox_inches='tight')
+
+
+era_anom_sel = era_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='14 days')
+era_anom_sel = era_anom_sel.mean('lon').mean('lat').drop('step')
+era_anom_df = era_anom_sel.to_dataframe().reset_index(level =1,drop=True)
+
+ax = sns.boxplot(x="validation_time", y="t2m", data=era_anom_df, linewidth=2.5)
+x_dates = era_anom_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+plt.savefig('era_step14.png',dpi='figure',bbox_inches='tight')
+
+
+#ax = sns.boxplot(x="validation_time", y="t2m", hue="time", data=tips, linewidth=2.5) --> lag en df der hue er: hc, fc, era
+.drop(
+            columns=['number']
+    ).reset_index(
+            level=1, drop=True
+    ) 
 
 era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(time='2018-04').sel(step='14 days').drop('time').to_dataframe()
 fig, ax = plt.subplots(figsize = (12,6))
