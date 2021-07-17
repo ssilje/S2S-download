@@ -216,6 +216,8 @@ test = result.reset_index(level=0)
 plt.close()
 fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
 ax = sns.boxplot(x="validation_time", y="t2m", data=test,hue='level_0', ax=axes)
+#ax = sns.relplot(x="validation_time", y="t2m", --> legg til era
+
 x_dates = test['validation_time'].dt.strftime('%m-%d').sort_values().unique()
 ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
 plt.savefig('fc_hc_test_step14.png',dpi='figure',bbox_inches='tight')
