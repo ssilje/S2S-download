@@ -95,7 +95,7 @@ hindcast_full = hindcast_full.rename(var)
 
 era = ERA5(high_res=high_res)\
                             .load(var,clim_t_start,clim_t_end,bounds)[var]
-grid_observations = Observations(
+grid_observations = Observations_hcfc(
                             name='Era',
                             observations=era,
                             forecast=hindcast_full,
@@ -118,37 +118,38 @@ forecast           = xh.assign_validation_time(grid_forecast.data)
 #for n,(nn,fcdata_m) in enumerate(fc_member): # loop through each member
 fcc_step = []    
 for lt in steps:
-      fc_steps          = forecast.sel(step=pd.Timedelta(lt,'D')) #loop through each month
-      hc_steps          = hindcast.sel(step=pd.Timedelta(lt,'D'))
+    fc_steps          = forecast.sel(step=pd.Timedelta(lt,'D')) #loop through each month
+    hc_steps          = hindcast.sel(step=pd.Timedelta(lt,'D'))
         
-      dim               = 'validation_time.month'
-      fc_group          = list(fc_steps.groupby(dim)) 
-      hc_group          = list(hc_steps.groupby(dim))
-      fcc_month = []  
-      for m,(mf,fcdata) in enumerate(fc_group): #loop through each month
-          mh,hcdata          = hc_group[m]
+    dim               = 'validation_time.month'
+    fc_group          = list(fc_steps.groupby(dim)) 
+    hc_group          = list(hc_steps.groupby(dim))
+    fcc_month = []  
+    
+    for m,(mf,fcdata) in enumerate(fc_group): #loop through each month
+        mh,hcdata          = hc_group[m]
             
-          dim                 = 'validation_time.day'
-          fc_group_day        = list(fcdata.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
-          hc_group_day        = list(hcdata.groupby(dim))
+        dim                 = 'validation_time.day'
+        fc_group_day        = list(fcdata.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
+        hc_group_day        = list(hcdata.groupby(dim))
           
-          fcc_day = []
-          for mm,(mmf,fcdata_m) in enumerate(fc_group_day): #loop through each month
-              mmh,hcdata_m          = hc_group_day[mm]
+        fcc_day = []
+        for mm,(mmf,fcdata_m) in enumerate(fc_group_day): #loop through each month
+            mmh,hcdata_m          = hc_group_day[mm]
              
-              fcc = []
-              for ensm in range(0,51,1):
-                  fc_anom = hcdata_m.mean('time').mean('member') - fcdata_m.sel(member=ensm)
+            fcc = []
+            for ensm in range(0,51,1):
+                fc_anom = hcdata_m.mean('time').mean('member') - fcdata_m.sel(member=ensm)
                   
-                  fcc.append(fc_anom)
-              fcc_member = xr.concat(fcc,dim='member')    
-              fcc_day.append(fcc_member)
-          fcc_member_day = xr.concat(fcc_day,dim='time')
-          fcc_month.append(fcc_member_day)
+                fcc.append(fc_anom)
+            fcc_member = xr.concat(fcc,dim='member')    
+            fcc_day.append(fcc_member)
+        fcc_member_day = xr.concat(fcc_day,dim='time')
+        fcc_month.append(fcc_member_day)
       
-      fcc_member_day_month = xr.concat(fcc_month,dim='time')
-      fcc_step.append(fcc_member_day_month)
-  forecast_anom = xr.concat(ffcc_step,dim='step')    
+    fcc_member_day_month = xr.concat(fcc_month,dim='time')
+    fcc_step.append(fcc_member_day_month)
+forecast_anom = xr.concat(fcc_step,dim='step')    
       
                  # fc_anom=fc_anom.assign_coords(time_month=xlabel)
           
