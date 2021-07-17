@@ -7,7 +7,7 @@ import os
 import scipy.stats as stats
 
 from S2S.local_configuration import config
-from S2S.data_handler        import BarentsWatch, ERA5, ECMWF_S2SH, Archive
+from S2S.data_handler        import BarentsWatch, ERA5, ECMWF_S2SH, ECMWF_S2SF, Archive
 
 import S2S.xarray_helpers    as xh
 import S2S.models            as models
