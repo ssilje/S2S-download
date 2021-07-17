@@ -93,10 +93,19 @@ class Archive:
 
         elif var=='t2m':
 
+            #return var+'/'+'_'.join(
+            #        [
+            #            var,
+            #            'CY46R1',
+            #            date.strftime('%Y-%m-%d'),
+            #            run
+            #        ]
+            #    ) + '.grb'
+        
             return var+'/'+'_'.join(
                     [
                         var,
-                        'CY46R1',
+                        'CY43R3_CY45R1',
                         date.strftime('%Y-%m-%d'),
                         run
                     ]
