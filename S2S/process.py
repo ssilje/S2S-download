@@ -99,7 +99,7 @@ class Forecast:
                     
                     if self.var == 'abs_wind':
                     # need to add wind
-                    print('\tabs_windnot implemented for forecast'
+                        print('\tabs_wind not implemented for forecast')
                     else:    
                         print('\tLoad forecast')
                         raw = self.load_data()
