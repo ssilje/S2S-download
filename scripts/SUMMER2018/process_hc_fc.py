@@ -247,6 +247,7 @@ for lt in steps:
         ax = sns.boxplot(x="validation_time", y="t2m", data=plot_df,hue='product', ax=axes, palette=my_pal)
         x_dates = plot_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
         ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+        ax.set_ylim([-8, 8]) 
         figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '.png'
         plt.savefig(figname,dpi='figure',bbox_inches='tight')
     
