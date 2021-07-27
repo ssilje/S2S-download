@@ -5,6 +5,8 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 
+import seaborn as sns
+
 from S2S.data_handler import ERA5
 from S2S.process import Hindcast, Observations, Forecast, Observations_hcfc
 
@@ -199,221 +201,59 @@ hindcast_anom = xr.concat(hcc_step,dim='step')
 hindcast_anom = xh.assign_validation_time(hindcast_anom)
 
 
-
-
-forecast_anom_sel = forecast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='14 days')
-forecast_anom_sel = forecast_anom_sel.mean('lon').mean('lat').drop('step')
-forecast_anom_df = forecast_anom_sel.to_dataframe().reset_index(level =1,drop=True).reset_index(level=0)
-
-hindcast_anom_sel = hindcast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='14 days')
-hindcast_anom_sel = hindcast_anom_sel.mean('lon').mean('lat').drop('step')
-hindcast_anom_df = hindcast_anom_sel.to_dataframe().reset_index(level =0,drop=True).reset_index(level=0)
-
-pieces = {"fc": forecast_anom_df, "hc": hindcast_anom_df}
-result = pd.concat(pieces)
-test = result.reset_index(level=0)
-
-plt.close()
-fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-ax = sns.boxplot(x="validation_time", y="t2m", data=test,hue='level_0', ax=axes)
-#ax = sns.relplot(x="validation_time", y="t2m", --> legg til era
-
-x_dates = test['validation_time'].dt.strftime('%m-%d').sort_values().unique()
-ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
-plt.savefig('fc_hc_test_step14.png',dpi='figure',bbox_inches='tight')
-####
-
-forecast_anom_sel = forecast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='7 days')
-forecast_anom_sel = forecast_anom_sel.mean('lon').mean('lat').drop('step')
-forecast_anom_df = forecast_anom_sel.to_dataframe().reset_index(level =1,drop=True).reset_index(level=0)
-
-hindcast_anom_sel = hindcast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='7 days')
-hindcast_anom_sel = hindcast_anom_sel.mean('lon').mean('lat').drop('step')
-hindcast_anom_df = hindcast_anom_sel.to_dataframe().reset_index(level =0,drop=True).reset_index(level=0)
-
-pieces = {"fc": forecast_anom_df, "hc": hindcast_anom_df}
-result = pd.concat(pieces)
-test = result.reset_index(level=0)
-
-plt.close()
-fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-ax = sns.boxplot(x="validation_time", y="t2m", data=test,hue='level_0', ax=axes)
-x_dates = test['validation_time'].dt.strftime('%m-%d').sort_values().unique()
-ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
-plt.savefig('fc_hc_test_step7.png',dpi='figure',bbox_inches='tight')
-
-
-####
-
-forecast_anom_sel = forecast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='21 days')
-forecast_anom_sel = forecast_anom_sel.mean('lon').mean('lat').drop('step')
-forecast_anom_df = forecast_anom_sel.to_dataframe().reset_index(level =1,drop=True).reset_index(level=0)
-
-hindcast_anom_sel = hindcast_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='21 days')
-hindcast_anom_sel = hindcast_anom_sel.mean('lon').mean('lat').drop('step')
-hindcast_anom_df = hindcast_anom_sel.to_dataframe().reset_index(level =0,drop=True).reset_index(level=0)
-
-pieces = {"fc": forecast_anom_df, "hc": hindcast_anom_df}
-result = pd.concat(pieces)
-test = result.reset_index(level=0)
-
-plt.close()
-fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-ax = sns.boxplot(x="validation_time", y="t2m", data=test,hue='level_0', ax=axes)
-x_dates = test['validation_time'].dt.strftime('%m-%d').sort_values().unique()
-ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
-plt.savefig('fc_hc_test_step21.png',dpi='figure',bbox_inches='tight')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-anom_df = forecast_anom_df.rename(columns={'t2m':'fc-t2m'})
-anom_df = hindcast_anom_df.rename(columns={'t2m':'hc-t2m'})
-
-#pd.concat([anom_df,hindcast_anom_df.rename(columns={'t2m':'hc_t2m'})])
-##anom_df.append(hc_anom,sort=False)
-
-#pieces = {"fc": anom_df, "hc": hc_anom}
-#result = pd.concat(pieces)
-
-
-ax = sns.boxplot(x="validation_time", y="t2m", data=forecast_anom_df, linewidth=2.5)
-x_dates = forecast_anom_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
-ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
-plt.savefig('fc_step14.png',dpi='figure',bbox_inches='tight')
-
-
-
-ax = sns.boxplot(x="validation_time", y="t2m", data=hindcast_anom_df, linewidth=2.5)
-x_dates = hindcast_anom_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
-ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
-plt.savefig('hc_step14.png',dpi='figure',bbox_inches='tight')
-
-
-era_anom_sel = era_anom.sel(lat=slice(55,65), lon=slice(5,10)).sel(step='14 days')
-era_anom_sel = era_anom_sel.mean('lon').mean('lat').drop('step')
-era_anom_df = era_anom_sel.to_dataframe().reset_index(level =1,drop=True)
-
-ax = sns.boxplot(x="validation_time", y="t2m", data=era_anom_df, linewidth=2.5)
-x_dates = era_anom_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
-ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
-plt.savefig('era_step14.png',dpi='figure',bbox_inches='tight')
-
-
-#ax = sns.boxplot(x="validation_time", y="t2m", hue="time", data=tips, linewidth=2.5) --> lag en df der hue er: hc, fc, era
-.drop(
-            columns=['number']
-    ).reset_index(
-            level=1, drop=True
-    ) 
-
-era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(time='2018-04').sel(step='14 days').drop('time').to_dataframe()
-fig, ax = plt.subplots(figsize = (12,6))
-
-fig = sns.scatterplot(data=era_sel,
-                      x="validation_time",
-                      y="t2m", 
-                      ax = ax)
-
-x_dates = era_sel['validation_time'].dt.strftime('%m-%d').sort_values().unique()
-
-ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
-plt.savefig('test.png',dpi='figure',bbox_inches='tight')
-
-
-
-
-
-
-## 
-era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(step='14 days')
-era_sel.plot(
-x=validation_time)
-era_sel.plot(
-x='validation_time')
-plt.savefig('test.png',dpi='figure',bbox_inches='tight')
-era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(step='14 days').sel(validation_time = 2018)
-era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(step='14 days').sel(time = 2018)
-era_sel = era_anom.sel(lat="60", lon="5", method='nearest').sel(step='14 days').sel(time = '2018')
-era_sel
-era_sel.plot(
-x='validation_time')
-plt.savefig('test.png',dpi='figure',bbox_inches='tight')
- plt.close()
-era_sel.plot(
-x='validation_time')
-plt.savefig('test.png',dpi='figure',bbox_inches='tight')
-
-
-
-      
-                 # fc_anom=fc_anom.assign_coords(time_month=xlabel)
-          
-
-    
-    
-    fc_group_m_t          = list(fcdata_m.groupby(dim)) #loop through each month
-    for nm,(nnm,fcdata_m_t) in enumerate(fc_group_m_t):
-        print(nm)
-        print(fcdata_m_t.dims)
-  
-  forecast_a        = fcdata - hindcast_mean.sel(time='2017')
-
-
-## loop through each member to calculate the anomaly
-  
-#forecast_a        = xh.assign_validation_time(grid_forecast.data_a)
-#forecast_mean     = xh.assign_validation_time(grid_forecast.mean)
-#forecast_std      = xh.assign_validation_time(grid_forecast.std)
-
-
-
-print('\tLoop through all steps')
-
 for lt in steps:
-
-    fc_a          = forecast_a.sel(step=pd.Timedelta(lt,'D'))
-    era_a         = stacked_era_a.sel(step=pd.Timedelta(lt,'D'))
-    hc_c          = hindcast_a.sel(step=pd.Timedelta(lt,'D'))
+      
+   # fc_group_month        = list(forecast_anom_sel.groupby(dim))
+    fc_steps          = forecast_anom.sel(step=pd.Timedelta(lt,'D')) #loop through each month
+    hc_steps          = hindcast_anom.sel(step=pd.Timedelta(lt,'D'))
+    era_steps          = era_anom.sel(step=pd.Timedelta(lt,'D')) 
     
+        
+    dim               = 'validation_time.month'
     
-   
+    fc_group          = list(fc_steps.groupby(dim)) 
+    hc_group          = list(hc_steps.groupby(dim))
+    era_group          = list(era_steps.groupby(dim))
   
-    fc_group      = list(fc_a.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
-    era_group     = list(era_a.groupby(dim))
-    hc_group      = list(hc_c.groupby(dim))
+    for m,(mf,fcdata) in enumerate(fc_group): #loop through each month
+        mh,hcdata          = hc_group[m]
+        me,eradata          = era_group[m]
+        
+        # mean over an area of norway
+        fcdata_sel = fcdata.sel(lat=slice(55,65), lon=slice(5,10))
+        hcdata_sel = hcdata.sel(lat=slice(55,65), lon=slice(5,10))
+        eradata_sel = eradata.sel(lat=slice(55,65), lon=slice(5,10))
+        
+        fcdata_sel = fcdata_sel.mean('lon').mean('lat')
+        hcdata_sel = hcdata_sel.mean('lon').mean('lat')
+        eradata_sel = eradata_sel.mean('lon').mean('lat')
+       
+        fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
+        hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0)
+        eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
+        
+        
+        pieces = {"fc": fcdata_sel_df, "hc": hcdata_sel_df, "era": eradata_sel_df}
+        result = pd.concat(pieces)
+        plot_df = result.reset_index(level=0).rename(columns={'level_0':'product'})
+        
+        
+        plt.close()
+        
+        my_pal = {"fc": "g", "hc": "b", "era":"k"}
+        
+        
+        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
+        ax = sns.boxplot(x="validation_time", y="t2m", data=plot_df,hue='product', ax=axes, palette=my_pal)
+        x_dates = plot_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+        ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+        figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '.png'
+        plt.savefig(figname,dpi='figure',bbox_inches='tight')
     
+
+
+
+
+
+
+
