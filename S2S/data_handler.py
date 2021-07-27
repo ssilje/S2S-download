@@ -110,6 +110,18 @@ class Archive:
                         run
                     ]
                 ) + '.grb'
+        
+        elif var=='sm20':
+
+                    
+            return var+'/'+'_'.join(
+                    [
+                        var,
+                        'CY43R3_CY45R1',
+                        date.strftime('%Y-%m-%d'),
+                        run
+                    ]
+                ) + '.grb'
 
     @staticmethod
     def BW_in_filename(**kwargs):
