@@ -165,9 +165,20 @@ for lt in steps:
             
             hcc = []
             for ensm in range(0,11,1):
-                hc_anom = hcdata_m.mean('time').sel(member=ensm) - hcdata_m.mean('time').mean('member')  # sjekk om man bør ta mean over ens istaden og beholde kvart år
-                hc_anom = hc_anom.assign_coords(time=fcc_member.time[0].values)  
-                hc_anom = hcc.append(hc_anom)
+            
+                hcdata_m_years = list(hcdata_m.groupby('validation_time.year'))
+                hcc_year = []
+                for yy,(yyh,hcdata_year) in enumerate(hcdata_m_years): #loop through each year
+                    hc_anom = hcdata_year.sel(member=ensm).drop('time').drop('validation_time').squeeze() - hcdata_m.mean('time').mean('member')
+                    hc_anom = hc_anom.assign_coords(time=fcc_member.time[0].values)
+                    hc_anom = hc_anom.assign_coords(year=yyh)
+                    hc_anom = hcc_year.append(hc_anom)
+
+                hcc_m_year = xr.concat(hcc_year,dim='year')
+                
+                hc_member_anom = hcc.append(hcc_m_year)
+            
+            
             hcc_member = xr.concat(hcc,dim='member')    
             hcc_day.append(hcc_member)
             
