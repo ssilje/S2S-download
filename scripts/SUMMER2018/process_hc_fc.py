@@ -165,9 +165,23 @@ for lt in steps:
             
             hcc = []
             for ensm in range(0,11,1):
-                hc_anom = hcdata_m.mean('time').sel(member=ensm) - hcdata_m.mean('time').mean('member')  # sjekk om man bør ta mean over ens istaden og beholde kvart år
-                hc_anom = hc_anom.assign_coords(time=fcc_member.time[0].values)  
-                hc_anom = hcc.append(hc_anom)
+                hcdata_m_years = list(hcdata_m.groupby('validation_time.year'))
+                hcc_year = []
+                for yy,(yyh,hcdata_year) in enumerate(hcdata_m_years): #loop through each year
+                    
+                   # hc_anom = hcdata_m.mean('time').sel(member=ensm) - hcdata_m.mean('time').mean('member')  # sjekk om man bør ta mean over ens istaden og beholde kvart år
+                   # hc_anom = hc_anom.assign_coords(time=fcc_member.time[0].values)  
+                   # hc_anom = hcc.append(hc_anom)
+  
+                    hc_anom = hcdata_year.sel(member=ensm).drop('time').drop('validation_time').squeeze() - hcdata_m.mean('time').mean('member')
+                    hc_anom = hc_anom.assign_coords(time=fcc_member.time[0].values)
+                    hc_anom = hc_anom.assign_coords(year=yyh)
+                    hc_anom = hcc_year.append(hc_anom)
+
+                hcc_m_year = xr.concat(hcc_year,dim='year')
+                
+                hc_member_anom = hcc.append(hcc_m_year)
+            
             hcc_member = xr.concat(hcc,dim='member')    
             hcc_day.append(hcc_member)
             
@@ -220,16 +234,16 @@ for lt in steps:
         me,eradata          = era_group[m]
         
         # mean over an area of norway
-        fcdata_sel = fcdata.sel(lat=slice(55,65), lon=slice(5,10))
-        hcdata_sel = hcdata.sel(lat=slice(55,65), lon=slice(5,10))
-        eradata_sel = eradata.sel(lat=slice(55,65), lon=slice(5,10))
+        fcdata_sel = fcdata.sel(lat=slice(58,65), lon=slice(5,10))
+        hcdata_sel = hcdata.sel(lat=slice(58,65), lon=slice(5,10))
+        eradata_sel = eradata.sel(lat=slice(58,65), lon=slice(5,10))
         
         fcdata_sel = fcdata_sel.mean('lon').mean('lat')
         hcdata_sel = hcdata_sel.mean('lon').mean('lat')
         eradata_sel = eradata_sel.mean('lon').mean('lat')
        
         fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
-        hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0)
+        hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0).reset_index(level=0)
         eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
         
         
