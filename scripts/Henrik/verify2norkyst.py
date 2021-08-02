@@ -48,7 +48,8 @@ for loc in locations:
     data.append(xr.open_dataset(fname)[var])
 
 point_observations = xr.concat(data,'location')
-
+print(point_observations)
+exit()
 ### get hindcast ###
 grid_hindcast = Hindcast(
                         var,
