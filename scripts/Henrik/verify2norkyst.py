@@ -29,10 +29,10 @@ for n,date in enumerate(date_range):
 
         ds = xr.open_dataset( path + filename_nird )
         ds = ds.assign_coords(time=[pd.Timestamp(date)])
+        ds = ds.to_array().rename('sst')
+
         print(ds)
         exit()
-        ds = ds.rename('sst')
-
         ds.to_netcdf(path+filename_out)
         print('\n')
 
