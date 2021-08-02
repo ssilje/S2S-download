@@ -45,7 +45,7 @@ data = []
 for loc in locations:
 
     fname = config['NORKYST'] + 'NorKyst800_' + str(loc_from_name(loc)) + '.nc'
-    data.append(xr.open_dataset(fname))
+    data.append(xr.open_dataset(fname)[var])
 
 point_observations = xr.concat(data,'location')
 
