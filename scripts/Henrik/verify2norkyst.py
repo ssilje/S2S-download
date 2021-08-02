@@ -4,6 +4,6 @@ import xarray as xr
 path     = '/nird/projects/NS9853K/DATA/norkyst800/'
 filename = 'norkyst800_sst_*_daily_mean_at-BW-loc.nc'
 
-ds = xarray.open_mfdataset( path + filename )
+ds = xr.open_mfdataset( path + filename )
 
 print(ds)
