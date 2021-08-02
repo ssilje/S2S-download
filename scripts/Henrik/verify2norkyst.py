@@ -29,7 +29,15 @@ for n,date in enumerate(date_range):
                         '_daily_mean_at-BW.nc'
 
     print(filename_nird)
-    ds = xr.open_dataset( path + filename_nird )
-    ds = ds.assign_coords(time=[pd.Timestamp(date)])
 
-    ds.to_netcdf(path+filename_out)
+    try:
+
+        ds = xr.open_dataset( path + filename_nird )
+        ds = ds.assign_coords(time=[pd.Timestamp(date)])
+
+        ds.to_netcdf(path+filename_out)
+        print('\n')
+
+    except FileNotFoundError:
+        print('Not found\n')
+        pass
