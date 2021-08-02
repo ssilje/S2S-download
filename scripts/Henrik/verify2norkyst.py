@@ -10,13 +10,6 @@ from S2S.process import Hindcast, Observations, Grid2Point
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics
 from S2S import models
 
-def name_from_loc(loc):
-    with open(config['SITES'], 'r') as file:
-        data = json.load(file)
-        for line in data:
-            if line["localityNo"]==int(loc):
-                return line['name']
-
 bounds   = (0,28,55,75)
 var      = 'sst'
 
@@ -30,24 +23,11 @@ steps    = pd.to_timedelta([9,16,23,30,37],'D')
 path     = '/nird/projects/NS9853K/DATA/norkyst800/'
 filename = 'norkyst800_sst_*_daily_mean_at-BW.nc'
 
-# open with dask
-ds = xr.open_mfdataset( path + filename, parallel=True )
-# load to memory
-da = ds.load()[var]
-# make dir
-Archive().make_dir(config['NORKYST'])
+locations = ['Hisdalen','Stokkvika']
 
-for loc in da.location:
-
-    fname = 'NorKyst800_'+str(loc.values)+'.nc'
-
-    file = da.sel(location=loc).sortby('time')
-
-    file.to_netcdf(config['NORKYST'] + fname)
-
-    print(name_from_loc(loc.values))
-    print(config['NORKYST'] + fname)
-
+for loc in Archive().get_domain(locations)['localityNo']:
+    fname = config['NORKYST'] + 'NorKyst800_' + loc
+    print(fname)
 # point_observations = etwas
 # ### get hindcast ###
 # grid_hindcast = Hindcast(
@@ -134,3 +114,27 @@ for loc in da.location:
 #     except FileNotFoundError:
 #         print('Not found\n')
 #         pass
+#
+# def name_from_loc(loc):
+#     with open(config['SITES'], 'r') as file:
+#         data = json.load(file)
+#         for line in data:
+#             if line["localityNo"]==int(loc):
+#                 return line['name']
+# # open with dask
+# ds = xr.open_mfdataset( path + filename, parallel=True )
+# # load to memory
+# da = ds.load()[var]
+# # make dir
+# Archive().make_dir(config['NORKYST'])
+#
+# for loc in da.location:
+#
+#     fname = 'NorKyst800_'+str(loc.values)+'.nc'
+#
+#     file = da.sel(location=loc).sortby('time')
+#
+#     file.to_netcdf(config['NORKYST'] + fname)
+#
+#     print(name_from_loc(loc.values))
+#     print(config['NORKYST'] + fname)
