@@ -119,9 +119,6 @@ for n,date in enumerate(date_range):
                 )
 
             out = out.assign_coords(radius=r)
-            out = out.assign_coords(time=pd.Timestamp(date))
-            print(out)
-            exit()
 
             if download:
                 out.to_netcdf(filename_nird)
