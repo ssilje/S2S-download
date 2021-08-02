@@ -5,9 +5,9 @@ import pandas as pd
 path     = '/nird/projects/NS9853K/DATA/norkyst800/'
 filename = 'norkyst800_sst_*_daily_mean_at-BW.nc'
 
-ds = xr.open_mfdataset( path + filename )
+ds = xr.open_mfdataset( path + filename, parallel=True )
 
-print(ds)
+print(ds.load())
 
 ##################################################################
 # start_date = '2012-06-27'
