@@ -26,6 +26,6 @@ for n,date in enumerate(date_range):
                         '_daily_mean_at-BW-loc.nc'
 
     ds = xr.open_dataset( path + filename_nird )
-
+    ds = ds.assign_coords(time=[pd.Timestamp(date)])
     print(ds)
     exit()
