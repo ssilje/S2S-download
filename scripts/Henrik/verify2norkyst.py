@@ -10,6 +10,22 @@ from S2S.process import Hindcast, Observations, Grid2Point
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics
 from S2S import models
 
+def loc_from_name(loc):
+    """
+    Returns name of Barentswatch location from loc number
+    """
+
+    try:
+        _ = int(loc)
+        return loc
+
+    except ValueError:
+        with open(config['SITES'], 'r') as file:
+            data = json.load(file)
+            for line in data:
+                if line['name']==loc:
+                    return line["localityNo"]
+
 bounds   = (0,28,55,75)
 var      = 'sst'
 
@@ -25,8 +41,9 @@ filename = 'norkyst800_sst_*_daily_mean_at-BW.nc'
 
 locations = ['Hisdalen','Stokkvika']
 
-for loc in Archive().get_domain(locations)['localityNo']:
-    fname = config['NORKYST'] + 'NorKyst800_' + loc
+for loc in locations:
+
+    fname = config['NORKYST'] + 'NorKyst800_' + name_from_loc(loc)
     print(fname)
 # point_observations = etwas
 # ### get hindcast ###
