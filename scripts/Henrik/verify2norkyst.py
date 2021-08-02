@@ -7,16 +7,6 @@ from S2S.process import Hindcast, Observations, Grid2Point
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics
 from S2S import models
 
-### get observations ###
-path     = '/nird/projects/NS9853K/DATA/norkyst800/'
-filename = 'norkyst800_sst_*_daily_mean_at-BW.nc'
-
-# open with dask
-ds = xr.open_mfdataset( path + filename, parallel=True )
-# load to memory
-point_observations = ds.load()
-
-### get hindcast ###
 bounds = (0,28,55,75)
 var      = 'sst'
 
@@ -26,6 +16,16 @@ t_end    = (2021,1,4)
 high_res = True
 steps    = pd.to_timedelta([9,16,23,30,37],'D')
 
+### get observations ###
+path     = '/nird/projects/NS9853K/DATA/norkyst800/'
+filename = 'norkyst800_sst_*_daily_mean_at-BW.nc'
+
+# open with dask
+ds = xr.open_mfdataset( path + filename, parallel=True )
+# load to memory
+point_observations = ds.load()[var]
+
+### get hindcast ###
 grid_hindcast = Hindcast(
                         var,
                         t_start,
