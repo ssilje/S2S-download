@@ -175,7 +175,7 @@ def SS_lt(
   
   
   
-bounds          = (0,28,55,75)
+bounds          = (-100,100,-40,0875)
 
 var             = 't2m'
 
@@ -438,9 +438,9 @@ for lt in steps:
   
     plot_months(
         varplot     = Data_skill.ACC_hc.sel(step=lt),
-        levels_plot = np.linspace(-1,1,21),
+        levels_plot = np.linspace(-0.5,0.5,21),
         label_text  = 'ACC',
-        levels_cbar = np.linspace(-1,1,11),
+        levels_cbar = np.linspace(-0.5,0.5,11),
         plot_title  = 'ACC hindcast and ERA5',
         fname       = 'hindcast_ERA5_ACC_step_' + str(lt.days) + '_' + var,
     )
