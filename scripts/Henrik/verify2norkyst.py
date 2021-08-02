@@ -2,7 +2,7 @@ import xarray as xr
 import pandas as pd
 
 # # get observations
-# path     = '/nird/projects/NS9853K/DATA/norkyst800/'
+path     = '/nird/projects/NS9853K/DATA/norkyst800/'
 # filename = 'norkyst800_sst_*_daily_mean_at-BW-loc.nc'
 #
 # ds1 = xr.open_dataset(
