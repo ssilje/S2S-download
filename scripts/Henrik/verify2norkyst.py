@@ -31,8 +31,6 @@ for n,date in enumerate(date_range):
         ds = ds.assign_coords(time=[pd.Timestamp(date)])
         ds = ds.to_array().rename('sst').isel(variable=0).drop('variable')
 
-        print(ds)
-        exit()
         ds.to_netcdf(path+filename_out)
         print('\n')
 
