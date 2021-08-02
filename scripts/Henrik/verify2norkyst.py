@@ -41,68 +41,71 @@ filename = 'norkyst800_sst_*_daily_mean_at-BW.nc'
 
 locations = ['Hisdalen','Stokkvika']
 
+data = []
 for loc in locations:
 
-    fname = config['NORKYST'] + 'NorKyst800_' + str(loc_from_name(loc))
-    print(fname)
-# point_observations = etwas
-# ### get hindcast ###
-# grid_hindcast = Hindcast(
-#                         var,
-#                         t_start,
-#                         t_end,
-#                         bounds,
-#                         high_res=high_res,
-#                         steps=steps,
-#                         process=False,
-#                         download=False,
-#                         split_work=True
-#                     )
-#
-# point_observations = Observations(
-#                             name='NorKyst800',
-#                             observations=point_observations,
-#                             forecast=grid_hindcast,
-#                             process=True
-#                             )
-#
-# point_hindcast = Grid2Point(point_observations,grid_hindcast).correlation(
-#                                                         step_dependent=True
-#                                                             )
-#
-# clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
-#
-# # In absolute values
-# graphics.timeseries(
-#                         observations    = point_observations.data,
-#                         cast            = [clim_fc,point_hindcast.data],
-#                         lead_time       = [9,16],
-#                         clabs           = ['clim','EC'],
-#                         filename        = 'NorKystAbs_absolute',
-#                         title           = 'NorKyst800 EC'
-#                     )
-#
-# # As anomalies
-# graphics.timeseries(
-#                         observations    = point_observations.data_a,
-#                         cast            = [point_hindcast.data_a],
-#                         lead_time       = [9,16],
-#                         clabs           = ['EC'],
-#                         filename        = 'NorKystAnom',
-#                         title           = 'NorKyst800 EC'
-#                     )
-#
-# # Simple bias adjustment
-# simple_bias_adjustment = ( point_hindcast.data_a * point_observations.std )\
-#                                 + point_observations.mean
-# graphics.timeseries(
-#                         observations    = point_observations.data,
-#                         cast            = [clim_fc,simple_bias_adjustment],
-#                         lead_time       = [9,16],
-#                         clabs           = ['EC'],
-#                         filename        = 'NorKyst_simple_bias_adjustment',
-#                         title           = 'NorKyst800 EC'
-#                     )
+    fname = config['NORKYST'] + 'NorKyst800_' + str(loc_from_name(loc)) + 'nc'
+    data.append(xr.open_dataset(fname))
+
+point_observations = xr.concat(data,'location')
+
+### get hindcast ###
+grid_hindcast = Hindcast(
+                        var,
+                        t_start,
+                        t_end,
+                        bounds,
+                        high_res=high_res,
+                        steps=steps,
+                        process=False,
+                        download=False,
+                        split_work=True
+                    )
+
+point_observations = Observations(
+                            name='NorKyst800',
+                            observations=point_observations,
+                            forecast=grid_hindcast,
+                            process=True
+                            )
+
+point_hindcast = Grid2Point(point_observations,grid_hindcast).correlation(
+                                                        step_dependent=True
+                                                            )
+
+clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
+
+# In absolute values
+graphics.timeseries(
+                        observations    = point_observations.data,
+                        cast            = [clim_fc,point_hindcast.data],
+                        lead_time       = [9,16],
+                        clabs           = ['clim','EC'],
+                        filename        = 'NorKystAbs_absolute',
+                        title           = 'NorKyst800 EC'
+                    )
+
+# As anomalies
+graphics.timeseries(
+                        observations    = point_observations.data_a,
+                        cast            = [point_hindcast.data_a],
+                        lead_time       = [9,16],
+                        clabs           = ['EC'],
+                        filename        = 'NorKystAnom',
+                        title           = 'NorKyst800 EC'
+                    )
+
+# Simple bias adjustment
+simple_bias_adjustment = ( point_hindcast.data_a * point_observations.std )\
+                                + point_observations.mean
+graphics.timeseries(
+                        observations    = point_observations.data,
+                        cast            = [clim_fc,simple_bias_adjustment],
+                        lead_time       = [9,16],
+                        clabs           = ['EC'],
+                        filename        = 'NorKyst_simple_bias_adjustment',
+                        title           = 'NorKyst800 EC'
+                    )
 ##################################################################
 # start_date = '2012-06-27'
 # end_date   = '2019-02-26'
