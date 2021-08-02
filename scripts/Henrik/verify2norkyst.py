@@ -29,7 +29,7 @@ for n,date in enumerate(date_range):
 
         ds = xr.open_dataset( path + filename_nird )
         ds = ds.assign_coords(time=[pd.Timestamp(date)])
-        ds = ds.to_array().rename('sst')
+        ds = ds.to_array().rename('sst').isel(variable=0).drop('variable')
 
         print(ds)
         exit()
