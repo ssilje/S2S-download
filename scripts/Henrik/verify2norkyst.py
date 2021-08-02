@@ -43,7 +43,7 @@ locations = ['Hisdalen','Stokkvika']
 
 for loc in locations:
 
-    fname = config['NORKYST'] + 'NorKyst800_' + name_from_loc(loc)
+    fname = config['NORKYST'] + 'NorKyst800_' + loc_from_name(loc)
     print(fname)
 # point_observations = etwas
 # ### get hindcast ###
