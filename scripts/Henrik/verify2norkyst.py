@@ -31,7 +31,11 @@ for loc in da.location:
 
     fname = 'NorKyst800_'+str(loc)+'.nc'
 
-    da.sel(location=loc).sortby('time').to_netcdf(config['VALID_DB'] + fname)
+    file = da.sel(location=loc).sortby('time')
+    print(file)
+    print(str(loc.values))
+    exit()
+    file.to_netcdf(config['VALID_DB'] + fname)
 
 # point_observations = etwas
 # ### get hindcast ###
