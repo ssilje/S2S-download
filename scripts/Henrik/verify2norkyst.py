@@ -25,7 +25,8 @@ for n,date in enumerate(date_range):
     filename_nird = 'norkyst800_sst_'+date.strftime('%Y-%m-%d')+\
                         '_daily_mean_at-BW-loc.nc'
 
+    print(filename_nird)
     ds = xr.open_dataset( path + filename_nird )
     ds = ds.assign_coords(time=[pd.Timestamp(date)])
-    print(ds)
-    exit()
+
+    ds.to_netcdf(path+filename_nird)
