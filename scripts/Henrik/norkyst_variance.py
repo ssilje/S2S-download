@@ -24,7 +24,7 @@ for ax,month in zip(axes.flatten(),months):
 
     fname = fname1 + '*-' + month + '-*' + fname2
     print(fname)
-
+    #hei
     try:
         # data = xr.open_dataset(path+fn1+month+fn2).squeeze()
 
