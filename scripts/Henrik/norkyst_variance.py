@@ -5,7 +5,7 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
 from S2S.local_configuration import config
-from S2S.graphics import latex
+from S2S.graphics import latex, graphics
 
 path   = '/nird/projects/NS9853K/DATA/norkyst800/'
 fn1    = 'norkyst800_sst_'
@@ -23,8 +23,9 @@ for ax,month in zip(axes.flatten(),months):
 
     data = xr.open_dataset(path+fn1+month+fn2).squeeze()
 
-    print(data)
-    exit()
+    var  = data.temperature
+    lons = data.longitude
+    lats = data.latitude
 
     ax.coastlines(resolution='10m', color='grey',\
                             linewidth=0.2)
@@ -33,3 +34,5 @@ for ax,month in zip(axes.flatten(),months):
 
     ax.set_extent((0,25,55,75),crs=ccrs.PlateCarree())
     ax.set_title(month)
+
+graphics.save_fig(fig,'variance_map_norkyst')
