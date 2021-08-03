@@ -92,7 +92,7 @@ def save_fig(fig,filename):
     """
     path = filename.split('/')[0]
     make_dir(config['SAVEFIG']+'/'+path)
-    file,converge = latex.save_figure(fig,config['SAVEFIG']+filename)
+    # file,converge = latex.save_figure(fig,config['SAVEFIG']+filename)
     plt.savefig(config['SAVEFIG']+\
                     filename+'.png',dpi='figure',bbox_inches='tight')
     plt.close()

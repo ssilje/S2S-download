@@ -103,23 +103,23 @@ clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
 # Simple bias adjustment
 simple_bias_adjustment = ( point_hindcast.data_a * point_observations.std )\
                                 + point_observations.mean
-graphics.timeseries(
-                        observations    = point_observations.data,
-                        cast            = [clim_fc,simple_bias_adjustment],
-                        lead_time       = [9,16],
-                        clabs           = ['NorKyst800','EC'],
-                        filename        = 'NorKyst_simple_bias_adjustment',
-                        title           = 'NorKyst800 EC'
-                    )
-
-graphics.timeseries(
-                        observations    = point_observations.data,
-                        cast            = [clim_fc,simple_bias_adjustment],
-                        lead_time       = [23,30,37],
-                        clabs           = ['NorKyst800','EC'],
-                        filename        = 'NorKyst_simple_bias_adjustment',
-                        title           = 'NorKyst800 EC'
-                    )
+# graphics.timeseries(
+#                         observations    = point_observations.data,
+#                         cast            = [clim_fc,simple_bias_adjustment],
+#                         lead_time       = [9,16],
+#                         clabs           = ['NorKyst800','EC'],
+#                         filename        = 'NorKyst_simple_bias_adjustment',
+#                         title           = 'NorKyst800 EC'
+#                     )
+#
+# graphics.timeseries(
+#                         observations    = point_observations.data,
+#                         cast            = [clim_fc,simple_bias_adjustment],
+#                         lead_time       = [23,30,37],
+#                         clabs           = ['NorKyst800','EC'],
+#                         filename        = 'NorKyst_simple_bias_adjustment',
+#                         title           = 'NorKyst800 EC'
+#                     )
 
 # more advanced modeling
 clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
@@ -146,6 +146,15 @@ graphics.timeseries(
                         observations    = point_observations.data_a,
                         cast            = [pers,point_hindcast.data_a,combo],
                         lead_time       = [9,16],
+                        clabs           = ['PERS','EC','combo'],
+                        filename        = 'NorKyst_persistence_combo',
+                        title           = 'NorKyst800 EC'
+                    )
+
+graphics.timeseries(
+                        observations    = point_observations.data_a,
+                        cast            = [pers,point_hindcast.data_a,combo],
+                        lead_time       = [23,30,37],
                         clabs           = ['PERS','EC','combo'],
                         filename        = 'NorKyst_persistence_combo',
                         title           = 'NorKyst800 EC'
