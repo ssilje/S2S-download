@@ -5,7 +5,7 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
 from S2S.local_configuration import config
-from S2S.graphics import graphics
+from S2S.graphics import latex
 
 path   = '/nird/projects/NS9853K/DATA/norkyst800/'
 fn1    = 'norkyst800_sst_'
