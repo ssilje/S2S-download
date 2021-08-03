@@ -30,7 +30,7 @@ for ax,month in zip(axes.flatten(),months):
     ax.coastlines(resolution='10m', color='grey',\
                             linewidth=0.2)
 
-    ax.contourf(lons,lats,var,projection=ccrs.PlateCarree())
+    ax.contourf(lons,lats,var,transform=ccrs.PlateCarree())
 
     ax.set_extent((0,25,55,75),crs=ccrs.PlateCarree())
     ax.set_title(month)
