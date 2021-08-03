@@ -8,7 +8,7 @@ from S2S.data_handler import ERA5, BarentsWatch, Archive
 from S2S.process import Hindcast, Observations, Grid2Point
 
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics
-from S2S import models
+from S2S import models, location_cluster
 
 def loc_from_name(loc):
     """
@@ -24,6 +24,9 @@ def loc_from_name(loc):
             for line in data:
                 if line['name']==loc:
                     return line["localityNo"]
+
+def loc(name):
+    return str(location_cluster.loc_from_name(name))
 
 location_names = 'Hisdalen'
 
