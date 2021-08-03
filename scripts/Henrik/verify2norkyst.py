@@ -52,7 +52,9 @@ for loc_name in location_names:
 
     data.append(xr.open_dataset(fname)[var])
 
-point_observations = xr.concat(data,'location')
+point_observations = xr.concat(data,'location',join='outer')
+
+print( point_observations.time )
 
 ### get hindcast ###
 grid_hindcast = Hindcast(
