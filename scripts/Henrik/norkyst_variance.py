@@ -5,6 +5,7 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
 from S2S.local_configuration import config
+from S2S.graphics import graphics
 
 path   = '/nird/projects/NS9853K/DATA/norkyst800/'
 fn1    = 'norkyst800_sst_'
@@ -19,7 +20,7 @@ fig,axes = plt.subplots(3,4,\
 for ax,month in zip(axes.flatten(),months):
 
     print(month)
-    
+
     data = xr.open_dataset(path+fn1+month+fn2)['sst']
 
     print(data)
