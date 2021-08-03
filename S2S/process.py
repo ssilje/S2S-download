@@ -370,8 +370,6 @@ class Observations:
                 init_std = init_std.groupby('time').mean(skipna=True)
             ####################################################################
 
-            init_obs   = self.observations.broadcast_like(init_mean)
-
             init_obs_a = ( self.observations - init_mean ) / init_std
 
             init_obs_a = init_obs_a.reindex(
