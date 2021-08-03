@@ -39,17 +39,21 @@ steps    = pd.to_timedelta([9,16,23,30,37],'D')
 path     = '/nird/projects/NS9853K/DATA/norkyst800/'
 filename = 'norkyst800_sst_*_daily_mean_at-BW.nc'
 
-locations = ['Hisdalen','Stokkvika']
+location_names = ['Hisdalen','Stokkvika']
 
 data = []
-for loc in locations:
+for loc_name in location_names:
 
-    fname = config['NORKYST'] + 'NorKyst800_' + str(loc_from_name(loc)) + '.nc'
+    print(loc_name)
+    fname =                 config['NORKYST'] +\
+                                'NorKyst800_' +\
+                 str(loc_from_name(loc_name)) +\
+                                        '.nc'
+
     data.append(xr.open_dataset(fname)[var])
 
 point_observations = xr.concat(data,'location')
-print(point_observations)
-exit()
+
 ### get hindcast ###
 grid_hindcast = Hindcast(
                         var,
