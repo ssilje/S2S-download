@@ -369,7 +369,7 @@ class Observations:
             if len(c[c>1])>0:
                 init_std = init_std.groupby('time').mean(skipna=True)
             ####################################################################
-            print( self.observations, init_mean, init_std )
+            print( self.observations.groupby('time').mean(skipna=True), init_mean, init_std )
             exit()
 
             init_obs_a = ( self.observations - init_mean ) / init_std
