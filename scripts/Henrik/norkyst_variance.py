@@ -32,7 +32,7 @@ for ax,month in zip(axes.flatten(),months):
         # # load to memory
         data = ds.load().temperature.var('time',skipna=True)
 
-        var  = data.temperature
+        var  = data
         lons = data.longitude
         lats = data.latitude
 
