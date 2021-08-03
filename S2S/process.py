@@ -358,7 +358,7 @@ class Observations:
             init_mean = init_mean.rename(self.var)
             init_std  = init_std.rename(self.var)
 
-            print( self.observations, init_mean, init_std )
+            print( self.observations.time, init_mean.time, init_std.time )
 
             ####################################################################
             # Deals with duplicates along time dimensions (can occur in
@@ -371,7 +371,7 @@ class Observations:
             if len(c[c>1])>0:
                 init_std = init_std.groupby('time').mean(skipna=True)
             ####################################################################
-            print( self.observations, init_mean, init_std )
+            print( self.observations.time, init_mean.time, init_std.time )
             exit()
 
             init_obs_a = ( self.observations - init_mean ) / init_std
