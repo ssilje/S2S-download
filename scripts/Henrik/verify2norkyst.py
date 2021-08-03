@@ -109,7 +109,7 @@ graphics.timeseries(
                         observations    = point_observations.data,
                         cast            = [clim_fc,simple_bias_adjustment],
                         lead_time       = [9,16],
-                        clabs           = ['EC'],
+                        clabs           = ['NorKyst800','EC'],
                         filename        = 'NorKyst_simple_bias_adjustment',
                         title           = 'NorKyst800 EC'
                     )
@@ -118,7 +118,7 @@ graphics.timeseries(
                         observations    = point_observations.data,
                         cast            = [clim_fc,simple_bias_adjustment],
                         lead_time       = [23,30,37],
-                        clabs           = ['EC'],
+                        clabs           = ['NorKyst800','EC'],
                         filename        = 'NorKyst_simple_bias_adjustment',
                         title           = 'NorKyst800 EC'
                     )
