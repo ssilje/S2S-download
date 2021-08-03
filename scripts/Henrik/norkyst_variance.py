@@ -30,10 +30,7 @@ for ax,month in zip(axes.flatten(),months):
 
         ds = xr.open_mfdataset( path + fname, parallel=True )
         # # load to memory
-        da = ds.load()
-
-        print(da)
-        exit()
+        data = ds.load().temperature.var('time',skipna=True)
 
         var  = data.temperature
         lons = data.longitude
