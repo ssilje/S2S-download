@@ -358,6 +358,8 @@ class Observations:
             init_mean = init_mean.rename(self.var)
             init_std  = init_std.rename(self.var)
 
+            print( self.observations, init_mean, init_std )
+
             ####################################################################
             # Deals with duplicates along time dimensions (can occur in
             # stacking - restacking occuring o_climatology, does occur for ERA)
@@ -369,7 +371,7 @@ class Observations:
             if len(c[c>1])>0:
                 init_std = init_std.groupby('time').mean(skipna=True)
             ####################################################################
-            print( self.observations.groupby('time').mean(skipna=True), init_mean, init_std )
+            print( self.observations, init_mean, init_std )
             exit()
 
             init_obs_a = ( self.observations - init_mean ) / init_std
