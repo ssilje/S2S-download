@@ -54,8 +54,6 @@ for loc_name in location_names:
 
 point_observations = xr.concat(data,'location',join='outer').drop('radius')
 
-print( point_observations.time )
-
 ### get hindcast ###
 grid_hindcast = Hindcast(
                         var,
@@ -120,6 +118,36 @@ graphics.timeseries(
                         lead_time       = [23,30,37],
                         clabs           = ['NorKyst800','EC'],
                         filename        = 'NorKyst_simple_bias_adjustment',
+                        title           = 'NorKyst800 EC'
+                    )
+
+# more advanced modeling
+clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
+pers    = models.persistence(
+                init_value   = point_observations.init_a,
+                observations = point_observations.data_a
+                )
+
+combo = models.combo(
+                        init_value      = point_observations.init_a,
+                        model           = point_hindcast.data_a,
+                        observations    = point_observations.data_a
+                    )
+
+combo = point_hindcast.data_a - point_hindcast.data_a.mean('member') + combo
+
+# adjust spread
+combo = models.bias_adjustment_torralba(
+                            forecast        = combo,
+                            observations    = point_observations.data_a,
+                            spread_only     = True
+                            )
+graphics.timeseries(
+                        observations    = point_observations.data_a,
+                        cast            = [pers,point_hindcast.data_a,combo],
+                        lead_time       = [9,16],
+                        clabs           = ['PERS','EC','combo'],
+                        filename        = 'NorKyst_persistence_combo',
                         title           = 'NorKyst800 EC'
                     )
 ##################################################################
