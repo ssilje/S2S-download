@@ -21,7 +21,7 @@ for ax,month in zip(axes.flatten(),months):
 
     print(month)
 
-    data = xr.open_dataset(path+fn1+month+fn2)['sst']
+    data = xr.open_dataset(path+fn1+month+fn2)
 
     print(data)
     exit()
