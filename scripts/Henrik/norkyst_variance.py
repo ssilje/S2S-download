@@ -18,6 +18,8 @@ fig,axes = plt.subplots(3,4,\
 
 for ax,month in zip(axes.flatten(),months):
 
+    print(month)
+    
     data = xr.open_dataset(path+fn1+month+fn2)['sst']
 
     print(data)
