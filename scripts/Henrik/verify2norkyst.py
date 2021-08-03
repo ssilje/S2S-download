@@ -82,25 +82,25 @@ point_hindcast = Grid2Point(point_observations,grid_hindcast).correlation(
 
 clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
 
-# In absolute values
-graphics.timeseries(
-                        observations    = point_observations.data,
-                        cast            = [clim_fc,point_hindcast.data],
-                        lead_time       = [9,16],
-                        clabs           = ['clim','EC'],
-                        filename        = 'NorKystAbs_absolute',
-                        title           = 'NorKyst800 EC'
-                    )
-
-# As anomalies
-graphics.timeseries(
-                        observations    = point_observations.data_a,
-                        cast            = [point_hindcast.data_a],
-                        lead_time       = [9,16],
-                        clabs           = ['EC'],
-                        filename        = 'NorKystAnom',
-                        title           = 'NorKyst800 EC'
-                    )
+# # In absolute values
+# graphics.timeseries(
+#                         observations    = point_observations.data,
+#                         cast            = [clim_fc,point_hindcast.data],
+#                         lead_time       = [9,16],
+#                         clabs           = ['clim','EC'],
+#                         filename        = 'NorKystAbs_absolute',
+#                         title           = 'NorKyst800 EC'
+#                     )
+#
+# # As anomalies
+# graphics.timeseries(
+#                         observations    = point_observations.data_a,
+#                         cast            = [point_hindcast.data_a],
+#                         lead_time       = [9,16],
+#                         clabs           = ['EC'],
+#                         filename        = 'NorKystAnom',
+#                         title           = 'NorKyst800 EC'
+#                     )
 
 # Simple bias adjustment
 simple_bias_adjustment = ( point_hindcast.data_a * point_observations.std )\
@@ -109,6 +109,15 @@ graphics.timeseries(
                         observations    = point_observations.data,
                         cast            = [clim_fc,simple_bias_adjustment],
                         lead_time       = [9,16],
+                        clabs           = ['EC'],
+                        filename        = 'NorKyst_simple_bias_adjustment',
+                        title           = 'NorKyst800 EC'
+                    )
+
+graphics.timeseries(
+                        observations    = point_observations.data,
+                        cast            = [clim_fc,simple_bias_adjustment],
+                        lead_time       = [23,30,37],
                         clabs           = ['EC'],
                         filename        = 'NorKyst_simple_bias_adjustment',
                         title           = 'NorKyst800 EC'
