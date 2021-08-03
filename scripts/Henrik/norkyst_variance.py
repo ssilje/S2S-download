@@ -21,16 +21,20 @@ for ax,month in zip(axes.flatten(),months):
 
     print(month)
 
-    data = xr.open_dataset(path+fn1+month+fn2).squeeze()
+    try:
+        data = xr.open_dataset(path+fn1+month+fn2).squeeze()
 
-    var  = data.temperature
-    lons = data.longitude
-    lats = data.latitude
+        var  = data.temperature
+        lons = data.longitude
+        lats = data.latitude
+
+        ax.contourf(lons,lats,var,transform=ccrs.PlateCarree())
+
+    except FileNotFoundError:
+        pass
 
     ax.coastlines(resolution='10m', color='grey',\
                             linewidth=0.2)
-
-    ax.contourf(lons,lats,var,transform=ccrs.PlateCarree())
 
     ax.set_extent((0,25,55,75),crs=ccrs.PlateCarree())
     ax.set_title(month)
