@@ -60,5 +60,5 @@ for month in months:
             fig.colorbar(cs,ax=ax)
             graphics.save_fig(fig,'variance_map_norkyst_'+month)
 
-    except (FileNotFoundError,np.core._exceptions.MemoryError) as e:
+    except (FileNotFoundError,MemoryError) as e:
         pass
