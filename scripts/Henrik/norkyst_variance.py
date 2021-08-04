@@ -48,7 +48,7 @@ for month in months:
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
             ax.set_title(month)
-            graphics.save_fig(fig,'variance_map_norkyst')
+            graphics.save_fig(fig,'variance_map_norkyst_'+month)
 
     except FileNotFoundError:
         pass
