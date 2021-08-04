@@ -24,14 +24,14 @@ for ax,month in zip(axes.flatten(),months):
 
     fname = fname1 + '*-' + month + '-*' + fname2
     print(fname)
-    #hei
+
     try:
         # data = xr.open_dataset(path+fn1+month+fn2).squeeze()
 
         ds = xr.open_mfdataset( path + fname, parallel=True )
         # # load to memory
-        data = ds.load().temperature.var('time',skipna=True)
-
+        data = ds.load().temperature.var('time',skipna=True).squeeze()
+        print(data)
         var  = data
         lons = data.longitude
         lats = data.latitude
@@ -45,6 +45,5 @@ for ax,month in zip(axes.flatten(),months):
                             linewidth=0.2)
 
     ax.set_title(month)
-
 
 graphics.save_fig(fig,'variance_map_norkyst')
