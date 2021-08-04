@@ -36,6 +36,7 @@ for month in months:
         # data = xr.open_dataset(path+fn1+month+fn2).squeeze()
         with xr.open_mfdataset( path + fname, parallel=True ) as data:
 
+            print(data)
             # # load to memory
             data = data.load()
             print(data)
@@ -44,10 +45,11 @@ for month in months:
             lons = data.longitude
             lats = data.latitude
 
-            ax.contourf(lons,lats,data,transform=ccrs.PlateCarree())
+            cs = ax.contourf(lons,lats,data,transform=ccrs.PlateCarree())
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
             ax.set_title(month)
+            fig.colorbar(cs,ax=ax)
             graphics.save_fig(fig,'variance_map_norkyst_'+month)
 
     except FileNotFoundError:
