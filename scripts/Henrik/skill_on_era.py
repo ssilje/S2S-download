@@ -11,6 +11,7 @@ from S2S.graphics import latex, graphics
 from matplotlib.colors import BoundaryNorm
 
 from S2S.data_handler import ERA5, BarentsWatch
+from S2S.process import Hindcast, Observations, Grid2Point
 
 bounds = (0,28,55,75)
 var      = 'sst'
