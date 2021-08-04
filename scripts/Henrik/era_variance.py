@@ -67,6 +67,6 @@ for month in months:
                         cmap=cmap,norm=norm,extend='max',levels=levels)
     ax.coastlines(resolution='10m', color='grey',\
                             linewidth=0.2)
-    ax.set_title(month)
+    ax.set_title(mparser[month] + ' ERA SST variance [degC^2]')
     fig.colorbar(cs,ax=ax)
     graphics.save_fig(fig,'variance_map_era_'+month)

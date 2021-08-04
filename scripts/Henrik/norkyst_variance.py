@@ -15,7 +15,12 @@ path   = '/nird/projects/NS9853K/DATA/norkyst800/'
 # fn2    = '_var.nc'
 fname1 = 'norkyst800_sst_'
 fname2 = '_daily_mean.nc'
-
+mparser = {
+            '01':'JAN','02':'FEB','03':'MAR',
+            '04':'APR','05':'MAY','06':'JUN',
+            '07':'JUL','08':'AUG','09':'SEP',
+            '10':'OCT','11':'NOV','12':'DEC'
+        }
 months = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
 # latex.set_style(style='white')
@@ -56,7 +61,7 @@ for month in months:
                                 cmap=cmap,norm=norm,extend='max',levels=levels)
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
-            ax.set_title(month)
+            ax.set_title(mparser[month] + ' NorKyst-800 SST variance [degC^2]')
             fig.colorbar(cs,ax=ax)
             graphics.save_fig(fig,'variance_map_norkyst_'+month)
 
