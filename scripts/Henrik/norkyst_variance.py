@@ -53,11 +53,11 @@ for month in months:
             norm   = BoundaryNorm(levels,cmap.N)
 
             cs = ax.contourf(lons,lats,data,transform=ccrs.PlateCarree(),
-                                cmap=cmap,norm=norm)
+                                cmap=cmap,norm=norm,extend='max',levels=levels)
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
             ax.set_title(month)
-            fig.colorbar(cs,ax=ax,extend='max')
+            fig.colorbar(cs,ax=ax)
             graphics.save_fig(fig,'variance_map_norkyst_'+month)
 
     except (FileNotFoundError,np.core._exceptions.MemoryError) as e:
