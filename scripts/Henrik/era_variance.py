@@ -55,7 +55,7 @@ for month in months:
     data = era.where(era.time.dt.month==int(month),drop=True)
 
     data = data.sst.var('time',skipna=True).squeeze().transpose('lat','lon')
-    print(data)
+
     lons = data.lon
     lats = data.lat
 
@@ -69,4 +69,4 @@ for month in months:
                             linewidth=0.2)
     ax.set_title(month)
     fig.colorbar(cs,ax=ax)
-    graphics.save_fig(fig,'variance_map_norkyst_'+month)
+    graphics.save_fig(fig,'variance_map_era_'+month)
