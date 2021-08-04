@@ -39,7 +39,7 @@ era = ERA5(high_res=True).load(
                             start_time  = clim_t_start,
                             end_time    = clim_t_end,
                             bounds      = bounds
-                        )
+                        )[var]
 
 hindcast     = Hindcast(
                         var,
