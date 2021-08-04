@@ -52,7 +52,7 @@ for month in months:
         figsize=latex.set_size(width=345,subplots=(1,1),fraction=0.95),\
         subplot_kw=dict(projection=ccrs.NorthPolarStereo()))
 
-    print(month)
+    print(int(month))
 
     print(era.time.dt.month)
 
