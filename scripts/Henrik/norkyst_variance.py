@@ -48,7 +48,7 @@ for month in months:
             lons = data.longitude
             lats = data.latitude
 
-            cmap   = latex.cm_rgc(c='yellow').reversed()
+            cmap   = latex.cm_rgc(c='yellow')
             levels = np.arange(0,7,0.5)
             norm   = BoundaryNorm(levels,cmap.N)
 
