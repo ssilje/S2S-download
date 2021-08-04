@@ -55,7 +55,7 @@ for month in months:
     data = era.where(era.time.dt.month==int(month),drop=True)
 
     data = data.sst.var('time',skipna=True).squeeze().transpose('lon','lat')
-
+    print(data)
     lons = data.lon
     lats = data.lat
 
