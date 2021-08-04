@@ -27,16 +27,16 @@ for ax,month in zip(axes.flatten(),months):
 
     try:
         # data = xr.open_dataset(path+fn1+month+fn2).squeeze()
+        with xr.open_mfdataset( path + fname, parallel=True ) as data:
 
-        data = xr.open_mfdataset( path + fname, parallel=True )
-        # # load to memory
-        data = data.load().temperature.var('time',skipna=True).squeeze()
-        print(data)
-        var  = data
-        lons = data.longitude
-        lats = data.latitude
+            # # load to memory
+            data = data.load().temperature.var('time',skipna=True).squeeze()
+            print(data)
+            
+            lons = data.longitude
+            lats = data.latitude
 
-        ax.contourf(lons,lats,var,transform=ccrs.PlateCarree())
+            ax.contourf(lons,lats,data,transform=ccrs.PlateCarree())
 
     except FileNotFoundError:
         pass
