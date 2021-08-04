@@ -16,8 +16,8 @@ fname2 = '_daily_mean.nc'
 months = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
 latex.set_style(style='white')
-fig,axes = plt.subplots(3,4,\
-    figsize=latex.set_size(width=345,subplots=(3,4),fraction=0.95),\
+fig,axes = plt.subplots(1,1,\
+    figsize=latex.set_size(width=345,subplots=(1,1),fraction=0.95),\
     subplot_kw=dict(projection=ccrs.NorthPolarStereo()))
 
 for ax,month in zip(axes.flatten(),months):
@@ -30,20 +30,18 @@ for ax,month in zip(axes.flatten(),months):
         with xr.open_mfdataset( path + fname, parallel=True ) as data:
 
             # # load to memory
-            data = data.load().temperature.var('time',skipna=True).squeeze()
+            data = data.load()
             print(data)
-            
+            data = data.temperature.var('time',skipna=True).squeeze()
+
             lons = data.longitude
             lats = data.latitude
 
             ax.contourf(lons,lats,data,transform=ccrs.PlateCarree())
-
+            ax.coastlines(resolution='10m', color='grey',\
+                                    linewidth=0.2)
+            ax.set_title(month)
+            graphics.save_fig(fig,'variance_map_norkyst')
+            
     except FileNotFoundError:
         pass
-
-    ax.coastlines(resolution='10m', color='grey',\
-                            linewidth=0.2)
-
-    ax.set_title(month)
-
-graphics.save_fig(fig,'variance_map_norkyst')
