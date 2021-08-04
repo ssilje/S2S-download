@@ -1,5 +1,6 @@
 import xarray as xr
 import pandas as pd
+import numpy as np
 import json
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
@@ -15,7 +16,7 @@ path   = '/nird/projects/NS9853K/DATA/norkyst800/'
 fname1 = 'norkyst800_sst_'
 fname2 = '_daily_mean.nc'
 
-months = ['01','02','03','04','05','06','07','08','09','10','11','12']
+months = ['01','02','03','04','05','07','08','09','10','11','12']
 
 # latex.set_style(style='white')
 # fig,axes = plt.subplots(1,1,\
