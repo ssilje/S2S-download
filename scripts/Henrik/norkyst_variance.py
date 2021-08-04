@@ -44,10 +44,10 @@ for month in months:
         # data = xr.open_dataset(path+fn1+month+fn2).squeeze()
         with xr.open_mfdataset( path + fname, parallel=True ) as data:
 
-            print(data)
+            
             # # load to memory
             data = data.load()
-            print(data)
+
             data = data.temperature.var('time',skipna=True).squeeze()
 
             lons = data.longitude
@@ -66,4 +66,5 @@ for month in months:
             graphics.save_fig(fig,'variance_map_norkyst_'+month)
 
     except (FileNotFoundError,MemoryError) as e:
+        print(e)
         pass
