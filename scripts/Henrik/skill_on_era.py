@@ -1,6 +1,8 @@
 import xarray as xr
 import pandas as pd
 import numpy as np
+import xskillscore as xs
+
 import json
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
@@ -60,5 +62,42 @@ observations = Observations(
                             process=True
                             )
 
-print(hindcast)
-print(observations)
+clim_fc = models.clim_fc(observations.mean,observations.std)
+pers    = models.persistence(
+                init_value   = observations.init_a,
+                observations = observations.data_a
+                )
+
+mae_fc = xs.mae(hindcast.data_a.mean('member'),observations.data_a,dim=[])
+mae_clim = xs.mae(clim_fc,observations.data_a,dim=[])
+mae_pers = xs.mae(pers,observations.data_a,dim=[])
+
+for month in months:
+
+    mfc   = mae_fc.where(mae_fc.time.dt.month==int(month),drop=True)\
+                                                .mean('time',skipna=True)
+    mclim = mae_clim.where(mae_fc.time.dt.month==int(month),drop=True)\
+                                                .mean('time',skipna=True)
+    mpers = mae_pers.where(mae_fc.time.dt.month==int(month),drop=True)\
+                                                .mean('time',skipna=True)
+
+    for ss,lab in zip([mfc/mclim,mfc/mpers],['CLIM','PERS']):
+
+        latex.set_style(style='white')
+        fig,ax = plt.subplots(1,1,\
+            figsize=latex.set_size(width=345,subplots=(1,1),fraction=0.95),\
+            subplot_kw=dict(projection=ccrs.NorthPolarStereo()))
+
+        ss = ( 1 - ss ).squeeze().transpose('lat','lon')
+
+        cmap   = latex.cm_rgc(c='yellow')
+        levels = np.arange(0,7,0.5)
+        norm   = BoundaryNorm(levels,cmap.N)
+
+        cs = ax.contourf(ss.lon,ss.lat,ss,transform=ccrs.PlateCarree(),
+                            cmap=cmap,norm=norm,extend='max',levels=levels)
+        ax.coastlines(resolution='10m', color='grey',\
+                                linewidth=0.2)
+        ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', ERA5')
+        fig.colorbar(cs,ax=ax)
+        graphics.save_fig(fig,'variance_map_'+lab+month)
