@@ -9,6 +9,7 @@ from S2S.local_configuration import config
 from S2S.graphics import latex, graphics
 
 from matplotlib.colors import BoundaryNorm
+from numpy.core._exceptions import MemoryError
 
 path   = '/nird/projects/NS9853K/DATA/norkyst800/'
 # fn1    = 'norkyst800_sst_'
@@ -16,7 +17,7 @@ path   = '/nird/projects/NS9853K/DATA/norkyst800/'
 fname1 = 'norkyst800_sst_'
 fname2 = '_daily_mean.nc'
 
-months = ['01','02','03','04','05','07','08','09','10','11','12']
+months = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
 # latex.set_style(style='white')
 # fig,axes = plt.subplots(1,1,\
@@ -57,8 +58,8 @@ for month in months:
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
             ax.set_title(month)
-            fig.colorbar(cs,ax=ax)
+            fig.colorbar(cs,ax=ax,extend='max')
             graphics.save_fig(fig,'variance_map_norkyst_'+month)
 
-    except FileNotFoundError:
+    except FileNotFoundError,MemoryError:
         pass
