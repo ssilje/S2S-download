@@ -52,21 +52,12 @@ for month in months:
         figsize=latex.set_size(width=345,subplots=(1,1),fraction=0.95),\
         subplot_kw=dict(projection=ccrs.NorthPolarStereo()))
 
-    print(int(month))
+    data = era.where(era.time.dt.month==int(month),drop=True)
 
-    print(era.time.dt.month)
+    data = data.sst.var('time',skipna=True).squeeze()
 
-    exit()
-
-
-    print(data)
-    # # load to memory
-    data = data.load()
-    print(data)
-    data = data.temperature.var('time',skipna=True).squeeze()
-
-    lons = data.longitude
-    lats = data.latitude
+    lons = data.lon
+    lats = data.lat
 
     cmap   = latex.cm_rgc(c='yellow')
     levels = np.arange(0,7,0.5)
