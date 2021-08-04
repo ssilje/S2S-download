@@ -9,7 +9,6 @@ from S2S.local_configuration import config
 from S2S.graphics import latex, graphics
 
 from matplotlib.colors import BoundaryNorm
-from numpy.core._exceptions import MemoryError
 
 path   = '/nird/projects/NS9853K/DATA/norkyst800/'
 # fn1    = 'norkyst800_sst_'
@@ -61,5 +60,5 @@ for month in months:
             fig.colorbar(cs,ax=ax,extend='max')
             graphics.save_fig(fig,'variance_map_norkyst_'+month)
 
-    except (FileNotFoundError,MemoryError) as e:
+    except (FileNotFoundError,np.core._exceptions.MemoryError) as e:
         pass
