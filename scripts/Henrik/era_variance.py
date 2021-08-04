@@ -24,7 +24,7 @@ clim_t_end    = (2021,1,4)
 high_res = True
 
 era = ERA5(high_res=True).load(
-                            var         = var
+                            var         = var,
                             start_time  = clim_t_start,
                             end_time    = clim_t_end,
                             bounds      = bounds
