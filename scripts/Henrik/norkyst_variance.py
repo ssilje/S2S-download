@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from S2S.local_configuration import config
 from S2S.graphics import latex, graphics
 
+from matplotlib.colors import BoundaryNorm
+
 path   = '/nird/projects/NS9853K/DATA/norkyst800/'
 # fn1    = 'norkyst800_sst_'
 # fn2    = '_var.nc'
@@ -45,7 +47,12 @@ for month in months:
             lons = data.longitude
             lats = data.latitude
 
-            cs = ax.contourf(lons,lats,data,transform=ccrs.PlateCarree())
+            cmap   = latex.cm_rgc(c='yellow').reversed()
+            levels = np.arange(0,7,0.5)
+            norm   = BoundaryNorm(levels,cmap.N)
+
+            cs = ax.contourf(lons,lats,data,transform=ccrs.PlateCarree(),
+                                cmap=cmap,norm=norm)
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
             ax.set_title(month)
