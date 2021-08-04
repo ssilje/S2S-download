@@ -18,8 +18,8 @@ var      = 'sst'
 t_start  = (2020,1,23)
 t_end    = (2021,1,4)
 
-clim_t_start  = (2000,1,1)
-clim_t_end    = (2021,1,4)
+clim_t_start  = (2012,06,27)
+clim_t_end    = (2019,02,26)
 
 high_res = True
 
