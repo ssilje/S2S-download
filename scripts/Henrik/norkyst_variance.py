@@ -28,9 +28,9 @@ for ax,month in zip(axes.flatten(),months):
     try:
         # data = xr.open_dataset(path+fn1+month+fn2).squeeze()
 
-        ds = xr.open_mfdataset( path + fname, parallel=True )
+        data = xr.open_mfdataset( path + fname, parallel=True )
         # # load to memory
-        data = ds.load().temperature.var('time',skipna=True).squeeze()
+        data = data.load().temperature.var('time',skipna=True).squeeze()
         print(data)
         var  = data
         lons = data.longitude
