@@ -13,6 +13,9 @@ from S2S.process import Hindcast, Observations, Grid2Point
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics,latex
 from S2S import models, location_cluster
 
+import statsmodels.api as sm
+import scipy.stats as stats
+
 from S2S.local_configuration import config
 
 def corr(x,y):
