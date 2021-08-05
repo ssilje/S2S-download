@@ -89,7 +89,7 @@ for month in months:
                     )
 
     rho = xr.apply_ufunc(
-                corr,mdata.mw,mdata.nk,
+                corr,mdata.bw,mdata.nk,
                 input_core_dims  = [['time'],['time']],
                 output_core_dims = [[]],
                 vectorize=True,dask='parallelized'
