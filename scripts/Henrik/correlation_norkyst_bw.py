@@ -1,4 +1,7 @@
 import pandas as pd
+import xarrray as xr
+import numpy as np
+import json
 
 from S2S.data_handler import ERA5, BarentsWatch
 from S2S.process import Hindcast, Observations, Grid2Point
