@@ -6,6 +6,8 @@ from S2S.process import Hindcast, Observations, Grid2Point
 from S2S.graphics import mae,crps,graphics as mae,crps,graphics
 from S2S import models, location_cluster
 
+from S2S.local_configuration import config
+
 def _loc_from_name(name):
     return str(location_cluster.loc_from_name(name))
 
