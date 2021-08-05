@@ -84,21 +84,25 @@ for month in months:
 
     for ss,lab in zip([mfc/mclim,mfc/mpers],['CLIM','PERS']):
 
-        latex.set_style(style='white')
-        fig,ax = plt.subplots(1,1,\
-            figsize=latex.set_size(width=345,subplots=(1,1),fraction=0.95),\
-            subplot_kw=dict(projection=ccrs.NorthPolarStereo()))
+        for step in mfc.step:
 
-        ss = ( 1 - ss ).squeeze().transpose('lat','lon')
+            ss = ss.sel(step=step)
 
-        cmap   = latex.cm_rgc(c='yellow')
-        levels = np.arange(0,7,0.5)
-        norm   = BoundaryNorm(levels,cmap.N)
+            latex.set_style(style='white')
+            fig,ax = plt.subplots(1,1,\
+                figsize=latex.set_size(width=345,subplots=(1,1),fraction=0.95),\
+                subplot_kw=dict(projection=ccrs.NorthPolarStereo()))
 
-        cs = ax.contourf(ss.lon,ss.lat,ss,transform=ccrs.PlateCarree(),
-                            cmap=cmap,norm=norm,extend='max',levels=levels)
-        ax.coastlines(resolution='10m', color='grey',\
-                                linewidth=0.2)
-        ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', ERA5')
-        fig.colorbar(cs,ax=ax)
-        graphics.save_fig(fig,'variance_map_'+lab+month)
+            ss = ( 1 - ss ).squeeze().transpose('lat','lon')
+
+            cmap   = latex.cm_rgc(c='yellow')
+            levels = np.arange(0,7,0.5)
+            norm   = BoundaryNorm(levels,cmap.N)
+
+            cs = ax.contourf(ss.lon,ss.lat,ss,transform=ccrs.PlateCarree(),
+                                cmap=cmap,norm=norm,extend='max',levels=levels)
+            ax.coastlines(resolution='10m', color='grey',\
+                                    linewidth=0.2)
+            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', ERA5, lt:'+str(step.values))
+            fig.colorbar(cs,ax=ax)
+            graphics.save_fig(fig,'variance_map_'+lab+month+str(step.values))
