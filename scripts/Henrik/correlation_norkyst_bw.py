@@ -83,8 +83,13 @@ for month in months:
     mbw = bw.where(bw.time.dt.month==int(month),drop=True)
     mnk = nk.where(nk.time.dt.month==int(month),drop=True)
 
+    mdata = xr.merge(
+                        [mbw.rename('bw'),mnk.rename('nk')],
+                        join='outer',compat='override'
+                    )
+
     rho = xr.apply_ufunc(
-                corr,mbw,mnk,
+                corr,mdata.mw,mdata.nk,
                 input_core_dims  = [['time'],['time']],
                 output_core_dims = [[]],
                 vectorize=True,dask='parallelized'
