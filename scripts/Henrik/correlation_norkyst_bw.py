@@ -100,7 +100,7 @@ for month in months:
 
     rho = rho.squeeze()
 
-    cmap   = latex.cm_rgc(c='white').reversed()
+    cmap   = latex.cm_rgc(c='yellow').reversed()
     levels = np.arange(-1,1.1,0.1)
     norm   = BoundaryNorm(levels,cmap.N)
 
@@ -108,10 +108,10 @@ for month in months:
                 rho.lon.values,
                 rho.lat.values,
                 c=rho.values,
-                s=1,
+                s=1.1,
                 cmap=cmap,
                 norm=norm,
-                alpha=0.9,
+                alpha=0.95,
                 transform=ccrs.PlateCarree()
             )
 

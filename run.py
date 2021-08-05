@@ -3,5 +3,5 @@
 # import scripts.Henrik.era_variance
 # import scripts.Henrik.norkyst_variance
 
-import scripts.Henrik.skill_on_era
-# import scripts.Henrik.correlation_norkyst_bw
+# import scripts.Henrik.skill_on_era
+import scripts.Henrik.correlation_norkyst_bw
