@@ -104,7 +104,7 @@ for month in months:
     levels = np.arange(-1,1.1,0.1)
     norm   = BoundaryNorm(levels,cmap.N)
 
-    ax.scatter(
+    cs = ax.scatter(
                 rho.lon.values,
                 rho.lat.values,
                 c=rho.values,
