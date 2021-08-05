@@ -98,14 +98,23 @@ for month in months:
                 vectorize=True,dask='parallelized'
                 )
 
-    rho = rho.squeeze().transpose('lat','lon')
+    rho = rho.squeeze()
 
     cmap   = latex.cm_rgc(c='white').reversed()
     levels = np.arange(-1,1.1,0.1)
     norm   = BoundaryNorm(levels,cmap.N)
 
-    cs = ax.contourf(rho.lon,rho.lat,rho,transform=ccrs.PlateCarree(),
-                        cmap=cmap,norm=norm,extend='max',levels=levels)
+    ax.scatter(
+                rho.lon.values,
+                rho.lat.values,
+                c=rho.values,
+                s=1,
+                cmap=cmap,
+                norm=norm,
+                alpha=0.9,
+                transform=ccrs.PlateCarree()
+            )
+
     ax.coastlines(resolution='10m', color='grey',\
                             linewidth=0.2)
     ax.set_title(mparser[month] + 'corr(Norkyst,Barentswatch)')
