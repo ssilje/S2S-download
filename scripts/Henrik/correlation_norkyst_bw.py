@@ -52,7 +52,7 @@ high_res = True
 steps    = pd.to_timedelta([9,16,23,30,37],'D')
 
 # observations must be weekly mean values with a time dimension
-bw       = BarentsWatch().load('all',no=350).sortby('time')[var]
+bw       = BarentsWatch().load('all',no=100).sortby('time')[var]
 
 ### get observations ###
 nk = []
