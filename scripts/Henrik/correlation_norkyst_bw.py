@@ -32,10 +32,6 @@ def corr(x,y):
                         )
     return r
 
-rho.append(np.array(yrho))
-
-    return np.stack(rho,axis=-1)
-
 def _loc_from_name(name):
     return str(location_cluster.loc_from_name(name))
 
