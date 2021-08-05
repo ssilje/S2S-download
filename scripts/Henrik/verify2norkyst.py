@@ -75,7 +75,7 @@ point_observations = Observations(
                             )
 
 point_hindcast = Grid2Point(point_observations,grid_hindcast).correlation(
-                                                        step_dependent=True
+            ['Hisdalen','Stokkvika']                                            step_dependent=True
                                                             )
 
 clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
