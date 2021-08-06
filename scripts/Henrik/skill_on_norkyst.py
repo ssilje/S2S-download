@@ -62,7 +62,7 @@ for loc in bw.location.values:
                             download=False,
                             split_work=True
                         )
-    print(hindcast.data_a.step.isel(step=0).values)
+    print(hindcast.data_a.step.isel(step=0).dt.days)
     observations = Observations(
                                 name='NorKyst-800_'+str(loc),
                                 observations=nk,
