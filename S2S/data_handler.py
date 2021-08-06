@@ -73,7 +73,7 @@ class Archive:
                 return var+'/'+'_'.join(
                         [
                             var,
-                            'CY46R1_CY47R1',
+                            'CY46R1',
                             date.strftime('%Y-%m-%d'),
                             run,
                             ftype
@@ -289,9 +289,17 @@ class LoadLocal:
                         members.append(open_data)
 
 
-                    open_data = xr.open_dataset(self.in_path+\
-                                                    filename,engine=engine)
-
+                    # to suppress generation of the index file when using cfgrib engine
+                    if engine=='cfgrib':
+                        open_data = xr.open_dataset(self.in_path+\
+                                                    filename,engine=engine,
+                                                    backend_kwargs={'indexpath':''}
+                                                    )
+                    else:
+                        open_data = xr.open_dataset(self.in_path+\
+                                                    filename,engine=engine
+                                                    )
+                                                    
                     open_data = self.rename_dimensions(open_data)
 
                     if sort_by:
@@ -367,8 +375,12 @@ class LoadLocal:
                             'member','step','time',
                             'lon','lat'
                             ).to_netcdf(self.out_path+self.out_filename)
-            else: # TODO make option for forecast
+            elif self.label=='S2SF':
+                data.transpose(
+                    'member','step','time', 'lon','lat'
+                ).to_netcdf(self.out_path+self.out_filename)
 
+            else: 
                 data.to_netcdf(self.out_path+self.out_filename)
 
             self.download = False
@@ -405,6 +417,29 @@ class ECMWF_S2SH(LoadLocal):
         super().__init__()
 
         self.label           = 'S2SH'
+
+        self.loading_options['load_time']        = 'daily'#'weekly_forecast_cycle'
+        self.loading_options['concat_dimension'] = 'time'
+        self.loading_options['resample']         = False
+        self.loading_options['sort_by']          = 'lat'
+        self.loading_options['control_run']      = True
+        self.loading_options['engine']           = 'cfgrib'
+
+        if high_res:
+            self.loading_options['high_res']     = True
+            self.in_path                         = config[self.label+'_HR']
+        else:
+            self.in_path                         = config[self.label]
+
+        self.out_path                            = config['VALID_DB']
+
+class ECMWF_S2SF(LoadLocal):
+
+    def __init__(self,high_res=False):
+
+        super().__init__()
+
+        self.label           = 'S2SF'
 
         self.loading_options['load_time']        = 'daily'#'weekly_forecast_cycle'
         self.loading_options['concat_dimension'] = 'time'
