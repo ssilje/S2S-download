@@ -37,56 +37,56 @@ mparser = {
         }
 months  = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
-era = ERA5(high_res=True).load(
-                            var         = var,
-                            start_time  = clim_t_start,
-                            end_time    = clim_t_end,
-                            bounds      = bounds
-                        )[var]
+for step in steps:
 
-hindcast     = Hindcast(
-                        var,
-                        t_start,
-                        t_end,
-                        bounds,
-                        high_res=high_res,
-                        steps=steps,
-                        process=False,
-                        download=False,
-                        split_work=True
+
+
+    era = ERA5(high_res=True).load(
+                                var         = var,
+                                start_time  = clim_t_start,
+                                end_time    = clim_t_end,
+                                bounds      = bounds
+                            )[var]
+
+    hindcast     = Hindcast(
+                            var,
+                            t_start,
+                            t_end,
+                            bounds,
+                            high_res=high_res,
+                            steps=step,
+                            process=False,
+                            download=False,
+                            split_work=True
+                        )
+
+    observations = Observations(
+                                name='ERA5',
+                                observations=era,
+                                forecast=hindcast,
+                                process=True
+                                )
+
+    clim_fc = models.clim_fc(observations.mean,observations.std)
+    pers    = models.persistence(
+                    init_value   = observations.init_a,
+                    observations = observations.data_a
                     )
 
-observations = Observations(
-                            name='ERA5',
-                            observations=era,
-                            forecast=hindcast,
-                            process=True
-                            )
+    mae_fc = xs.mae(hindcast.data_a.mean('member'),observations.data_a,dim=[])
+    mae_clim = xs.mae(clim_fc,observations.data_a,dim=[])
+    mae_pers = xs.mae(pers,observations.data_a,dim=[])
 
-clim_fc = models.clim_fc(observations.mean,observations.std)
-pers    = models.persistence(
-                init_value   = observations.init_a,
-                observations = observations.data_a
-                )
+    for month in months:
 
-mae_fc = xs.mae(hindcast.data_a.mean('member'),observations.data_a,dim=[])
-mae_clim = xs.mae(clim_fc,observations.data_a,dim=[])
-mae_pers = xs.mae(pers,observations.data_a,dim=[])
+        mfc   = mae_fc.where(mae_fc.time.dt.month==int(month),drop=True)\
+                                                    .mean('time',skipna=True)
+        mclim = mae_clim.where(mae_fc.time.dt.month==int(month),drop=True)\
+                                                    .mean('time',skipna=True)
+        mpers = mae_pers.where(mae_fc.time.dt.month==int(month),drop=True)\
+                                                    .mean('time',skipna=True)
 
-for month in months:
-
-    mfc   = mae_fc.where(mae_fc.time.dt.month==int(month),drop=True)\
-                                                .mean('time',skipna=True)
-    mclim = mae_clim.where(mae_fc.time.dt.month==int(month),drop=True)\
-                                                .mean('time',skipna=True)
-    mpers = mae_pers.where(mae_fc.time.dt.month==int(month),drop=True)\
-                                                .mean('time',skipna=True)
-
-    for ss,lab in zip([mfc/mclim,mfc/mpers],['CLIM','PERS']):
-
-        for step in mfc.step:
-
-            ss = ss.sel(step=step)
+        for ss,lab in zip([mfc/mclim,mfc/mpers],['CLIM','PERS']):
 
             latex.set_style(style='white')
             fig,ax = plt.subplots(1,1,\
