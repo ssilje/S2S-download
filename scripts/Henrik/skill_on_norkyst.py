@@ -37,12 +37,10 @@ mparser = {
         }
 months  = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
-
+mae_fc, mae_clim, mae_pers = [], [], []
 ################################################################################
 bw       = BarentsWatch().load('all',no=0).sortby('time')[var]
 
-### get observations ###
-nk = []
 for loc in bw.location.values:
 
     print(loc)
@@ -51,11 +49,7 @@ for loc in bw.location.values:
                                      str(loc) +\
                                         '.nc'
 
-    nk.append(xr.open_dataset(fname)[var])
-
-nk = xr.concat(nk,'location',join='outer').drop('radius')
-################################################################################
-for step in steps:
+    nk = xr.open_dataset(fname)[var].drop('radius')
 
     hindcast     = Hindcast(
                             var,
@@ -63,12 +57,12 @@ for step in steps:
                             t_end,
                             bounds,
                             high_res=high_res,
-                            steps=step,
+                            steps=steps,
                             process=False,
                             download=False,
                             split_work=True
                         )
-
+    
     observations = Observations(
                                 name='NorKyst-800',
                                 observations=nk,
@@ -82,18 +76,24 @@ for step in steps:
                     observations = observations.data_a
                     )
 
-    mae_fc = xs.mae(hindcast.data_a.mean('member'),observations.data_a,dim=[])
-    mae_clim = xs.mae(clim_fc,observations.data_a,dim=[])
-    mae_pers = xs.mae(pers,observations.data_a,dim=[])
+    mae_fc.append(xs.mae(hindcast.data_a.mean('member'),observations.data_a,dim=[]))
+    mae_clim.append(xs.mae(clim_fc,observations.data_a,dim=[]))
+    mae_pers.append(xs.mae(pers,observations.data_a,dim=[]))
 
-    for month in months:
+mae_fc = xr.concat(mae_fc,'location',join='outer')
+mae_clim = xr.concat(mae_clim,'location',join='outer')
+mae_pers = xr.concat(mae_pers,'location',join='outer')
 
-        mfc   = mae_fc.where(mae_fc.time.dt.month==int(month),drop=True)\
-                                                    .mean('time',skipna=True)
-        mclim = mae_clim.where(mae_fc.time.dt.month==int(month),drop=True)\
-                                                    .mean('time',skipna=True)
-        mpers = mae_pers.where(mae_fc.time.dt.month==int(month),drop=True)\
-                                                    .mean('time',skipna=True)
+for month in months:
+
+    mfc   = mae_fc.where(mae_fc.time.dt.month==int(month),drop=True)\
+                                                .mean('time',skipna=True)
+    mclim = mae_clim.where(mae_fc.time.dt.month==int(month),drop=True)\
+                                                .mean('time',skipna=True)
+    mpers = mae_pers.where(mae_fc.time.dt.month==int(month),drop=True)\
+                                                .mean('time',skipna=True)
+
+    for step in steps:
 
         for ss,lab in zip([mfc/mclim,mfc/mpers],['CLIM','PERS']):
 
@@ -102,6 +102,7 @@ for step in steps:
                 figsize=latex.set_size(width=345,subplots=(1,1),fraction=0.95),\
                 subplot_kw=dict(projection=ccrs.NorthPolarStereo()))
 
+            ss = ss.sel(step=step)
             ss = ( 1 - ss ).squeeze().transpose('lat','lon')
 
             cmap   = latex.cm_rgc(c='yellow')
@@ -112,6 +113,6 @@ for step in steps:
                                 cmap=cmap,norm=norm,extend='max',levels=levels)
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
-            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', NorKyst, lt:'+str(step.values))
+            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', NorKyst, lt:'+str(step.values.days))
             fig.colorbar(cs,ax=ax)
-            graphics.save_fig(fig,'variance_map_NorKyst_'+lab+month+str(step.values))
+            graphics.save_fig(fig,'variance_map_NorKyst_'+lab+month+str(step.values.days))
