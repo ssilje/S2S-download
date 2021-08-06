@@ -113,6 +113,6 @@ for month in months:
                                 cmap=cmap,norm=norm,extend='max',levels=levels)
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
-            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', NorKyst, lt:'+str(step.values.days))
+            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', NorKyst, lt:'+str(step.dt.days.values))
             fig.colorbar(cs,ax=ax)
-            graphics.save_fig(fig,'variance_map_NorKyst_'+lab+month+str(step.values.days))
+            graphics.save_fig(fig,'variance_map_NorKyst_'+lab+month+str(step.dt.days.values))
