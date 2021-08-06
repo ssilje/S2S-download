@@ -64,7 +64,7 @@ for loc in bw.location.values:
                         )
     print(hindcast.data_a.step.isel(step=0).values)
     observations = Observations(
-                                name='NorKyst-800',
+                                name='NorKyst-800_'+str(loc),
                                 observations=nk,
                                 forecast=hindcast,
                                 process=True
