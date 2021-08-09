@@ -1,4 +1,4 @@
-
+import pandas as pd
 from datetime import datetime
 
 # dictionary of model versions with (start,end)
@@ -28,13 +28,23 @@ def which_mv_for_init(fc_init_date,model='ECMWF',fmt='%Y-%m-%d'):
             model version as string
     """
 
-    # convert date string to datetime object:
-    fc_init_datetime = datetime.strptime(fc_init_date,fmt)
+    if isinstance(fc_init_date,str):
+        fc_init_datetime = pd.Timestamp(fc_init_date)
+
+    elif isinstance(fc_init_date,pd.Timestamp):
+        fc_init_datetime = fc_init_date
+
+    elif isinstance(fc_init_date,datetime.datetime):
+        fc_init_datetime = pd.Timestamp(fc_init_date)
+
+    else:
+        raise TypeError('No valid date format was given to which_mv_for_init')
+        return None
 
     # got through the model versions from the above dictionary:
     for MV,mv_dates in model_version_specs[model].items():
         # convert first and last dates to datetime:
-        mv_first = datetime.strptime(mv_dates[0],fmt),
+        mv_first = datetime.strptime(mv_dates[0],fmt)
         mv_last  = datetime.strptime(mv_dates[-1],fmt)
         # check if the given date is within the current model version's
         # start and end dates:
@@ -44,5 +54,5 @@ def which_mv_for_init(fc_init_date,model='ECMWF',fmt='%Y-%m-%d'):
     try:
         return valid_version
     except:
-        print('No matching model version found...')
+        raise ValueError('No matching model version found...')
         return None
