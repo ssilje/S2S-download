@@ -10,6 +10,7 @@ from S2S.local_configuration import config
 import S2S.handle_datetime as dt
 import scripts.Henrik.organize_barentzwatch as organize_barentzwatch
 from . import xarray_helpers as xh
+from . import date_to_model as d2m
 
 class Archive:
     """
@@ -27,10 +28,10 @@ class Archive:
                         }
 
         self.dimension_parser = {
-                        'number':'member',
-                        'longitude':'lon',
-                        'latitude':'lat'
-                        }
+                                    'number'   :'member',
+                                    'longitude':'lon',
+                                    'latitude' :'lat'
+                                    }
 
     @staticmethod
     def ERA5_in_filename(**kwargs):
@@ -44,6 +45,7 @@ class Archive:
                 'v10':'10m_v_component_of_wind',
                 't2m':'2m_temperature'
             }[var]
+
         return '_'.join([var,date.strftime('%Y%m%d')])+'.nc'
 
     @staticmethod
@@ -54,49 +56,25 @@ class Archive:
         var   = kwargs['var']
         date  = kwargs['date']
         run   = kwargs['run']
-        ftype = kwargs['ftype']
 
-        if var=='sst':
+        model_version = d2m.which_mv_for_init(date)
 
-            if kwargs['high_res']:
-                return var+'/'+'_'.join(
-                        [
-                            var,
-                            'CY46R1_CY47R1',
-                            '05x05',
-                            date.strftime('%Y-%m-%d'),
-                            run,
-                            ftype
-                        ]
-                    ) + '.grb'
-            else:
-                return var+'/'+'_'.join(
-                        [
-                            var,
-                            'CY46R1_CY47R1',
-                            date.strftime('%Y-%m-%d'),
-                            run,
-                            ftype
-                        ]
-                    ) + '.grb'
-
-        elif var[1:]=='10':
-
+        if kwargs['high_res']:
             return var+'/'+'_'.join(
                     [
                         var,
-                        'CY46R1',
+                        model_version,
+                        '05x05',
                         date.strftime('%Y-%m-%d'),
                         run
                     ]
                 ) + '.grb'
 
-        elif var=='t2m':
-
+        else:
             return var+'/'+'_'.join(
                     [
                         var,
-                        'CY46R1',
+                        model_version,
                         date.strftime('%Y-%m-%d'),
                         run
                     ]
@@ -131,20 +109,6 @@ class Archive:
         if not os.path.exists(path):
             os.makedirs(path)
 
-    # These two functions are depricated after stopped usign domains.json
-    @staticmethod
-    def get_bounds(domainID):
-        with open(config['DOMAINS'], 'r') as file:
-            domain_dict = json.load(file)
-        return domain_dict[domainID]['bounds']
-
-    # These two functions are depricated after stopped usign domains.json
-    @staticmethod
-    def get_domain(domainID):
-        with open(config['DOMAINS'], 'r') as file:
-            domain_dict = json.load(file)
-        return domain_dict[domainID]
-
 class LoadLocal:
     """
     Base class for loading local data
@@ -176,7 +140,6 @@ class LoadLocal:
         self.start_time   = None
         self.end_time     = None
 
-        self.domainID     = 'full_grid'
         self.bounds       = ()
 
         self.dimension_parser = Archive().dimension_parser
@@ -289,8 +252,18 @@ class LoadLocal:
                         members.append(open_data)
 
 
-                    open_data = xr.open_dataset(self.in_path+\
-                                                    filename,engine=engine)
+                    # to suppress generation of the index file when
+                    # using cfgrib engine
+                    if engine=='cfgrib':
+                        open_data = xr.open_dataset(
+                                            self.in_path + \
+                                            filename,engine = engine,
+                                            backend_kwargs  = {'indexpath':''}
+                                            )
+                    else:
+                        open_data = xr.open_dataset(self.in_path+\
+                                                    filename,engine=engine
+                                                    )
 
                     open_data = self.rename_dimensions(open_data)
 
@@ -344,12 +317,12 @@ class LoadLocal:
         self.bounds       = bounds
         self.download     = download
         self.out_filename = archive.out_filename(
-                                                var=var,
-                                                start=start_time,
-                                                end=end_time,
-                                                bounds=bounds,
-                                                label=archive.ftype[self.label]
-                                                )
+                                            var    = var,
+                                            start  = start_time,
+                                            end    = end_time,
+                                            bounds = bounds,
+                                            label  = archive.ftype[self.label]
+                                            )
 
         while self.download or not os.path.exists(self.out_path
                                                         +self.out_filename):
@@ -359,16 +332,23 @@ class LoadLocal:
             data = self.execute_loading_sequence(x_landmask=x_landmask)
 
             if self.label=='ERA5':
-                data.transpose('time','lon','lat').to_netcdf(self.out_path
-                                                            +self.out_filename)
+                data.transpose('time','lon','lat').to_netcdf(
+                                                              self.out_path
+                                                            + self.out_filename
+                                                            )
             elif self.label=='S2SH':
 
                 data.transpose(
-                            'member','step','time',
-                            'lon','lat'
-                            ).to_netcdf(self.out_path+self.out_filename)
-            else: # TODO make option for forecast
+                            'member','step','time','lon','lat'
+                            ).to_netcdf(self.out_path + self.out_filename)
 
+            elif self.label=='S2SF':
+
+                data.transpose(
+                            'member','step','time', 'lon','lat'
+                            ).to_netcdf(self.out_path + self.out_filename)
+
+            else:
                 data.to_netcdf(self.out_path+self.out_filename)
 
             self.download = False
@@ -406,7 +386,7 @@ class ECMWF_S2SH(LoadLocal):
 
         self.label           = 'S2SH'
 
-        self.loading_options['load_time']        = 'daily'#'weekly_forecast_cycle'
+        self.loading_options['load_time']        = 'daily'
         self.loading_options['concat_dimension'] = 'time'
         self.loading_options['resample']         = False
         self.loading_options['sort_by']          = 'lat'
@@ -421,8 +401,28 @@ class ECMWF_S2SH(LoadLocal):
 
         self.out_path                            = config['VALID_DB']
 
-def gets2sh(domainID):
-    return xr.open_mfdataset(config['S2SH']+'*8-2020*.grb', parallel=True, engine='cfgrib')
+class ECMWF_S2SF(LoadLocal):
+
+    def __init__(self,high_res=False):
+
+        super().__init__()
+
+        self.label           = 'S2SF'
+
+        self.loading_options['load_time']        = 'daily'#'weekly_forecast_cycle'
+        self.loading_options['concat_dimension'] = 'time'
+        self.loading_options['resample']         = False
+        self.loading_options['sort_by']          = 'lat'
+        self.loading_options['control_run']      = True
+        self.loading_options['engine']           = 'cfgrib'
+
+        if high_res:
+            self.loading_options['high_res']     = True
+            self.in_path                         = config[self.label+'_HR']
+        else:
+            self.in_path                         = config[self.label]
+
+        self.out_path                            = config['VALID_DB']
 
 class BarentsWatch:
 
@@ -521,147 +521,3 @@ class IMR:
             chunk.append(data)
 
         return xr.concat(chunk,'location',join='outer')
-
-class SST:
-    """
-    Loads daily: S2S data, hindcast and forecast, and ERA5.
-    """
-
-    def __init__(self,prnt=True):
-
-        self.ERA5   = xr.Dataset()
-        self.S2SH   = xr.Dataset()
-        self.S2SF   = xr.Dataset()
-
-        self.labels = [
-                        'ERA5',
-                        'S2SH',
-                        'S2SF'
-                        ]
-
-        self.ftype = {
-                        'ERA5':'reanalysis',
-                        'S2SH':'hindcast',
-                        'S2SF':'forecast'
-                        }
-
-        self.loaded = dict.fromkeys(self.labels)
-        self.path   = dict.fromkeys(self.labels)
-        self.time   = dict.fromkeys(self.labels)
-
-        self.domainID = 'full_grid'
-        self.bounds   = ()
-
-    def load(
-                self,
-                data_label,
-                t_start,
-                t_end,
-                domainID=None,
-                match_fc=False,
-                fc_per_week=1
-            ):
-
-        self.domainID = domainID if domainID else self.domainID
-        self.bounds   = Archive().get_bounds(domainID)
-
-        # if not self.is_loaded(data_label) or reload:
-
-        self.execute_loading_sequence(
-                                        data_label,
-                                        t_start,
-                                        t_end,
-                                        match_fc,
-                                        fc_per_week
-                                    )
-
-    def execute_loading_sequence(
-                                    self,
-                                    data_label,
-                                    t_start,
-                                    t_end,
-                                    match_fc=False,
-                                    fc_per_week=1
-                                ):
-
-        self.path[data_label] = config[data_label]
-        bounds                = self.bounds
-
-        if data_label=='ERA5':
-
-            self.time[data_label] = dt.days_from(t_start,t_end,match_fc)
-
-            chunk = []
-
-            for date in self.time[data_label]:
-
-                chunk.append(
-                    self.load_era(
-                        self.path[data_label],
-                        date,
-                        self.bounds
-                        )
-                    )
-
-            self.ERA5 = xr.concat(chunk,'time') # existing dimension
-
-        else:
-
-            if fc_per_week==1:
-                self.time[data_label] = dt.weekly_forecast_cycle(t_start,t_end)
-            else:
-                self.time[data_label] = dt.forecast_cycle(t_start,t_end)
-
-            chunk = []
-
-            for date in self.time[data_label]:
-
-                chunk.append(
-                        self.load_S2S(
-                            self.path[data_label],
-                            date,
-                            self.bounds,
-                            self.ftype[data_label]
-                            )
-                        )
-
-            if data_label=='S2SH':
-
-                self.S2SH = xr.concat(chunk,'time') # existing dimension
-
-            else:
-
-                self.S2SF = xr.concat(chunk,'cast_time') # new dimension
-
-    def is_loaded(self,data_label):
-        if self.loaded[data_label]:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def load_era(path,date,bounds):
-
-        filename  = '_'.join(['sea_surface_temperature',date.strftime('%Y%m%d')])+'.nc'
-
-        open_data = xr.open_dataset(path+filename)
-        open_data = open_data.sel(
-                        lat=slice(bounds[2],bounds[3]),
-                        lon=slice(bounds[0],bounds[1])
-                        )
-        open_data = open_data.resample(time='D').mean()
-
-        return open_data
-
-    @staticmethod
-    def load_S2S(path,date,bounds,ftype):
-
-        filename = '_'.join(['sst','CY46R1_CY47R1',date.strftime('%Y-%m-%d'),'pf',ftype])+'.grb'
-        open_data = xr.open_dataset(path+filename,engine='cfgrib')
-        open_data = open_data.sortby('latitude', ascending=True)
-        open_data = open_data.sel(
-                        latitude=slice(bounds[2],bounds[3]),
-                        longitude=slice(bounds[0],bounds[1])
-                        )
-
-        return open_data
