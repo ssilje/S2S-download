@@ -204,16 +204,16 @@ def skill_agg(
 
 
         handles, labels = ax.get_legend_handles_labels()
-        by_label = OrderedDict(zip(labels, handles))
-        legend = fig.legend(
-                    by_label.values(),
-                    by_label.keys(),
-                    loc='upper center',
-                    bbox_to_anchor=(0.5, -0.05),
-                    fancybox=True,
-                    shadow=True,
-                    ncol=4
-                )
+        by_label        = OrderedDict(zip(labels, handles))
+        legend          = fig.legend(
+                            by_label.values(),
+                            by_label.keys(),
+                            loc='upper center',
+                            bbox_to_anchor=(0.5, -0.05),
+                            fancybox=True,
+                            shadow=True,
+                            ncol=4
+                        )
         legend.get_texts()[0].set_color('r')
 
         fig.suptitle(suptitle)

@@ -4,18 +4,13 @@ config = {
     "S2S_DIR": '/nird/projects/NS9853K/DATA/S2S', # "/nird/projects/NS9853K/DATA/S2S",
     "S2SEUR_DIR": '', # "/nird/projects/NS9001K/sso102/S2S/DATA/grib/",
     "SFE_DIR": '', # "/nird/projects/NS9853K/DATA/SFE/Systems_daily_grib/",
-    "ERA5_daily_DIR": '', # "/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/",
+    "ERA5_daily_DIR": '/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/',
     "ERA5_monthly_DIR": '', # "/nird/projects/NS9853K/DATA/SFE/ERA_monthly_nc/",
-    "S2S_DIR_summer2018": '', # "/nird/projects/NS9001K/sso102/S2S/DATA/SUMMER2018",
-    "SAVEFIG": 'figures/', # " /nird/projects/NS9001K/sso102/FIGUERS"
+    "SAVEFIG": '/nird/projects/NS9001K/owul/figures/S2S-download/', # " /nird/projects/NS9001K/sso102/FIGUERS"
     'VALID_DB':'data/valid_db/',
-    'NORKYST':'data/norkyst800/',
     'S2SF':'/nird/projects/NS9853K/DATA/S2S/forecast/ECMWF/sfc/',
     'S2SH':'/nird/projects/NS9853K/DATA/S2S/hindcast/ECMWF/sfc/',
     'ERA5':'/nird/projects/NS9853K/DATA/SFE/ERA_daily_nc/grid_15/',
-    # 'S2SF':'data/nird_copy/S2S/Benjamin/forecast/ECMWF/sfc/', # local to henrik
-    # 'S2SH':'data/nird_copy/S2S/Benjamin/hindcast/ECMWF/sfc/', # local to henrik
-    # 'ERA5':'data/nird_copy/SFE/ERA_daily_nc/grid_15/',  # local to henrik
     'SITES':'data/BW/sites.json',
     'DOMAINS':'data/EIDE/domains.json',
     'BW':'./data/BW/BW_temperature/',
