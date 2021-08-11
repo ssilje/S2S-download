@@ -235,5 +235,5 @@ while smaller_than(t_end,(2021,4,1)):
                                                             +str(step.days))
         fig.colorbar(cs,ax=ax)
         graphics.save_fig(fig,
-                        model+'crps_skill_map_NorKyst_month'+month+lab+str(step.days)
+                        model+'crps_skill_map_NorKyst_month'+month+'CLIM'+str(step.days)
                         )
