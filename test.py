@@ -1,3 +1,4 @@
+
 from S2S.data_handler import ERA5, ECMWF_S2SF, ECMWF_S2SH
 
 bounds = (5,10,60,65)
@@ -28,3 +29,4 @@ for var in variables:
 
             except (KeyError,ValueError) as e:
                 print(repr(e))
+
