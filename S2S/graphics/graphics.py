@@ -497,18 +497,18 @@ def timeseries(
         fig.suptitle(str(name_from_loc(loc.values))+' '+title)
         save_fig(fig,fname)
 
-def point_map(da,c='r',poi=None):
+def point_map(da,c='r',poi=None,bw_special=False,boxes=None,bw_poi=None):
 
     name = poi
 
     latex.set_style(style='white')
     fig,axes = plt.subplots(1,1,\
-        figsize=latex.set_size(width='thesis',subplots=(1,1),fraction=0.95),\
+        figsize=latex.set_size(width=345,subplots=(1,1),fraction=0.95),\
         subplot_kw=dict(projection=ccrs.PlateCarree()))
 
     ax = axes
 
-    ax.coastlines(resolution='10m', color='black',\
+    ax.coastlines(resolution='10m', color='grey',\
                             linewidth=0.2)
 
     ax.set_extent((0,25,55,75),crs=ccrs.PlateCarree())
@@ -520,8 +520,8 @@ def point_map(da,c='r',poi=None):
         x = z.lon.values
         y = z.lat.values
 
-        ax.plot(x, y, marker='o', color='k', markersize=1,
-            alpha=0.6, transform=ccrs.PlateCarree())
+        ax.plot(x, y, marker='o', color='orange', markersize=0.5,
+            alpha=0.9, transform=ccrs.PlateCarree())
     if poi:
         poi = loc_from_name(poi)
         z = da.sel(location=str(poi))
@@ -535,7 +535,89 @@ def point_map(da,c='r',poi=None):
             verticalalignment='center', horizontalalignment='left',
             transform=ccrs.PlateCarree(),
             bbox=dict(facecolor='red', alpha=0.5, boxstyle='round'))
-    plt.show()
+
+    if bw_special:
+
+        gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+                  linewidth=0.5, color='gray', alpha=0.3, linestyle='--')
+
+        for coords,label in boxes:
+            box(ax,coords,proj=ccrs.PlateCarree(),label=label)
+
+        if bw_poi is not None:
+            for loc in bw_poi.location:
+
+                z = da.sel(location=loc)
+                x = z.lon.values
+                y = z.lat.values
+
+                ax.plot(x, y, marker='x', color='blue', markersize=0.3,
+                    alpha=0.9, transform=ccrs.PlateCarree())
+
+        ax.set_title('Fish farm locations')
+
+        save_fig(fig,'fish_farm_loctions')
+
+def box(ax,coords,proj,color='k',lwd=0.5,label=''):
+
+    if len(coords)==4:
+        x1 = coords[0]
+        x2 = coords[1]
+        y1 = coords[2]
+        y2 = coords[3]
+
+        ax.plot([x1,x1],[y1,y2],color=color,transform=proj,linewidth=lwd)
+        ax.plot([x2,x2],[y1,y2],color=color,transform=proj,linewidth=lwd)
+        ax.plot([x1,x2],[y1,y1],color=color,transform=proj,linewidth=lwd)
+        ax.plot([x1,x2],[y2,y2],color=color,transform=proj,linewidth=lwd)
+
+        ax.text(x1+0.1, y2, label,
+            verticalalignment='top', horizontalalignment='left',
+            transform=proj
+            # ,
+            # bbox=dict(facecolor='red', alpha=1, boxstyle='round')
+            )
+    if len(coords)==6:
+        x1 = coords[0]
+        x2 = coords[1]
+        x3 = coords[2]
+        x4 = coords[3]
+        y1 = coords[4]
+        y2 = coords[5]
+
+        ax.plot([x1,x3],[y1,y2],color=color,transform=proj,linewidth=lwd)
+        ax.plot([x2,x4],[y1,y2],color=color,transform=proj,linewidth=lwd)
+        ax.plot([x1,x2],[y1,y1],color=color,transform=proj,linewidth=lwd)
+        ax.plot([x3,x4],[y2,y2],color=color,transform=proj,linewidth=lwd)
+
+        ax.text(x3+0.1, y2, label,
+            verticalalignment='top', horizontalalignment='left',
+            transform=proj
+            # ,
+            # bbox=dict(facecolor='red', alpha=1, boxstyle='round')
+            )
+
+    if len(coords)==8:
+        x1 = coords[0]
+        x2 = coords[1]
+        x3 = coords[2]
+        x4 = coords[3]
+        y1 = coords[4]
+        y2 = coords[5]
+        y3 = coords[6]
+        y4 = coords[7]
+
+        ax.plot([x1,x3],[y1,y2],color=color,transform=proj,linewidth=lwd)
+        ax.plot([x2,x4],[y3,y4],color=color,transform=proj,linewidth=lwd)
+        ax.plot([x1,x2],[y1,y3],color=color,transform=proj,linewidth=lwd)
+        ax.plot([x3,x4],[y2,y4],color=color,transform=proj,linewidth=lwd)
+
+        ax.text(x3+0.1, y2, label,
+            verticalalignment='top', horizontalalignment='left',
+            transform=proj
+            # ,
+            # bbox=dict(facecolor='red', alpha=1, boxstyle='round')
+            )
 
 def skill_map(
               model,
