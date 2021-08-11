@@ -62,12 +62,13 @@ class Hindcast:
                     t_start,
                     t_end,
                     bounds,
-                    high_res=False,
-                    steps=None,
-                    download=False,
-                    process=False,
-                    split_work=False,
-                    period=None
+                    high_res   = False,
+                    steps      = None,
+                    download   = False,
+                    process    = False,
+                    split_work = False,
+                    period     = None,
+                    cross_val  = False
                 ):
 
         self.var            = var
@@ -80,6 +81,7 @@ class Hindcast:
         self.process        = process
         self.path           = config['VALID_DB']
         self.period         = period
+        self.cross_val      = cross_val
 
         filename_absolute = self.filename_func('absolute')
 
@@ -181,7 +183,10 @@ class Hindcast:
         if self.process or not os.path.exists(self.path+filename_anomalies):
 
             print('\tCompute model climatology')
-            self.mean,self.std = xh.c_climatology(self.data)
+            self.mean,self.std = xh.c_climatology(
+                                            self.data,
+                                            cross_validation = self.cross_val
+                                                )
 
             self.mean = self.mean.rename(self.var)
             self.std  = self.std.rename(self.var)
