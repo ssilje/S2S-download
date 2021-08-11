@@ -90,8 +90,12 @@ def save_fig(fig,filename):
     """
     Save figure as pdf and png
     """
-    path = filename.split('/')[0]
-    make_dir(config['SAVEFIG']+'/'+path)
+    if len(filename.split('/'))==2:
+        path = filename.split('/')[0]
+        make_dir(config['SAVEFIG']+'/'+path)
+    else:
+        make_dir(config['SAVEFIG'])
+
     # file,converge = latex.save_figure(fig,config['SAVEFIG']+filename)
     plt.savefig(config['SAVEFIG']+\
                     filename+'.png',dpi='figure',bbox_inches='tight')
