@@ -255,15 +255,18 @@ class LoadLocal:
                     # to suppress generation of the index file when
                     # using cfgrib engine
                     if engine=='cfgrib':
-                        open_data = xr.open_dataset(
+                        with xr.open_dataset(
                                             self.in_path + \
                                             filename,engine = engine,
                                             backend_kwargs  = {'indexpath':''}
-                                            )
+                                            ) as temp_data:
+                            open_data = temp_data
+
                     else:
-                        open_data = xr.open_dataset(self.in_path+\
+                        with xr.open_dataset(self.in_path+\
                                                     filename,engine=engine
-                                                    )
+                                                    ) as temp_data:
+                            open_data = temp_data
 
                     open_data = self.rename_dimensions(open_data)
 

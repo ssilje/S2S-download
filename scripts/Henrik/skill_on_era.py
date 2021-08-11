@@ -40,13 +40,15 @@ months  = ['01','02','03','04','05','06','07','08','09','10','11','12']
 for step in steps:
 
 
-
     era = ERA5(high_res=True).load(
                                 var         = var,
                                 start_time  = clim_t_start,
                                 end_time    = clim_t_end,
                                 bounds      = bounds
                             )[var]
+
+    era = era.stack(['lon','lat'])
+    print(era)
 
     hindcast     = Hindcast(
                             var,
@@ -55,7 +57,7 @@ for step in steps:
                             bounds,
                             high_res=high_res,
                             steps=step,
-                            process=False,
+                            process=True,
                             download=False,
                             split_work=True
                         )
@@ -103,6 +105,6 @@ for step in steps:
                                 cmap=cmap,norm=norm,extend='max',levels=levels)
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
-            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', ERA5, lt:'+str(step.values))
+            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', ERA5, lt:'+str(step.dt.days.values))
             fig.colorbar(cs,ax=ax)
-            graphics.save_fig(fig,'variance_map_'+lab+month+str(step.values))
+            graphics.save_fig(fig,'variance_map_'+lab+month+str(step.dt.days.values))

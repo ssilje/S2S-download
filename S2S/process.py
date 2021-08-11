@@ -51,6 +51,10 @@ class Hindcast:
                     anomalies. Default is False.
         split_work: if True, exploits the steps given in argument 'steps' to
                     reduce the use of internal memory. Default is False.
+        period:     The period that climatology should be computed over
+                    (list of tuples of int; [(year,monty,day),(year,monty,day)])
+                    Useful if the the observational period is shorter than the
+                    hindcast period. Default is None.
     """
     def __init__(
                     self,
@@ -63,6 +67,7 @@ class Hindcast:
                     download=False,
                     process=False,
                     split_work=False,
+                    period=None
                 ):
 
         self.var            = var
@@ -74,6 +79,7 @@ class Hindcast:
         self.download       = download
         self.process        = process
         self.path           = config['VALID_DB']
+        self.period         = period
 
         filename_absolute = self.filename_func('absolute')
 
@@ -98,7 +104,17 @@ class Hindcast:
                 while self.smaller_than(self.t_end,t_end):
 
                     print('\tLoad hindcast')
-                    raw = self.load_data()
+                    raw = self.load_data().sortby('time')
+
+                    # Select only given period
+                    if self.period is not None:
+
+                        self.raw = self.raw.sel(
+                                        time=slice(
+                                                dt.to_datetime(self.period[0]),
+                                                dt.to_datetime(self.period[1])
+                                                )
+                                            )
 
                     print('\tApply 7D running mean along lead time dimension')
                     data = raw.rolling(step=7,center=True).mean()
@@ -130,7 +146,17 @@ class Hindcast:
             else:
 
                 print('\tLoad hindcast')
-                self.raw = self.load_data()
+                self.raw = self.load_data().sortby('time')
+
+                # Select only given period
+                if self.period is not None:
+
+                    self.raw = self.raw.sel(
+                                    time=slice(
+                                            dt.to_datetime(self.period[0]),
+                                            dt.to_datetime(self.period[1])
+                                            )
+                                        )
 
                 print('\tApply 7D running mean along lead time dimension')
                 self.data = self.raw.rolling(step=7,center=True).mean()
@@ -257,7 +283,7 @@ class Forecast:
                         (xarray.DataArray)
         self.hc_std:    the model hindcast std climatology (over 30-day running window)
                         (xarray.DataArray)
-        self.hc_abs:    absolute values of the 20 years of hindcasts corresponding to the 
+        self.hc_abs:    absolute values of the 20 years of hindcasts corresponding to the
                         forecast for the given initialization(s) (xarray.DataArray)
         self.hc_anom:   hindcast anomalies relative to the same model hindcast climatology
                         as used for forecast anomalies (xarray.DataArray)
@@ -393,7 +419,7 @@ class Forecast:
 
         if self.process or not os.path.exists(self.path+filename_anomalies):
 
-            # load the hindcasts in order to get the model climatology: 
+            # load the hindcasts in order to get the model climatology:
             print('\tloading corresponding hindcasts for climatology')
             hc_ref = Hindcast(
                                 var                 = self.var,
@@ -410,7 +436,7 @@ class Forecast:
             # climatologies saved in hc_ref.
             # subtract clim mean and divide by clim std.
             # climatology files are extended to a value each year are (should be) the same for every year
-            # so it should be possible to take the mean over all hindcast years (try to find better solution): 
+            # so it should be possible to take the mean over all hindcast years (try to find better solution):
             self.data_anom = (self.data.groupby('time.dayofyear') - hc_ref.mean.groupby('time.dayofyear').mean())
             self.data_a = self.data_anom.groupby('time.dayofyear')/hc_ref.std.groupby('time.dayofyear').mean()
 
@@ -577,6 +603,13 @@ class Observations:
             self.data = self.data.rename(self.var)
             self.data = self.data.drop('validation_time')
 
+            # lon/lat are lost in storage process
+            # if contained in encoding['coordinates']
+            coords = self.data.encoding['coordinates'].split(' ')
+            while 'lon' in coords: coords.remove('lon')
+            while 'lat' in coords: coords.remove('lat')
+            self.data.encoding['coordinates'] = ' '.join(coords)
+
             self.store(self.data,filename_absolute)
 
         self.data = self.load(filename_absolute)
@@ -615,7 +648,7 @@ class Observations:
 
             ####################################################################
             # Deals with duplicates along time dimensions (can occur in
-            # stacking - restacking occuring o_climatology, does occur for ERA)
+            # stacking - restacking occuring o_climatology, does occur for ERA5)
             _,c = np.unique(init_mean.time.values, return_counts=True)
             if len(c[c>1])>0:
                 init_mean = init_mean.groupby('time').mean(skipna=True)
