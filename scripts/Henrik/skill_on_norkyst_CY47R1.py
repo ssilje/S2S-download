@@ -53,8 +53,8 @@ mae_fc, mae_clim, mae_pers = [], [], []
 ################################################################################
 bw       = BarentsWatch().load('all',no=0).sortby('time')[var]
 
-t_start  = (2020,8,1)
-t_end    = (2020,9,1)
+t_start  = (2020,12,1) #can start with 8
+t_end    = (2021,1,1)
 model    = 'CY47R1'
 
 hh = Hindcast(
