@@ -142,9 +142,7 @@ def crps_ensemble(obs,fc,fair=True):
     A xarray wrapper for CRPS_ensemble()
     """
 
-    # obs = obs.broadcast_like(fc.mean('member'))
-    obs,fc = xr.align(obs,fc,join='outer')
-    print(obs)
+    obs = obs.broadcast_like(fc.mean('member'))
 
     return xr.apply_ufunc(
             CRPS_ensemble, obs, fc,

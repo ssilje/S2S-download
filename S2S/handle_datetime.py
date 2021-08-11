@@ -6,15 +6,12 @@ def to_datetime(tup):
     Returns pandas.DatetimeIndex from tuple
 
     args:
-        tup: tuple of int, fmt: (year,month,date) or pandas.Datetime
+        tup: tuple of int, fmt: (year,month,date)
 
     returns:
         pandas.DatetimeIndex
     """
-    if isinstance(tup,tuple):
-        return pd.to_datetime(f'{tup[0]}-{tup[1]}-{tup[2]}',format='%Y-%m-%d')
-    else:
-        return tup
+    return pd.to_datetime(f'{tup[0]}-{tup[1]}-{tup[2]}',format='%Y-%m-%d')
 
 def forecast_cycle(t_start,t_end):
     """
