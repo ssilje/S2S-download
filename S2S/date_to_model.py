@@ -43,13 +43,16 @@ def which_mv_for_init(fc_init_date,model='ECMWF',fmt='%Y-%m-%d'):
         raise TypeError(
             'Input of invalid type was given to date_to_model.which_mv_for_init'
             )
+
         return None
 
     # got through the model versions from the above dictionary:
     for MV,mv_dates in model_version_specs[model].items():
         # convert first and last dates to datetime:
+
         mv_first = pd.Timestamp(mv_dates[0])
         mv_last  = pd.Timestamp(mv_dates[-1])
+
         # check if the given date is within the current model version's
         # start and end dates:
         if  mv_first <= fc_init_datetime <= mv_last:
@@ -58,6 +61,7 @@ def which_mv_for_init(fc_init_date,model='ECMWF',fmt='%Y-%m-%d'):
     try:
         return valid_version
     except:
+
         raise ValueError(
             'No matching model version found...'
             )
