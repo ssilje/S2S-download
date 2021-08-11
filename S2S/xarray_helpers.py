@@ -183,7 +183,7 @@ def o_climatology(da,window=30):
     # re-assing time dimension to da from year,dayofyear
     return stack_time(mean),stack_time(std)
 
-def c_climatology(da,cross_validation=False):
+def c_climatology(da,window=30,cross_validation=False):
     """
     Climatology with centered initialization time
     """
@@ -194,8 +194,13 @@ def c_climatology(da,cross_validation=False):
 
     # to all year,dayofyear matrices in da, apply runnning_clim
     mean,std = xr.apply_ufunc(
-            running_clim, da, da.dayofyear, cross_validation,
-            input_core_dims  = [['member','year','dayofyear'],['dayofyear']],
+            running_clim, da, da.dayofyear, window, cross_validation,
+            input_core_dims  = [
+                                ['member','year','dayofyear'],
+                                ['dayofyear'],
+                                [],
+                                []
+                            ],
             output_core_dims = [['year','dayofyear'],['year','dayofyear']],
             vectorize=True
         )
