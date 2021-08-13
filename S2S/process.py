@@ -204,14 +204,49 @@ class Hindcast:
 
     def load_data(self):
 
-        data = ECMWF_S2SH(high_res=self.high_res)\
-                        .load(
-                                self.var,
-                                self.t_start,
-                                self.t_end,
-                                self.bounds,
-                                self.download
-                            )[self.var]
+        # hardcoded option for absolute wind that we should consider redoing
+        if self.var=='U10':
+
+            data_u = ECMWF_S2SH(high_res=self.high_res)\
+                            .load(
+                                    'u10',
+                                    self.t_start,
+                                    self.t_end,
+                                    self.bounds,
+                                    self.download
+                                )['u10']
+
+            data_v = ECMWF_S2SH(high_res=self.high_res)\
+                            .load(
+                                    'v10',
+                                    self.t_start,
+                                    self.t_end,
+                                    self.bounds,
+                                    self.download
+                                )['v10']
+
+            data = xr.apply_ufunc(
+                            xh.absolute,data_u,data_v,
+                            input_core_dims  = [[],[]],
+                            output_core_dims = [[]],
+                            vectorize=True,dask='parallelized'
+                        )
+
+            del data_u
+            del data_v
+
+            data = data.rename('U10')
+
+        else:
+
+            data = ECMWF_S2SH(high_res=self.high_res)\
+                            .load(
+                                    self.var,
+                                    self.t_start,
+                                    self.t_end,
+                                    self.bounds,
+                                    self.download
+                                )[self.var]
 
         # Converts Kelvin to degC, if this should be done here can be discussed?
         if self.var == 'sst':
@@ -608,12 +643,16 @@ class Observations:
             self.data = self.data.rename(self.var)
             self.data = self.data.drop('validation_time')
 
+            # TODO: This part must check whether the encoding exists.
             # lon/lat are lost in storage process
             # if contained in encoding['coordinates']
-            coords = self.data.encoding['coordinates'].split(' ')
-            while 'lon' in coords: coords.remove('lon')
-            while 'lat' in coords: coords.remove('lat')
-            self.data.encoding['coordinates'] = ' '.join(coords)
+            try:
+                coords = self.data.encoding['coordinates'].split(' ')
+                while 'lon' in coords: coords.remove('lon')
+                while 'lat' in coords: coords.remove('lat')
+                self.data.encoding['coordinates'] = ' '.join(coords)
+            except KeyError:
+                pass
 
             self.store(self.data,filename_absolute)
 
