@@ -17,6 +17,7 @@ import S2S.handle_datetime   as dt
 class Forecast:
     """
     Loads hindcast from S2S database, computes weekly means and then provides
+
         self.data:      the absolute values of the hindcast (xarray.DataArray)
         self.data_a:    the anomlies of the data relative to model climatology
                         (xarray.DataArray)
@@ -24,7 +25,9 @@ class Forecast:
                         (xarray.DataArray)
         self.std:       the model std climatology (over 30-day running window)
                         (xarray.DataArray)
+
     Arguments to __init__
+
         var:        the name of the variable, should correspond to filenames in
                     the S2S database (string)
         t_start:    start time of files to load (tuple of int; (year,monty,day))
@@ -257,7 +260,6 @@ class Forecast:
 
     def load(self,filename):
         return xr.open_dataset(self.path+filename)[self.var]
-
 
 class Hindcast:
     """
