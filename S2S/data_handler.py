@@ -103,17 +103,15 @@ class Archive:
                 ) + '.grb'
         
         elif var=='sm20':
-
-                    
             return var+'/'+'_'.join(
-                    [
-                        var,
-                        'CY43R3_CY45R1',
-                        date.strftime('%Y-%m-%d'),
-                        run
-                    ]
-                ) + '.grb'
-
+              [
+                var,
+                'CY43R3_CY45R1',
+                date.strftime('%Y-%m-%d'),
+                run
+              ]
+            ) + '.grb'
+           
     @staticmethod
     def BW_in_filename(**kwargs):
 
@@ -385,6 +383,12 @@ class LoadLocal:
                             'lon','lat'
                             ).to_netcdf(self.out_path+self.out_filename)
                 
+            elif self.label=='S2SF':
+                data.transpose(
+                            'member','step','time',
+                            'lon','lat'
+                            ).to_netcdf(self.out_path+self.out_filename)
+                
             else: # TODO make option for forecast --> check if above is OK
 
                 data.to_netcdf(self.out_path+self.out_filename)
@@ -423,6 +427,29 @@ class ECMWF_S2SH(LoadLocal):
         super().__init__()
 
         self.label           = 'S2SH'
+
+        self.loading_options['load_time']        = 'daily'#'weekly_forecast_cycle'
+        self.loading_options['concat_dimension'] = 'time'
+        self.loading_options['resample']         = False
+        self.loading_options['sort_by']          = 'lat'
+        self.loading_options['control_run']      = True
+        self.loading_options['engine']           = 'cfgrib'
+
+        if high_res:
+            self.loading_options['high_res']     = True
+            self.in_path                         = config[self.label+'_HR']
+        else:
+            self.in_path                         = config[self.label]
+
+        self.out_path                            = config['VALID_DB']
+ 
+class ECMWF_S2SF(LoadLocal):
+
+    def __init__(self,high_res=False):
+
+        super().__init__()
+
+        self.label           = 'S2SF'
 
         self.loading_options['load_time']        = 'daily'#'weekly_forecast_cycle'
         self.loading_options['concat_dimension'] = 'time'

@@ -178,7 +178,8 @@ def SS_lt(
 bounds          = (0,28,55,75)
 
 var             = 't2m'
-
+clabel          = 'K'
+#var             = 'abs_wind'
 t_start         = (2019,7,1)
 t_end           = (2020,6,26)
 
@@ -195,9 +196,17 @@ dim             = 'validation_time.month'
 
 cc              = []
 mm              = []
+
 Data_skill      = []
+
 ACcc            = []
 MAE_m_s         = []
+
+CLIM_era_s      = []
+CLIM_hc_s       = []
+
+CLIMATOLOGY     = []
+
 
 print('\tProcess Hindcast')
 grid_hindcast = Hindcast(
@@ -216,9 +225,29 @@ grid_hindcast = Hindcast(
 #    clim_mean:     grid_hindcast.mean
 #    clim_std:      grid_hindcast.std
 
-print('\tProcess ERA5')
-era = ERA5(high_res=high_res)\
-                        .load(var,clim_t_start,clim_t_end,bounds)[var]
+print('\tLoad ERA')
+if var == 'abs_wind':
+    era_u = ERA5(high_res=high_res)\
+                         .load('u10',clim_t_start,clim_t_end,bounds)['u10']
+
+    era_v = ERA5(high_res=high_res)\
+                        .load('v10',clim_t_start,clim_t_end,bounds)['v10']
+
+    era_u,era_v = xr.align(era_u,era_v)
+
+    era = xr.apply_ufunc(
+                    xh.absolute,era_u,era_v,
+                    input_core_dims  = [[],[]],
+                    output_core_dims = [[]],
+                    vectorize=True,dask='parallelized'
+                )
+
+    era = era.rename(var)
+
+else:
+
+    era = ERA5(high_res=high_res)\
+                            .load(var,clim_t_start,clim_t_end,bounds)[var]
 
 
 
@@ -285,41 +314,42 @@ for lt in steps:
     cm_group    = list(cm.groupby(dim))
     yr_group    = list(obs_random.groupby(dim))
 
-    era_group = list(era.groupby(dim))
-    hc_group = list(hc.groupby(dim))
+    era_group   = list(era.groupby(dim))
+    hc_group    = list(hc.groupby(dim))
   
-    mae = []
-    c = [] #lagar en ny xarray med score for kvar mnd
-    acc = [] #lagar en ny xarray med ACC for kvar mnd
+    mae         = []
+    c           = [] #lagar en ny xarray med score for kvar mnd
+    acc         = [] #lagar en ny xarray med ACC for kvar mnd
     
-    era_tmp = []
-    hc_tmp = []    
+    era_tmp     = []
+    hc_tmp      = []    
 
     print('\tLoop through each month')
     for n,(xlabel,xdata) in enumerate(x_group): # loop over each validation month. n går frå 0-11, xlabel 1-12, xdata: dataene
     
-        ylabel,ydata    = y_group[n]
-        cmlabel,cmdata  = cm_group[n]
-        yrlabel,yrdata = yr_group[n]
+        ylabel,ydata     = y_group[n]
+        cmlabel,cmdata   = cm_group[n]
+        yrlabel,yrdata   = yr_group[n]
         
         eralabel,eradata = era_group[n]
-        hclabel,hcdata = hc_group[n]
+        hclabel,hcdata   = hc_group[n]
         
-        xdata  = xdata.unstack().sortby(['time']) #mod
-        ydata  = ydata.unstack().sortby(['time']) # obs
-        cmdata = cmdata.unstack().sortby(['time'])
-        yrdata = yrdata.unstack().sortby(['time']) # random forecast
+        xdata            = xdata.unstack().sortby(['time']) #mod
+        ydata            = ydata.unstack().sortby(['time']) # obs
+        cmdata           = cmdata.unstack().sortby(['time'])
+        yrdata           = yrdata.unstack().sortby(['time']) # random forecast
         
-        eradata  = eradata.unstack().sortby(['time'])
-        hcdata  = hcdata.unstack().sortby(['time'])
+        eradata          = eradata.unstack().sortby(['time'])
+        hcdata           = hcdata.unstack().sortby(['time'])
         
 
         xdata,ydata,cmdata,yrdata = xr.align(xdata,ydata,cmdata,yrdata)
         
-        eradata,hcdata = xr.align(eradata,hcdata)
+        eradata,hcdata            = xr.align(eradata,hcdata)
         
-        #%s hours %s minutes %s seconds' % (int(hours),int(minutes),round(seconds)
+        
         print('\tCalculate MAE and MAESS for step %s month %s' % (int(lt.days),int(xlabel)))
+        
         score_mean   = xs.mae(
             xdata.mean('member',skipna=True),
             ydata,
@@ -331,7 +361,6 @@ for lt in steps:
             dim=[])
    
         SS_mae      = 1 - score_mean/score_clim
-        #SS      = SS.median('time',skipna=True).assign_coords(time_month=xlabel)
         
         MAE_dataset = xr.merge(
                              [
@@ -340,14 +369,11 @@ for lt in steps:
                              ],join='inner',compat='override'
                          )
         
-        #c.append(SS)
+     
         
         MAE_dataset      = MAE_dataset.assign_coords(time_month=xlabel)      
         mae.append(MAE_dataset)
 
-        
-
-        
         print('\tCalculate ACC for step %s month %s' % (int(lt.days),int(xlabel)))
         
         ACC_grid_hc = ACC_grid(
@@ -378,47 +404,43 @@ for lt in steps:
         
         acc.append(ACC_dataset)
         
+        # Calculate climatology
         
-        
-        
-         # Calculate climatology
-        era_mean = eradata.mean('time').drop('step').assign_coords(time_month=xlabel)
+        era_mean = eradata.mean('time').assign_coords(time_month=xlabel) 
         era_tmp.append(era_mean)
-        hc_mean  = hcdata.mean('member').mean('time').drop('step').assign_coords(time_month=xlabel)
+        hc_mean  = hcdata.mean('member').mean('time').assign_coords(time_month=xlabel)
         hc_tmp.append(hc_mean)   
         
     # Done loop month    
      
-    
-
-
-
-
     MAE_m = xr.concat(mae,dim='time_month') ## stacking the data along month dimension
     MAE_m_s.append(MAE_m) # Saving MAESS for each month and step
-     
-    #MAE = xr.concat(m,dim='time_month') ## stacking the data along month dimension
-    #mm.append(MAE) #  Saving MAE for each month and step
     
-    ACC_m = xr.concat(acc,dim='time_month') 
-    ACC_m = ACC_m.assign_coords(step=lt)
-    ACC_m_s = ACC_m 
+    ACC_m       = xr.concat(acc,dim='time_month') 
+    ACC_m       = ACC_m.assign_coords(step=lt)
+    ACC_m_s     = ACC_m 
+        
     ACcc.append(ACC_m_s) 
+    
+    CLIM_hc     = xr.concat(hc_tmp,dim='time_month') 
+    CLIM_hc_s.append(CLIM_hc)
+    CLIM_era    =xr.concat(era_tmp,dim='time_month') 
+    CLIM_era_s.append(CLIM_era)
+
 
 # loop leadtime done
 
-MAE  = xr.concat(MAE_m_s,dim='step')
+MAE         = xr.concat(MAE_m_s,dim='step')
 
 Data_skill  = xr.concat(ACcc,dim='step') 
-
 Data_skill  = Data_skill.assign(MAESS=MAE.MAESS)
-
 Data_skill  = Data_skill.assign(MAE=MAE.MAE)
-
 Data_skill  = Data_skill.assign(MAESS_best_lt=SS_lt(SS_data=MAE.MAESS).skill)
-
+Data_skill  = Data_skill.assign(hcCLIM=xr.concat(CLIM_hc_s,dim='step'))
+Data_skill  = Data_skill.assign(eraCLIM=xr.concat(CLIM_era_s,dim='step'))
 
 outfilename = 'hindcast_skill_' + var + '.nc'
+
 print('\tSaving calculated scores as netcdf-file:  %s' %outfilename )
 
 print('\t Saving file with', \
@@ -427,7 +449,8 @@ print('\t Saving file with', \
       '\nMAESS_best_lt :', Data_skill.MAESS_best_lt.dims,\
       '\nACC_hc        :', Data_skill.ACC_hc.dims,\
       '\nACC_rf        :', Data_skill.ACC_rf.dims,\
-      '\nACCSS         :', Data_skill.ACCSS.dims)
+      '\nhcCLIM        :', Data_skill.hcCLIM.dims,\
+      '\neraCLIM       :', Data_skill.eraCLIM.dims)
       
 Data_skill.to_netcdf(path=outfilename , mode='w')
 
@@ -482,6 +505,27 @@ for lt in steps:
         fname       = 'hindcast_MAE_days_' + str(lt.days) + '_' + var,
     )
 
+    plot_months(
+        varplot     = Data_skill.eraCLIM.sel(step=lt),
+        levels_plot = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),21),
+        label_text  = clabel,
+        levels_cbar = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),11),
+        plot_title  = 'ERA Climatology',
+        fname       = 'ERA_Climatology_'  + str(lt.days) + '_' + var,
+    )
+        
+        ### PLOTTING CLIMATOLOGY 
+
+    plot_months(
+        varplot     = Data_skill.hcCLIM.sel(step=lt),
+        levels_plot = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),21), # same plotting range as era
+        label_text  = clabel,
+        levels_cbar = np.linspace(round(Data_skill.eraCLIM.sel(step=lt).values.min()),round(Data_skill.eraCLIM.sel(step=lt).values.max()),11),
+        plot_title  = 'HC Climatology',
+        fname       = 'HC_Climatology_' + str(lt.days) + '_' + var,
+    )
+
+
 
     
 
@@ -498,23 +542,6 @@ plot_months(
 
 
 
-### PLOTTING CLIMATOLOGY 
-ERA_MEAN = xr.concat(era_tmp,dim='time_month') ## stacking the data along month dimension
-plot_months(
-        varplot     = ERA_MEAN,
-        levels_plot = np.linspace(ERA_MEAN.min(),ERA_MEAN.max(),21),
-        label_text  = 'K',
-        levels_cbar = np.linspace(ERA_MEAN.min(),ERA_MEAN.max(),11),
-        plot_title  = 'ERA Climatology',
-        fname       = 'ERA_Climatology_'  + var,
-    )
 
-HC_MEAN = xr.concat(hc_tmp,dim='time_month') ## stacking the data along month dimension
-plot_months(
-        varplot     = HC_MEAN,
-        levels_plot = np.linspace(HC_MEAN.min(),HC_MEAN.max(),21),
-        label_text  = 'K',
-        levels_cbar = np.linspace(HC_MEAN.min(),HC_MEAN.max(),11),
-        plot_title  = 'Hindcast Climatology',
-        fname       = 'HC_Climatology_' + var,
-    )
+
+
