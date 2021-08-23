@@ -16,8 +16,7 @@ import S2S.handle_datetime   as dt
 
 class Forecast:
     """
-    Loads forecast from S2S database, computes weekly means and then provides
-
+    Loads hindcast from S2S database, computes weekly means and then provides
         self.data:      the absolute values of the hindcast (xarray.DataArray)
         self.data_a:    the anomlies of the data relative to model climatology
                         (xarray.DataArray)
@@ -25,9 +24,7 @@ class Forecast:
                         (xarray.DataArray)
         self.std:       the model std climatology (over 30-day running window)
                         (xarray.DataArray)
-
     Arguments to __init__
-
         var:        the name of the variable, should correspond to filenames in
                     the S2S database (string)
         t_start:    start time of files to load (tuple of int; (year,monty,day))
@@ -99,43 +96,9 @@ class Forecast:
                 while self.smaller_than(self.t_end,t_end):
                     
                     if self.var == 'abs_wind':
-                        print('\tread in u10 and v10 to calculate ' + self.var)
+                    # need to add wind
+                        print('\tabs_wind not implemented for forecast')
                         
-                        self.var = 'u10'
-                        print('\tLoad forecast ' + self.var)
-                        raw = self.load_data()
-                        print('\tApply 7D running mean along lead time dimension')
-                        data = raw.rolling(step=7,center=True).mean()
-                        if self.steps is not None:
-                            print('\tKeep only specified lead times')
-                            data_u = data.where(
-                                            data.step.isin(self.steps),
-                                            drop=True
-                                        )
-                        
-                        
-                        self.var = 'v10'
-                        print('\tLoad forecast ' + self.var)
-                        raw = self.load_data()
-                        print('\tApply 7D running mean along lead time dimension')
-                        data = raw.rolling(step=7,center=True).mean()
-                        if self.steps is not None:
-                            print('\tKeep only specified lead times')
-                            data_v = data.where(
-                                            data.step.isin(self.steps),
-                                            drop=True
-                                        )
-                        print('\tCompute absolute wind')
-                        data_u,data_v = xr.align(data_u,data_v)
-                        
-                        data = xr.apply_ufunc(
-                            xh.absolute,data_u,data_v,
-                            input_core_dims  = [[],[]],
-                            output_core_dims = [[]],
-                            vectorize=True,dask='parallelized'
-                        )
-                        self.var = 'abs_wind'
-                        data = data.rename(self.var)
                         
                     else:    
                         print('\tLoad forecast')
@@ -143,7 +106,8 @@ class Forecast:
 
                         print('\tApply 7D running mean along lead time dimension')
                         data = raw.rolling(step=7,center=True).mean()
-                        
+                        print(data.dims)
+                        print(data.shape)
 
                         if self.steps is not None:
                             print('\tKeep only specified lead times')
@@ -164,9 +128,10 @@ class Forecast:
                 self.data = xr.concat(data_list,'time')
 
                 # deal with duplicates along time dimesion
-                print(self.data.shape)
-                print(self.data.dims)
                 #self.data = self.data.groupby('time').mean()
+                print(self.data.dims)
+                print(self.data.shape)
+                self.data = self.data
 
                 # restore original times of loading
                 self.t_start = t_start
@@ -176,10 +141,9 @@ class Forecast:
 
                 print('\tLoad forecast')
                 self.raw = self.load_data()
-
+ 
                 print('\tApply 7D running mean along lead time dimension')
-                #self.data = self.raw.rolling(step=7,center=True).mean()
-                self.data = self.raw
+                self.data = self.raw.rolling(step=7,center=True).mean()
 
                 if self.steps is not None:
                     print('\tKeep only specified lead times')
@@ -295,18 +259,9 @@ class Forecast:
         return xr.open_dataset(self.path+filename)[self.var]
 
 
-    
-
-
-
-
-
-
-
 class Hindcast:
     """
     Loads hindcast from S2S database, computes weekly means and then provides
-
         self.data:      the absolute values of the hindcast (xarray.DataArray)
         self.data_a:    the anomlies of the data relative to model climatology
                         (xarray.DataArray)
@@ -314,9 +269,7 @@ class Hindcast:
                         (xarray.DataArray)
         self.std:       the model std climatology (over 30-day running window)
                         (xarray.DataArray)
-
     Arguments to __init__
-
         var:        the name of the variable, should correspond to filenames in
                     the S2S database (string)
         t_start:    start time of files to load (tuple of int; (year,monty,day))
@@ -464,8 +417,7 @@ class Hindcast:
                 self.raw = self.load_data()
 
                 print('\tApply 7D running mean along lead time dimension')
-                #self.data = self.raw.rolling(step=7,center=True).mean()
-                self.data = self.raw
+                self.data = self.raw.rolling(step=7,center=True).mean()
 
                 if self.steps is not None:
                     print('\tKeep only specified lead times')
@@ -585,7 +537,6 @@ class Observations:
     Stacks observations along step (lead time) dimension to match forecast
     for matrix operations. Further computes climatology using a 30-day running
     window with cross validation (leaving out the current year). Produces:
-
         self.data:      the absolute values of the observations
                         (xarray.DataArray)
         self.data_a:    the anomalies of the data relative to climatology
@@ -597,9 +548,157 @@ class Observations:
         self.init_a     the observed value at forecast initialization time,
                         stacked along step (lead time) dimension. Given as
                         anomlies.
-
     Arguments to __init__
+        name:           name of the observation data, to create temporary files
+        observations:   xarray.DataArray with required dimension time. Must
+                        be seven day means.
+        forecast:       process.Hindcast like object. Assimilates the
+                        observations to the attributes of this input.
+        process:        Forces data processing even if temporary files are
+                        found. Temporary file names are not so flexible at the
+                        moment, can be smart to keep this option on if input
+                        observations are changed.
+    """
+    def __init__(
+                    self,
+                    name,
+                    observations,
+                    forecast,
+                    process=False
+                ):
 
+        self.name           = name
+        self.observations   = observations.sortby('time')
+        self.forecast       = forecast
+        self.process        = process
+        self.var            = forecast.data.name
+        self.path           = config['VALID_DB']
+
+        self.forecast.data  = self.forecast.data.sortby(['time','step'])
+
+        self.t_start        = (
+                                observations.time.min().dt.year.values,
+                                observations.time.min().dt.month.values,
+                                observations.time.min().dt.day.values
+                            )
+        self.t_end          = (
+                                observations.time.max().dt.year.values,
+                                observations.time.max().dt.month.values,
+                                observations.time.max().dt.day.values
+                            )
+
+        filename_absolute = self.filename_func('absolute_' + self.var)
+
+        if self.process or not os.path.exists(self.path+filename_absolute):
+
+            print('Process observations')
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
+
+            print('\tAssign step dimension to observations')
+            self.data = xh.at_validation(
+                                        self.observations,
+                                        forecast.data.time + forecast.data.step,
+                                        ddays=1
+                                        )
+
+            self.data = self.data.rename(self.var)
+            self.data = self.data.drop('validation_time')
+
+            self.store(self.data,filename_absolute)
+
+        self.data = self.load(filename_absolute)
+
+        filename_anomalies = self.filename_func('anomalies_' + self.var)
+        filename_mean      = self.filename_func('obs_mean_'  + self.var)
+        filename_std       = self.filename_func('obs_std_' + self.var)
+
+        if self.process or not os.path.exists(self.path+filename_anomalies):
+
+            print('\tCompute climatology')
+            self.mean,self.std = xh.o_climatology(self.data)
+
+            self.mean = self.mean.rename(self.var)
+            self.std  = self.std.rename(self.var)
+
+            self.data_a = ( self.data - self.mean ) / self.std
+
+            self.store(self.data_a,filename_anomalies)
+            self.store(self.mean,  filename_mean)
+            self.store(self.std,   filename_std)
+
+        self.data_a = self.load(filename_anomalies)
+        self.mean   = self.load(filename_mean)
+        self.std    = self.load(filename_std)
+
+        filename_init = self.filename_func('init_' + self.var)
+
+        if self.process or not os.path.exists(self.path+filename_init):
+
+            print('\tGather observations at model initalization')
+            init_mean,init_std = xh.o_climatology(self.observations)
+
+            init_mean = init_mean.rename(self.var)
+            init_std  = init_std.rename(self.var)
+
+            ####################################################################
+            # Deals with duplicates along time dimensions (can occur in
+            # stacking - restacking occuring o_climatology, does occur for ERA)
+            _,c = np.unique(init_mean.time.values, return_counts=True)
+            if len(c[c>1])>0:
+                init_mean = init_mean.groupby('time').mean(skipna=True)
+
+            _,c = np.unique(init_std.time.values, return_counts=True)
+            if len(c[c>1])>0:
+                init_std = init_std.groupby('time').mean(skipna=True)
+            ####################################################################
+
+            init_obs_a = ( self.observations - init_mean ) / init_std
+
+            init_obs_a = init_obs_a.reindex(
+                            {'time':forecast.data.time},
+                            method='pad',
+                            tolerance='7D'
+                        ).broadcast_like(self.data)
+
+            self.store(init_obs_a,filename_init)
+
+        self.init_a = self.load(filename_init)
+
+    def filename_func(self,filename):
+        return '_'.join(
+                        [
+                            self.name,
+                            filename,
+                            dt.to_datetime(self.t_start).strftime('%Y-%m-%d'),
+                            dt.to_datetime(self.t_end).strftime('%Y-%m-%d'),
+                            'observations'
+                        ]
+                    ) + '.nc'
+
+    def store(self,file,filename):
+        file.to_netcdf(self.path+filename)
+
+    def load(self,filename):
+        return xr.open_dataset(self.path+filename)[self.var]
+
+class Observations_hcfc:
+    """
+    Stacks observations along step (lead time) dimension to match forecast
+    for matrix operations. Further computes climatology using a 30-day running
+    window with cross validation (leaving out the current year). Produces:
+        self.data:      the absolute values of the observations
+                        (xarray.DataArray)
+        self.data_a:    the anomalies of the data relative to climatology
+                        (xarray.DataArray)
+        self.mean:      the mean climatology (over 30-day running window)
+                        (xarray.DataArray)
+        self.std:       the std climatology (over 30-day running window)
+                        (xarray.DataArray)
+        self.init_a     the observed value at forecast initialization time,
+                        stacked along step (lead time) dimension. Given as
+                        anomlies.
+    Arguments to __init__
         name:           name of the observation data, to create temporary files
         observations:   xarray.DataArray with required dimension time. Must
                         be seven day means.
@@ -758,18 +857,18 @@ class Observations:
     def load(self,filename):
         return xr.open_dataset(self.path+filename)[self.var]
 
+    
+    
+    
 class Grid2Point:
     """
     Class rountine correlation() returns a forecast (process.Hindcast like)
     with corresponding dimensions to observations.
     The routine selects the highest correlated (Pearson) gridpoint to represent
     each dimension in observations, respectively.
-
     Arguments to __init__
-
         observations:   process.Observations like object
         forecast:       process.Hindcast like object
-
         Note:
             - observations and forecast must have common dimensions:
             time and step
@@ -786,11 +885,9 @@ class Grid2Point:
         Returns a forecast (process.Hindcast like) with corresponding dimensions
         to observations. The routine selects the highest correlated (Pearson)
         gridpoint to represent each dimension in observations, respectively.
-
         args:
             step_dependent: if True, correlation is done respectively of each
                             step (lead time). Default is False.
-
         returns:
             process.Hindcast like object with 'regridded' to dimensions of
             observations, additional to time and step.
