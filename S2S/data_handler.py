@@ -92,15 +92,6 @@ class Archive:
                 ) + '.grb'
 
         elif var=='t2m':
-
-            #return var+'/'+'_'.join(
-            #        [
-            #            var,
-            #            'CY46R1',
-            #            date.strftime('%Y-%m-%d'),
-            #            run
-            #        ]
-            #    ) + '.grb'
         
             return var+'/'+'_'.join(
                     [
@@ -387,8 +378,7 @@ class LoadLocal:
                 data.transpose(
                             'member','step','time',
                             'lon','lat'
-                            ).to_netcdf(self.out_path+self.out_filename)
-                
+                            ).to_netcdf(self.out_path+self.out_filename)                
             elif self.label=='S2SF':
 
                 data.transpose(
@@ -396,7 +386,7 @@ class LoadLocal:
                             'lon','lat'
                             ).to_netcdf(self.out_path+self.out_filename)
                 
-            else: # TODO make option for forecast
+            else: # TODO make option for forecast --> check if above is OK
 
                 data.to_netcdf(self.out_path+self.out_filename)
 
