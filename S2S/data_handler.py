@@ -380,7 +380,6 @@ class LoadLocal:
                             'lon','lat'
                             ).to_netcdf(self.out_path+self.out_filename)                
             elif self.label=='S2SF':
-
                 data.transpose(
                             'member','step','time',
                             'lon','lat'
