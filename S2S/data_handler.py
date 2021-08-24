@@ -461,7 +461,7 @@ class BarentsWatch:
         location_2 = []
         if isinstance(location[0],str):
             for loc in location:
-                location_2.append(archive.get_domain(loc)['localityNo'])
+                location_2.append(self.loc_from_name(loc))
             location = location_2
 
         if not os.path.exists(self.path['DATA']+\
@@ -505,6 +505,22 @@ class BarentsWatch:
         open_data = xr.open_dataset(path+filename)
 
         return open_data
+
+    @staticmethod
+    def loc_from_name(loc):
+        """
+        Returns name of Barentswatch location from loc number
+        """
+        try:
+            _ = int(loc)
+            return loc
+
+        except ValueError:
+            with open(config['SITES'], 'r') as file:
+                data = json.load(file)
+                for line in data:
+                    if line['name']==loc:
+                        return line["localityNo"]
 
 class IMR:
 
