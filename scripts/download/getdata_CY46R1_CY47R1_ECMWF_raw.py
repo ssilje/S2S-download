@@ -12,7 +12,6 @@ product = 'hindcast' # forecast, hincast
 dirbase = '/nird/projects/nird/NS9853K/DATA/S2S/MARS'
 dir = '%s/%s/%s/'%(dirbase,product,'/ECMWF/sfc')
 
-forcastcycle = 'CY46R1_CY47R1_05x05'
 
 
 
