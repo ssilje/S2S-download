@@ -3,7 +3,7 @@ from ecmwfapi import ECMWFDataServer
 import os,sys
 import pandas as pd
 from datetime import datetime
-import S2S.date_to_model  
+import S2S.date_to_model  as d2m
 
 server = ECMWFDataServer()
 
@@ -95,7 +95,7 @@ for filename in (
             if not os.path.exists(datadir)  :
                 os.makedirs(datadir)
             hdate = '/'.join([d.replace('%i'%refyear,'%i'%i) for i in range(refyear-20,refyear)])
-            forcastcycle = which_mv_for_init(fc_init_date,model='ECMWF',fmt='%Y-%m-%d')
+            forcastcycle = d2m.which_mv_for_init(fc_init_date,model='ECMWF',fmt='%Y-%m-%d')
             target = '%s/%s_%s_%s_%s_%s.grb'%(datadir,filename,forcastcycle,d,prefix,product)
             if not os.path.isfile(target):
                dic = basedict.copy()
