@@ -3,7 +3,7 @@ from ecmwfapi import *
 import os,sys
 import pandas as pd
 from datetime import datetime
-
+import S2S.date_to_model  as d2m
 
 server = ECMWFService("mars")
 
@@ -11,7 +11,6 @@ product = 'hindcast' # forecast, hincast
 dirbase = '/nird/projects/nird/NS9853K/DATA/S2S/MARS'
 dir = '%s/%s/%s/'%(dirbase,product,'/ECMWF/sfc')
 
-forcastcycle = 'CY46R1_CY47R1_05x05'
 
 
 
@@ -103,7 +102,8 @@ for filename in (
             if not os.path.exists(datadir)  :
                 os.makedirs(datadir)
             hdate = '/'.join([d.replace('%i'%refyear,'%i'%i) for i in range(refyear-20,refyear)])
-            target = '%s/%s_%s_%s_%s_%s.grb'%(datadir,filename,forcastcycle,d,prefix,product)
+            forcastcycle = d2m.which_mv_for_init(d,model='ECMWF',fmt='%Y-%m-%d')
+            target = '%s/%s_%s_%s_%s_%s_%s.grb'%(datadir,filename,forcastcycle,'05x05',d,prefix,product)
             if not os.path.isfile(target):
                dic = basedict.copy()
                for k,v in meta[filename].items():
