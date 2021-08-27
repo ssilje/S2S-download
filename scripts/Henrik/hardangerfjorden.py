@@ -5,6 +5,7 @@ import xskillscore as xs
 
 import json
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 
 from S2S.local_configuration import config
@@ -16,6 +17,7 @@ from S2S.data_handler import ERA5, BarentsWatch
 from S2S.process import Hindcast, Observations, Grid2Point
 from S2S import models
 import S2S.scoring as sc
+import S2S.location_cluster as lc
 
 def plus_minus_15_days(t_start,t_end):
     if t_start[1]==1:
@@ -51,11 +53,13 @@ months  = ['01','02','03','04','05','06','07','08','09','10','11','12']
 
 mae_fc, mae_clim, mae_pers = [], [], []
 ################################################################################
-bw       = BarentsWatch().load('all',no=0).sortby('time')[var]
+bw = BarentsWatch().load('all',no=0).sortby('time')[var]
+bw = lc.cluster(bw,'Hisdalen',3,1)
 
-t_start  = (2020,12,1) #can start with 8
-t_end    = (2021,1,1)
-model    = 'CY47R1'
+t_start  = (2020,2,1) #can start with 8
+t_end    = (2021,8,1)
+model    = ''
+extent   = [4.5,7.5,59.3,61]
 
 hh = Hindcast(
                         var,
@@ -79,6 +83,7 @@ t_end = add_month(t_start)
 while smaller_than(t_end,(2021,4,1)):
 
     month = str(t_start[1])
+    year  = str(t_start[0])
     print(month)
 
     nk = []
@@ -100,21 +105,21 @@ while smaller_than(t_end,(2021,4,1)):
                         bounds,
                         high_res   = high_res,
                         steps      = steps,
-                        process    = True,
+                        process    = False,
                         download   = False,
                         split_work = False,
                         period     = [nk.time.min(),nk.time.max()]
                     )
-    print([nk.time.min(),nk.time.max()])
+
     # update times to the next month
     t_start = t_end
     t_end   = add_month(t_end)
 
     observations = Observations(
-                                name='NorKyst-800',
+                                name='Hardanger_NorKyst-800_'+str(month)+year,
                                 observations=nk,
                                 forecast=hindcast,
-                                process=True
+                                process=False
                                 )
     del nk
 
@@ -186,26 +191,41 @@ while smaller_than(t_end,(2021,4,1)):
             ss = ( 1 - mae_fc/ref_fc ).sel(step=step)
 
             cmap   = latex.skill_cmap().reversed()
-            levels = np.arange(-1.,1.05,0.05)
+            levels = levels = [-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,0.05,0.1,0.2,0.3,0.4,0.5] #np.arange(-0.5,0.6,0.1)
             norm   = BoundaryNorm(levels,cmap.N)
 
             cs = ax.scatter(
                         ss.lon.values,
                         ss.lat.values,
                         c=ss.values,
-                        s=1.1,
+                        s=3.1,
                         cmap=cmap,
                         norm=norm,
                         alpha=0.95,
-                        transform=ccrs.PlateCarree()
+                        transform=ccrs.PlateCarree(),
+                        zorder=30,
+                        edgecolors='k',
+                        linewidth=0.2
                     )
-            ax.coastlines(resolution='10m', color='grey',\
-                                    linewidth=0.2)
-            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', NorKyst, lt:'\
-                                                                +str(step.days))
-            fig.colorbar(cs,ax=ax)
+            ax.set_extent(extent, crs=ccrs.PlateCarree())
+
+            resol = '10m'  # use data at this scale
+            land = cfeature.NaturalEarthFeature('physical', 'land', \
+                scale=resol, edgecolor='k', facecolor=cfeature.COLORS['land'])
+            # ocean = cfeature.NaturalEarthFeature('physical', 'ocean', \
+            #     scale=resol, edgecolor='none', facecolor=cfeature.COLORS['water'])
+            ax.add_feature(land, zorder=1, facecolor='beige', linewidth=0.2)
+            # ax.add_feature(ocean, linewidth=0.2, zorder=0 )
+
+            # ax.coastlines(resolution='10m', color='grey',\
+            #                         linewidth=0.2)
+            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', NorKyst, lt: '\
+                                        +str(step.days-4)+'-'+str(step.days+3))
+            cbar=fig.colorbar(cs,ax=ax)
+            cbar.set_ticks(levels)
+            cbar.set_ticklabels(levels)
             graphics.save_fig(fig,
-                            model+'mae_skill_map_NorKyst_month'+month+lab+str(step.days)
+                            year+'hardanger_mae_skill_map_NorKyst_month'+month+lab+str(step.days)
                             )
 
         latex.set_style(style='white')
@@ -216,24 +236,38 @@ while smaller_than(t_end,(2021,4,1)):
         ss = ( 1 - crps_fc/crps_clim ).sel(step=step)
 
         cmap   = latex.skill_cmap().reversed()
-        levels = np.arange(-1.,1.05,0.05)
+        levels = [-0.5,-0.4,-0.3,-0.2,-0.1,-0.05,0.05,0.1,0.2,0.3,0.4,0.5] #np.arange(-0.5,0.6,0.1)
         norm   = BoundaryNorm(levels,cmap.N)
 
         cs = ax.scatter(
                     ss.lon.values,
                     ss.lat.values,
                     c=ss.values,
-                    s=1.1,
+                    s=3.1,
                     cmap=cmap,
                     norm=norm,
                     alpha=0.95,
-                    transform=ccrs.PlateCarree()
+                    transform=ccrs.PlateCarree(),
+                    zorder=30,
+                    edgecolors='k',
+                    linewidth=0.2
                 )
-        ax.coastlines(resolution='10m', color='grey',\
-                                linewidth=0.2)
-        ax.set_title(mparser[month] + ' CRPss EC vs. CLIM, NorKyst, lt:'\
-                                                            +str(step.days))
+        ax.set_extent(extent, crs=ccrs.PlateCarree())
+
+        resol = '10m'  # use data at this scale
+        land = cfeature.NaturalEarthFeature('physical', 'land', \
+            scale=resol, edgecolor='k', facecolor=cfeature.COLORS['land'])
+        # ocean = cfeature.NaturalEarthFeature('physical', 'ocean', \
+            # scale=resol, edgecolor='none', facecolor=cfeature.COLORS['water'])
+        ax.add_feature(land, zorder=1, facecolor='beige', linewidth=0.2)
+        # ax.add_feature(ocean, linewidth=0.2, zorder=0 )
+
+        # ax.coastlines(resolution='10m', color='grey',\
+        #                         linewidth=0.2)
+
+        ax.set_title(mparser[month] + ' CRPss EC vs. CLIM, NorKyst, lt: '\
+                                        +str(step.days-4)+'-'+str(step.days+3))
         fig.colorbar(cs,ax=ax)
         graphics.save_fig(fig,
-                        model+'crps_skill_map_NorKyst_month'+month+'CLIM'+str(step.days)
+                        year+'hardanger_crps_skill_map_NorKyst_month'+month+'CLIM'+str(step.days)
                         )

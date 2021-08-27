@@ -51,7 +51,7 @@ def diverge_skill_map(high=(0.565, 0.392, 0.173),low=(0.094, 0.310, 0.635),sep='
     c = mcolors.ColorConverter().to_rgb
     if isinstance(low, str): low = c(low)
     if isinstance(high, str): high = c(high)
-    return make_colormap([low, c('pink'),0.45, high, 0.55, c('yellow'), c('black')])
+    return make_colormap([low, c('white'),0.45,c('yellow'),0.55, c('white'),high])
 
 def diverge_map_grey(high=(0.565, 0.392, 0.173), low=(0.094, 0.310, 0.635)):
     '''
@@ -78,7 +78,7 @@ def cm_rgc(c='green'):
 
 def skill_cmap(high=(168/255, 50/255, 45/255), low=(0/255, 122/255, 150/255)):
     return diverge_skill_map(high=high,low=low)
-    
+
 def set_style(style='white'):
 
     if style=='white':

@@ -5,6 +5,7 @@ import statsmodels.api as sm
 import scipy.stats as stats
 
 import S2S.xarray_helpers as xh
+from S2S.local_configuration import config
 
 ################################################################################
 ############################# xarray routines ##################################
@@ -155,7 +156,7 @@ def persistence(init_value,observations,window=30):
     )
 
     rho = xh.stack_time(rho)
-
+    
     try:
         rho = rho.drop('validation_time')
     except (AttributeError, ValueError):

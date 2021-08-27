@@ -53,9 +53,9 @@ mae_fc, mae_clim, mae_pers = [], [], []
 ################################################################################
 bw       = BarentsWatch().load('all',no=0).sortby('time')[var]
 
-t_start  = (2020,12,1) #can start with 8
-t_end    = (2021,1,1)
-model    = 'CY47R1'
+t_start  = (2020,2,1)
+t_end    = (2020,3,1)
+model    = 'CY46R1'
 
 hh = Hindcast(
                         var,
@@ -76,21 +76,17 @@ del hh
 t_end = add_month(t_start)
 
 # until end time is reached; load one month at the time
-while smaller_than(t_end,(2021,4,1)):
+while smaller_than(t_end,(2020,6,1)):
 
     month = str(t_start[1])
     print(month)
 
-    nk = []
-    for loc in bw.location.values:
-
-        fname =                 config['NORKYST'] +\
-                                    'NorKyst800_' +\
-                                         str(loc) +\
-                                            '.nc'
-
-        nk.append(xr.open_dataset(fname)[var].drop('radius'))
-    nk = xr.concat(nk,'location')
+    era = ERA5(high_res=True).load(
+                                var         = var,
+                                start_time  = clim_t_start,
+                                end_time    = clim_t_end,
+                                bounds      = bounds
+                            )[var]
 
     ts,te    = plus_minus_15_days(t_start,t_end)
     hindcast = Hindcast(
@@ -103,23 +99,20 @@ while smaller_than(t_end,(2021,4,1)):
                         process    = True,
                         download   = False,
                         split_work = False,
-                        period     = [nk.time.min(),nk.time.max()]
+                        period     = [era.time.min(),era.time.max()]
                     )
-    print([nk.time.min(),nk.time.max()])
+
     # update times to the next month
     t_start = t_end
     t_end   = add_month(t_end)
 
     observations = Observations(
-                                name='NorKyst-800',
-                                observations=nk,
+                                name='ERA5_'+str(month),
+                                observations=era,
                                 forecast=hindcast,
                                 process=True
                                 )
-    del nk
-
-    hindcast = Grid2Point(observations,hindcast)\
-                            .correlation(step_dependent=True)
+    del era
 
     mae_fc = xs.mae(
             hindcast.data_a.mean('member'),
@@ -189,23 +182,16 @@ while smaller_than(t_end,(2021,4,1)):
             levels = np.arange(-1.,1.05,0.05)
             norm   = BoundaryNorm(levels,cmap.N)
 
-            cs = ax.scatter(
-                        ss.lon.values,
-                        ss.lat.values,
-                        c=ss.values,
-                        s=1.1,
-                        cmap=cmap,
-                        norm=norm,
-                        alpha=0.95,
-                        transform=ccrs.PlateCarree()
-                    )
+            cs = ax.contourf(ss.lat,ss.lon,ss,transform=ccrs.PlateCarree(),
+                                cmap=cmap,norm=norm,extend='max',levels=levels)
+
             ax.coastlines(resolution='10m', color='grey',\
                                     linewidth=0.2)
-            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', NorKyst, lt:'\
+            ax.set_title(mparser[month] + ' MAEss EC vs. '+lab+', ERA5, lt:'\
                                                                 +str(step.days))
             fig.colorbar(cs,ax=ax)
             graphics.save_fig(fig,
-                            model+'mae_skill_map_NorKyst_month'+month+lab+str(step.days)
+                            model+'mae_skill_map_ERA5_month'+month+lab+str(step.days)
                             )
 
         latex.set_style(style='white')
@@ -219,21 +205,14 @@ while smaller_than(t_end,(2021,4,1)):
         levels = np.arange(-1.,1.05,0.05)
         norm   = BoundaryNorm(levels,cmap.N)
 
-        cs = ax.scatter(
-                    ss.lon.values,
-                    ss.lat.values,
-                    c=ss.values,
-                    s=1.1,
-                    cmap=cmap,
-                    norm=norm,
-                    alpha=0.95,
-                    transform=ccrs.PlateCarree()
-                )
+        cs = ax.contourf(ss.lat,ss.lon,ss,transform=ccrs.PlateCarree(),
+                            cmap=cmap,norm=norm,extend='max',levels=levels)
+                            
         ax.coastlines(resolution='10m', color='grey',\
                                 linewidth=0.2)
-        ax.set_title(mparser[month] + ' CRPss EC vs. CLIM, NorKyst, lt:'\
+        ax.set_title(mparser[month] + ' CRPss EC vs. CLIM, ERA5, lt:'\
                                                             +str(step.days))
         fig.colorbar(cs,ax=ax)
         graphics.save_fig(fig,
-                        model+'crps_skill_map_NorKyst_month'+month+'CLIM'+str(step.days)
+                        model+'crps_skill_map_ERA5_month'+month+'CLIM'+str(step.days)
                         )

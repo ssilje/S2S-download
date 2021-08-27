@@ -53,9 +53,9 @@ mae_fc, mae_clim, mae_pers = [], [], []
 ################################################################################
 bw       = BarentsWatch().load('all',no=0).sortby('time')[var]
 
-t_start  = (2020,12,1) #can start with 8
-t_end    = (2021,1,1)
-model    = 'CY47R1'
+t_start  = (2021,6,1) #can start with 8
+t_end    = (2021,7,1)
+model    = 'CY47R2'
 
 hh = Hindcast(
                         var,
@@ -76,7 +76,7 @@ del hh
 t_end = add_month(t_start)
 
 # until end time is reached; load one month at the time
-while smaller_than(t_end,(2021,4,1)):
+while smaller_than(t_end,(2021,8,1)):
 
     month = str(t_start[1])
     print(month)
