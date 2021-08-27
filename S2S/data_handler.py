@@ -12,6 +12,7 @@ import scripts.Henrik.organize_barentzwatch as organize_barentzwatch
 from . import xarray_helpers as xh
 from . import date_to_model as d2m
 
+#
 class Archive:
     """
     Returns local paths and filename functions
