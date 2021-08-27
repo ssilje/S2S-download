@@ -13,6 +13,7 @@ import S2S.xarray_helpers    as xh
 import S2S.models            as models
 import S2S.handle_datetime   as dt
 
+#
 class Hindcast:
     """
     Loads hindcast from S2S database, computes weekly means and then provides
