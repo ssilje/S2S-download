@@ -231,7 +231,7 @@ def unstack_time(da):
                                         )
 
     # re-assing time from datetime like to multiindex (year,dayofyear) and
-    # and split mutliindex into year and dauofyear dimension
+    # and split mutliindex into year and dayofyear dimension
     return da.assign_coords(time=stacked_time).unstack('time')
 
 def stack_time(da):
@@ -533,6 +533,7 @@ def at_validation(obs,vt,ddays=1):
                 tolerance  = pd.Timedelta(ddays,'D'),
                 fill_value = np.nan
                 )
+
         o = o.assign_coords(time=o.time-t).rename(time='step')
         out.append(o)
 

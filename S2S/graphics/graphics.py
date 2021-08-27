@@ -421,7 +421,7 @@ def timeseries(
                 o   = observations\
                         .sel(step=pd.Timedelta(lt,'D'),location=loc)\
                             .sortby('time')
-            except ValueError:
+            except (ValueError,KeyError) as e:
                 o   = observations\
                         .sel(step=pd.Timedelta(lt,'D'))\
                             .sortby('time')
@@ -445,7 +445,7 @@ def timeseries(
                     c = c\
                             .sel(step=pd.Timedelta(lt,'D'),location=loc)\
                                 .sortby('time')
-                except ValueError:
+                except (ValueError,KeyError) as e:
                     c = c\
                             .sel(step=pd.Timedelta(lt,'D'))\
                                 .sortby('time')
@@ -495,7 +495,7 @@ def timeseries(
 
                 subtitle += ' '+clabs[cn]+' '+str(round(float(score.values),2))
 
-            ax.set_title('Lead time '+str(lt)+' days '+subtitle)
+            ax.set_title('Lead time '+str(lt-4)+'-'+str(lt+3)+' days '+subtitle)
             ax.legend()
 
         fig.suptitle(str(name_from_loc(loc.values))+' '+title)

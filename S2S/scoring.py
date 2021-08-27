@@ -220,8 +220,8 @@ class SSCORE:
     def pull(self,fc,obs,N,ci=.95,min_period=2):
 
         # use only years of at least min_period observations
-        fc_idx  = (~np.isnan(fc)).sum(axis=0)>min_period
-        obs_idx = (~np.isnan(obs)).sum(axis=0)>min_period
+        fc_idx  = (np.isfinite(fc)).sum(axis=0)>min_period
+        obs_idx = (np.isfinite(obs)).sum(axis=0)>min_period
 
         # use only coincinding years
         idx_bool = np.logical_and(

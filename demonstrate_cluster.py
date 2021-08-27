@@ -12,22 +12,23 @@ def loc(name):
 bounds = (0,28,55,75)
 var      = 'sst'
 
-t_start  = (2020,1,23)
-t_end    = (2021,1,4)
+t_start  = (2020,2,1)
+t_end    = (2021,2,1)
 
 clim_t_start  = (2000,1,1)
 clim_t_end    = (2021,1,4)
 
+loc_name = 'Langøy S'
 
 high_res = True
 steps    = pd.to_timedelta([9,16,23,30,37],'D')
 
 # observations must be weekly mean values with a time dimension
-all_observations    = BarentsWatch().load('all',no=350).sortby('time')[var]
+all_observations    = BarentsWatch().load('all',no=0).sortby('time')[var]
 
 point_observations  = location_cluster.cluster(
                                                 da=all_observations,
-                                                loc='Hisdalen',
+                                                loc=loc_name,
                                                 lon_tolerance=0.5,
                                                 lat_tolerance=0.25
                                             )
@@ -52,7 +53,7 @@ point_observations = Observations(
                             )
 
 point_hindcast     = Grid2Point(point_observations,grid_hindcast)\
-                            .correlation(step_dependent=True)
+                            .correlation(step_dependent=False)
 
 clim_fc = models.clim_fc(point_observations.mean,point_observations.std)
 pers    = models.persistence(
@@ -77,10 +78,10 @@ combo = models.bias_adjustment_torralba(
                             cluster_name    = 'location'
                             )
 
-hisdalen_obs   = point_observations.data_a.sel(location=loc('Hisdalen'))
-hisdalen_pers  = pers.sel(location=loc('Hisdalen'))
-hisdalen_combo = combo.sel(location=loc('Hisdalen'))
-hisdalen_ec    = point_hindcast.data_a.sel(location=loc('Hisdalen'))
+hisdalen_obs   = point_observations.data_a.sel(location=loc(loc_name))
+hisdalen_pers  = pers.sel(location=loc(loc_name))
+hisdalen_combo = combo.sel(location=loc(loc_name))
+hisdalen_ec    = point_hindcast.data_a.sel(location=loc(loc_name))
 
 graphics.timeseries(
                         observations    = hisdalen_obs,
