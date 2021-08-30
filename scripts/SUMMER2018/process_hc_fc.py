@@ -269,13 +269,13 @@ for lt in steps:
 # Different plotting style
 #x="validation_time", y="t2m", data=plot_df,hue='product', ax=axes, palette=my_pal)
 
-mm, hcdata        = hc_group[6]
-mm, eradata       = era_group[6]
-mm, fcdata        = fc_group[6]
+#mm, hcdata        = hc_group[6]
+#mm, eradata       = era_group[6]
+#mm, fcdata        = fc_group[6]
 
-fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
-hcdata_sel_df = hcdata_sel.drop('step').drop('year').to_dataframe().reset_index(level=0,drop=True).reset_index(level=1,drop=True).reset_index(level=0)
-eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
+#fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
+#hcdata_sel_df = hcdata_sel.drop('step').drop('year').to_dataframe().reset_index(level=0,drop=True).reset_index(level=1,drop=True).reset_index(level=0)
+#eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
 
 plt.close()
 fig,ax=plt.subplots()
@@ -287,15 +287,15 @@ plt.savefig('test_lineplot_hc_fc.png',dpi='figure',bbox_inches='tight')
 
 
 
-plt.close()
-fig,ax2=plt.subplots()
-#sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', boxprops=dict(alpha=.1),ax=ax2)
-sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
-#sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars",ci=100)
-sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
-#sns.lineplot(x="validation_time", y="t2m",data=eradata_sel_df, color='r', markers=True, dashes=True,ax=ax2)
-ax2.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
-plt.savefig('test_lineplot_hc_fc_new.png',dpi='figure',bbox_inches='tight')
+#plt.close()
+#fig,ax2=plt.subplots()
+##sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', boxprops=dict(alpha=.1),ax=ax2)
+#sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
+##sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars",ci=100)
+#sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
+##sns.lineplot(x="validation_time", y="t2m",data=eradata_sel_df, color='r', markers=True, dashes=True,ax=ax2)
+#ax2.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
+#plt.savefig('test_lineplot_hc_fc_new.png',dpi='figure',bbox_inches='tight')
 
 
 
@@ -326,7 +326,8 @@ for lt in steps:
         eradata_sel = eradata_sel.mean('lon').mean('lat')
        
         fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
-        hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0).reset_index(level=0)
+        hcdata_sel_df = hcdata_sel.drop('step').drop('year').to_dataframe().reset_index(level=0,drop=True).reset_index(level=1,drop=True).reset_index(level=0)
+        #hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0).reset_index(level=0)
         eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
         
         
@@ -341,12 +342,143 @@ for lt in steps:
         figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '_new.png'
         plt.savefig(figname,dpi='figure',bbox_inches='tight')
 
+
         
         
         
         
+for lt in steps:
+    fc_steps          = forecast_anom.sel(step=pd.Timedelta(lt,'D')) #loop through each month  
+    era_steps          = era_anom.sel(step=pd.Timedelta(lt,'D'))          
+    
+    dim               = 'validation_time.month'    
+    
+    fc_group          = list(fc_steps.groupby(dim)) 
+    era_group          = list(era_steps.groupby(dim))
+    
+    for m,(mf,fcdata) in enumerate(fc_group): #loop through each month 
         
+        me,eradata          = era_group[m]   
         
+        dim                 = 'validation_time.day'    
+        
+        fc_group_day        = list(fcdata.groupby(dim)) # lagar en liste for kvar mnd (nr_mnd, xarray)
+        re_group_day        = list(eradata.groupby(dim))
+          
+        fcc_day = []
+        rcc_day = []
+        
+        for mm,(mmf,fcdata_m) in enumerate(fc_group_day): #loop through each month
+            mmr,redata_m          = re_group_day[mm]
+            
+            da = fcdata_m.mean('member')
+            try:
+              da = da.isel(member=0)
+            except ValueError:
+              pass
+            
+            try:
+              da = da.isel(time=0)
+            except ValueError:
+              pass
+            try:
+              da = da.isel(step=0)
+            except ValueError:
+              pass
+            
+            
+            p = da.transpose('lat','lon').plot(
+              subplot_kws=dict(projection=ccrs.PlateCarree(),
+                               facecolor="white"),
+              transform=ccrs.PlateCarree(),
+            )
+            p.axes.coastlines()
+    
+            
+            plt.close()
+            im = fcdata_mean.drop('time').drop('step').plot( 
+              x='lon',
+              y='lat',
+              levels=[5, 2.5, 0, 2.5, 5],
+              transform=ccrs.PlateCarree(),
+              cbar_kwargs={'label': 'C',
+                           'ticks': [5, 2.5, 0, 2.5, 5]}
+            )
+            plt.savefig('test.png',dpi='figure',bbox_inches='tight')
+            
+            for i,ax in enumerate(im.axes.flat):
+                ax.coastlines(resolution='10m', color='black',\
+                      linewidth=0.2)
+         
+        # plotting maps
+    
+            #MAE_map = xs.mae(fcdata_valtime_err.mean('member',skipna=True), eradata_valtime_err, dim=[])
+    
+    im = varplot.plot( 
+            x='lon',
+            y='lat',
+            col='step',
+            col_wrap=3,
+            levels=levels_plot,
+            transform=ccrs.PlateCarree(),
+            cbar_kwargs={'label': label_text,
+                 'ticks': levels_cbar}
+            )
+  
+    for i,ax in enumerate(im.axes.flat):
+        ax.coastlines(resolution='10m', color='black',\
+                      linewidth=0.2)
+        ax.set_title(month(i))
+    plt.suptitle(plot_title)
+    plt.savefig(plot_save)    
+            
+            
+            
+            
+            
+        # mean over an area of norway
+        fcdata_sel = fcdata.sel(lat=slice(58,65), lon=slice(5,10))
+        hcdata_sel = hcdata.sel(lat=slice(58,65), lon=slice(5,10))
+        eradata_sel = eradata.sel(lat=slice(58,65), lon=slice(5,10))
+        
+        fcdata_sel = fcdata_sel.mean('lon').mean('lat')
+        hcdata_sel = hcdata_sel.mean('lon').mean('lat')
+        eradata_sel = eradata_sel.mean('lon').mean('lat')
+       
+        fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
+        hcdata_sel_df = hcdata_sel.drop('step').drop('year').to_dataframe().reset_index(level=0,drop=True).reset_index(level=1,drop=True).reset_index(level=0)
+        #hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0).reset_index(level=0)
+        eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
+        
+
+        
+    def plot_months(
+        varplot,
+        levels_plot,
+        label_text,
+        levels_cbar,
+        plot_title,
+        plot_save,
+):
+    # Sjekk her: plottet blir det samme om eg brukar transpose eller ikkje. 
+    #im = skill_score_at_lt.skill.transpose('lon','lat','time_month').plot(
+    im = varplot.plot( 
+        x='lon',
+        y='lat',
+        col='time_month',
+        col_wrap=3,
+        levels=levels_plot,
+        transform=ccrs.PlateCarree(),
+        cbar_kwargs={'label': label_text,
+                 'ticks': levels_cbar}
+    )
+  
+    for i,ax in enumerate(im.axes.flat):
+        ax.coastlines(resolution='10m', color='black',\
+                      linewidth=0.2)
+        ax.set_title(month(i))
+    plt.suptitle(plot_title)
+    plt.savefig(plot_save)    
 
 
 
