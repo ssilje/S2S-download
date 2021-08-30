@@ -1,0 +1,18 @@
+grid.linewidth : 0.05
+savefig.dpi :    360
+figure.dpi :     360
+text.usetex :    False
+font.family :    serif
+font.serif : "Computer Modern Roman",
+axes.labelsize :  6
+axes.titlesize :  6
+font.size :       4
+legend.fontsize : 4
+xtick.labelsize : 4
+ytick.labelsize : 4
+xtick.major.pad : 1
+axes.formatter.limits : -2, 6
+
+# text.latex.preamble: \usepackage{siunitx} \usepackage{amsmath} \sisetup{quotient-mode = fraction} \sisetup{per-mode = reciprocal}
+
+figure.constrained_layout.use : True
