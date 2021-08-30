@@ -276,13 +276,30 @@ mm, fcdata        = fc_group[6]
 fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
 hcdata_sel_df = hcdata_sel.drop('step').drop('year').to_dataframe().reset_index(level=0,drop=True).reset_index(level=1,drop=True).reset_index(level=0)
 eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
+
 plt.close()
-
-sns.boxplot(x="validation_time", y="t2m",data=hcdata_sel_df, color='b', boxprops=dict(alpha=.1))
-sns.boxplot(x="validation_time", y="t2m",data=fcdata_sel_df, color='b')
-sns.lineplot(x="validation_time", y="t2m",data=eradata_sel_df)
-
+fig,ax=plt.subplots()
+sns.boxplot(x="validation_time", y="t2m",data=hcdata_sel_df, color='b', boxprops=dict(alpha=.1),ax=ax)
+sns.boxplot(x="validation_time", y="t2m",data=fcdata_sel_df, color='b',ax=ax)
+ax.plot(eradata_sel_df.t2m,'r-o',linewidth=4)
 plt.savefig('test_lineplot_hc_fc.png',dpi='figure',bbox_inches='tight')
+
+
+
+
+plt.close()
+fig,ax2=plt.subplots()
+#sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', boxprops=dict(alpha=.1),ax=ax2)
+sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
+#sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars",ci=100)
+sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
+#sns.lineplot(x="validation_time", y="t2m",data=eradata_sel_df, color='r', markers=True, dashes=True,ax=ax2)
+ax2.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
+plt.savefig('test_lineplot_hc_fc_new.png',dpi='figure',bbox_inches='tight')
+
+
+
+
 
 for lt in steps:
     fc_steps          = forecast_anom.sel(step=pd.Timedelta(lt,'D')) #loop through each month
@@ -313,24 +330,23 @@ for lt in steps:
         eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
         
         
-        pieces = {"fc": fcdata_sel_df, "hc": hcdata_sel_df, "era": eradata_sel_df}
-        result = pd.concat(pieces)
-        plot_df = result.reset_index(level=0).rename(columns={'level_0':'product'})
-        
-        
         plt.close()
-        
-        my_pal = {"fc": "g", "hc": "b", "era":"k"}
-        
-        
-        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
-        ax = sns.boxplot(x="validation_time", y="t2m", data=plot_df,hue='product', ax=axes, palette=my_pal)
-        x_dates = plot_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
-        ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
-        ax.set_ylim([-8, 8]) 
-        figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '.png'
+        fig,ax2=plt.subplots()
+        sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
+        sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
+        ax2.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
+        x_dates = eradata_sel_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+        ax2.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+        ax2.set_ylim([-4.5, 4.5]) 
+        figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '_new.png'
         plt.savefig(figname,dpi='figure',bbox_inches='tight')
-    
+
+        
+        
+        
+        
+        
+        
 
 
 
