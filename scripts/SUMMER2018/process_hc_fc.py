@@ -264,6 +264,72 @@ for lt in steps:
         ax.set_ylim([-8, 8]) 
         figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '.png'
         plt.savefig(figname,dpi='figure',bbox_inches='tight')
+
+        
+# Different plotting style
+#x="validation_time", y="t2m", data=plot_df,hue='product', ax=axes, palette=my_pal)
+
+mm, hcdata        = hc_group[6]
+mm, eradata       = era_group[6]
+mm, fcdata        = fc_group[6]
+
+fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
+hcdata_sel_df = hcdata_sel.drop('step').drop('year').to_dataframe().reset_index(level=0,drop=True).reset_index(level=1,drop=True).reset_index(level=0)
+eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
+plt.close()
+
+sns.boxplot(x="validation_time", y="t2m",data=hcdata_sel_df, color='b', boxprops=dict(alpha=.1))
+sns.boxplot(x="validation_time", y="t2m",data=fcdata_sel_df, color='b')
+sns.lineplot(x="validation_time", y="t2m",data=eradata_sel_df)
+
+plt.savefig('test_lineplot_hc_fc.png',dpi='figure',bbox_inches='tight')
+
+for lt in steps:
+    fc_steps          = forecast_anom.sel(step=pd.Timedelta(lt,'D')) #loop through each month
+    hc_steps          = hindcast_anom.sel(step=pd.Timedelta(lt,'D'))
+    era_steps          = era_anom.sel(step=pd.Timedelta(lt,'D'))         
+    
+    dim               = 'validation_time.month'    
+    
+    fc_group          = list(fc_steps.groupby(dim)) 
+    hc_group          = list(hc_steps.groupby(dim))
+    era_group          = list(era_steps.groupby(dim))
+  
+    for m,(mf,fcdata) in enumerate(fc_group): #loop through each month
+        mh,hcdata          = hc_group[m]
+        me,eradata          = era_group[m]
+        
+        # mean over an area of norway
+        fcdata_sel = fcdata.sel(lat=slice(58,65), lon=slice(5,10))
+        hcdata_sel = hcdata.sel(lat=slice(58,65), lon=slice(5,10))
+        eradata_sel = eradata.sel(lat=slice(58,65), lon=slice(5,10))
+        
+        fcdata_sel = fcdata_sel.mean('lon').mean('lat')
+        hcdata_sel = hcdata_sel.mean('lon').mean('lat')
+        eradata_sel = eradata_sel.mean('lon').mean('lat')
+       
+        fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
+        hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0).reset_index(level=0)
+        eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
+        
+        
+        pieces = {"fc": fcdata_sel_df, "hc": hcdata_sel_df, "era": eradata_sel_df}
+        result = pd.concat(pieces)
+        plot_df = result.reset_index(level=0).rename(columns={'level_0':'product'})
+        
+        
+        plt.close()
+        
+        my_pal = {"fc": "g", "hc": "b", "era":"k"}
+        
+        
+        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(6, 6), sharey=True)
+        ax = sns.boxplot(x="validation_time", y="t2m", data=plot_df,hue='product', ax=axes, palette=my_pal)
+        x_dates = plot_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+        ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+        ax.set_ylim([-8, 8]) 
+        figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '.png'
+        plt.savefig(figname,dpi='figure',bbox_inches='tight')
     
 
 
