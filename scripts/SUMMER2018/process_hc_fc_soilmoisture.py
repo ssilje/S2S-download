@@ -307,8 +307,8 @@ for lt in steps:
             
             plt.close()
             fig,ax2=plt.subplots()
-            sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
-            sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
+            sns.lineplot(x="validation_time", y=var,data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
+            sns.lineplot(x="validation_time", y=var,data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
             
             x_dates = fcdata_sel_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
             ax2.set_xticklabels(labels=x_dates, rotation=45, ha='right')
