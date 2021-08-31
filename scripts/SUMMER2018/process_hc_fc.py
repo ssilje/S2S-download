@@ -19,7 +19,7 @@ from S2S.local_configuration import config
 
 
 
-bounds          = (0,28,55,75)
+bounds          = (0,28,40,75)
 
 var             = 't2m'
 clabel          = 'K'
@@ -296,6 +296,21 @@ plt.savefig('test_lineplot_hc_fc.png',dpi='figure',bbox_inches='tight')
 ##sns.lineplot(x="validation_time", y="t2m",data=eradata_sel_df, color='r', markers=True, dashes=True,ax=ax2)
 #ax2.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
 #plt.savefig('test_lineplot_hc_fc_new.png',dpi='figure',bbox_inches='tight')
+#bounds          = (0,28,55,75)
+region = {
+    'Norway': {
+        'minlat': '55',  
+        'maxlat': '70',
+        'minlon': '5',  
+        'maxlon': '20'
+            },
+    'MEU': {
+        'minlat': '45',  
+        'maxlat': '55',
+        'minlon': '0',  
+        'maxlon': '16'
+            },
+}
 
 
 
@@ -316,36 +331,51 @@ for lt in steps:
         mh,hcdata          = hc_group[m]
         me,eradata          = era_group[m]
         
-        # mean over an area of norway
-        fcdata_sel = fcdata.sel(lat=slice(58,65), lon=slice(5,10))
-        hcdata_sel = hcdata.sel(lat=slice(58,65), lon=slice(5,10))
-        eradata_sel = eradata.sel(lat=slice(58,65), lon=slice(5,10))
+        for reg in (
+          'Norway',
+        #  'MEU'
+        ):
+            fcdata_sel = fcdata.sel(lat=slice(int(region[reg]['minlat']),int(region[reg]['maxlat'])), lon=slice(int(region[reg]['minlon']),int(region[reg]['maxlon'])))
+            hcdata_sel = hcdata.sel(lat=slice(int(region[reg]['minlat']),int(region[reg]['maxlat'])), lon=slice(int(region[reg]['minlon']),int(region[reg]['maxlon'])))
+            eradata_sel = eradata.sel(lat=slice(int(region[reg]['minlat']),int(region[reg]['maxlat'])), lon=slice(int(region[reg]['minlon']),int(region[reg]['maxlon'])))
         
-        fcdata_sel = fcdata_sel.mean('lon').mean('lat')
-        hcdata_sel = hcdata_sel.mean('lon').mean('lat')
-        eradata_sel = eradata_sel.mean('lon').mean('lat')
+            fcdata_sel = fcdata_sel.mean('lon').mean('lat')
+            hcdata_sel = hcdata_sel.mean('lon').mean('lat')
+            eradata_sel = eradata_sel.mean('lon').mean('lat')
        
-        fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
-        hcdata_sel_df = hcdata_sel.drop('step').drop('year').to_dataframe().reset_index(level=0,drop=True).reset_index(level=1,drop=True).reset_index(level=0)
-        #hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0).reset_index(level=0)
-        eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
+            fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
+            hcdata_sel_df = hcdata_sel.drop('step').drop('year').to_dataframe().reset_index(level=0,drop=True).reset_index(level=1,drop=True).reset_index(level=0)
+            #hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0).reset_index(level=0)
+            eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
         
         
-        plt.close()
-        fig,ax2=plt.subplots()
-        sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
-        sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
-        ax2.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
-        x_dates = eradata_sel_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
-        ax2.set_xticklabels(labels=x_dates, rotation=45, ha='right')
-        ax2.set_ylim([-4.5, 4.5]) 
-        figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '_new.png'
-        plt.savefig(figname,dpi='figure',bbox_inches='tight')
+            plt.close()
+            fig,ax2=plt.subplots()
+            sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
+            sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
+            ax2.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
+            x_dates = eradata_sel_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+            ax2.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+            ax2.set_ylim([-4.5, 4.5]) 
+            figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '_' + reg + '.png'
+            plt.savefig(figname,dpi='figure',bbox_inches='tight')
 
 
         
-        
-        
+ plt.close()
+ fig,ax2=plt.subplots()
+ #sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
+ ax.fill_between(fcdata_sel_df.validation_time, fcdata_sel_df.t2m.max,fcdata_sel_df.t2m.min,alpha=0.1,zorder=30)
+ sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
+ ax2.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
+ x_dates = eradata_sel_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+ ax2.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+ ax2.set_ylim([-4.5, 4.5]) 
+ figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '_' + reg + '.png'
+ plt.savefig(figname,dpi='figure',bbox_inches='tight')       
+ 
+
+
         
 for lt in steps:
     fc_steps          = forecast_anom.sel(step=pd.Timedelta(lt,'D')) #loop through each month  
