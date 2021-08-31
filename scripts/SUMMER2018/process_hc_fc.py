@@ -19,8 +19,8 @@ from S2S.local_configuration import config
 
 
 
-bounds          = (0,28,40,75)
-
+#bounds          = (0,28,40,75)
+bounds          = (0,28,55,75)
 var             = 't2m'
 clabel          = 'K'
 t_start         = (2018,3,1)
@@ -56,7 +56,7 @@ grid_forecast = Forecast(
                         bounds,
                         high_res=high_res,
                         steps=steps,
-                        process=False,
+                        process=True,
                         download=False,
                         split_work=False
                     )
