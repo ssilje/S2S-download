@@ -435,20 +435,20 @@ for lt in steps:
         
             plt.close()
             fig,ax=plt.subplots()
-            #sns.boxplot(x="validation_time", y="t2m",data=hcdata_sel_df, color='b', boxprops=dict(alpha=.1),ax=ax)
-            #sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
             ax.fill_between(eradata_sel_df.validation_time, hcmax_plot.squeeze(),hcmin_plot.squeeze(),alpha=0.1,zorder=30)
             ax.fill_between(eradata_sel_df.validation_time, fcmax_plot.squeeze(),fcmin_plot.squeeze(),alpha=0.1,zorder=30)
-            sns.boxplot(x="validation_time", y="t2m",data=fcdata_sel_df, color='b',ax=ax)
-            ax.plot(eradata_sel_df.t2m,'r-o',linewidth=4)
-            #ax.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
+            ax.fill_between(eradata_sel_df.validation_time, fc75_plot.squeeze(),fc25_plot.squeeze(),alpha=0.1,zorder=30)
+            ax.plot(eradata_sel_df.validation_time,fc50_plot.squeeze())
+            ax.plot(eradata_sel_df.validation_time,eradata_sel_df.t2m)
+            
             x_dates = eradata_sel_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
             ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
             ax.set_ylim([-4.5, 6]) 
-            figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '_' + reg + '.png'
+            figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '_' + reg + '_full_ens.png'
             plt.savefig(figname,dpi='figure',bbox_inches='tight')
             
-            #plt.close()
+            
+
 
 
 
