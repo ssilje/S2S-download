@@ -263,3 +263,58 @@ for lt in steps:
     #    ax.set_ylim([-8, 8]) 
         figname = var + '_HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '.png'
         plt.savefig(figname,dpi='figure',bbox_inches='tight')
+
+region = {
+    'Norway': {
+        'minlat': '55',  
+        'maxlat': '70',
+        'minlon': '5',  
+        'maxlon': '20'
+            },
+    'MEU': {
+        'minlat': '45',  
+        'maxlat': '55',
+        'minlon': '0',  
+        'maxlon': '16'
+            },
+}
+        
+for lt in steps:
+  
+    fc_steps          = forecast_anom.sel(step=pd.Timedelta(lt,'D')) #loop through each month
+    hc_steps          = hindcast_anom.sel(step=pd.Timedelta(lt,'D'))
+  
+    dim               = 'validation_time.month'
+    
+    fc_group          = list(fc_steps.groupby(dim)) 
+    hc_group          = list(hc_steps.groupby(dim))
+    
+    for m,(mf,fcdata) in enumerate(fc_group): #loop through each month
+        mh,hcdata          = hc_group[m]
+        
+        for reg in (
+          'Norway',
+        #  'MEU'
+        ):
+          
+            fcdata_sel = fcdata.sel(lat=slice(int(region[reg]['minlat']),int(region[reg]['maxlat'])), lon=slice(int(region[reg]['minlon']),int(region[reg]['maxlon'])))
+            hcdata_sel = hcdata.sel(lat=slice(int(region[reg]['minlat']),int(region[reg]['maxlat'])), lon=slice(int(region[reg]['minlon']),int(region[reg]['maxlon'])))
+            fcdata_sel = fcdata_sel.mean('lon').mean('lat')
+            hcdata_sel = hcdata_sel.mean('lon').mean('lat')
+            
+            fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
+            hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0)
+            
+            plt.close()
+            fig,ax2=plt.subplots()
+            sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
+            sns.lineplot(x="validation_time", y="t2m",data=fcdata_sel_df,ax=ax2, color='b',err_style="bars")
+            
+            x_dates = fcdata_sel_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+            ax2.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+            #ax2.set_ylim([-4.5, 4.5]) 
+            figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '_' + reg + '_' + var  + '.png'
+            plt.savefig(figname,dpi='figure',bbox_inches='tight')
+              
+        
+              
