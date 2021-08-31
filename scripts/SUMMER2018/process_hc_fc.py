@@ -312,10 +312,6 @@ region = {
             },
 }
 
-
-
-
-
 for lt in steps:
     fc_steps          = forecast_anom.sel(step=pd.Timedelta(lt,'D')) #loop through each month
     hc_steps          = hindcast_anom.sel(step=pd.Timedelta(lt,'D'))
@@ -361,7 +357,109 @@ for lt in steps:
             plt.savefig(figname,dpi='figure',bbox_inches='tight')
 
 
+
+ for lt in steps:
+    fc_steps          = forecast_anom.sel(step=pd.Timedelta(lt,'D')) #loop through each month
+    hc_steps          = hindcast_anom.sel(step=pd.Timedelta(lt,'D'))
+    era_steps          = era_anom.sel(step=pd.Timedelta(lt,'D'))         
+    
+    dim               = 'validation_time.month'    
+    
+    fc_group          = list(fc_steps.groupby(dim)) 
+    hc_group          = list(hc_steps.groupby(dim))
+    era_group          = list(era_steps.groupby(dim))
+  
+    for m,(mf,fcdata) in enumerate(fc_group): #loop through each month
+        mh,hcdata          = hc_group[m]
+        me,eradata          = era_group[m]
         
+        for reg in (
+          'Norway',
+        #  'MEU'
+        ):
+            fcdata_sel = fcdata.sel(lat=slice(int(region[reg]['minlat']),int(region[reg]['maxlat'])), lon=slice(int(region[reg]['minlon']),int(region[reg]['maxlon'])))
+            hcdata_sel = hcdata.sel(lat=slice(int(region[reg]['minlat']),int(region[reg]['maxlat'])), lon=slice(int(region[reg]['minlon']),int(region[reg]['maxlon'])))
+            eradata_sel = eradata.sel(lat=slice(int(region[reg]['minlat']),int(region[reg]['maxlat'])), lon=slice(int(region[reg]['minlon']),int(region[reg]['maxlon'])))
+        
+            fcdata_sel = fcdata_sel.mean('lon').mean('lat')
+            hcdata_sel = hcdata_sel.mean('lon').mean('lat')
+            eradata_sel = eradata_sel.mean('lon').mean('lat')
+            
+            dim                 = 'validation_time.day'
+            hc_group_day        = list(hcdata_sel.groupby(dim))
+            fc_group_day        = list(fcdata_sel.groupby(dim))
+            
+            hcmax = []
+            hcmin = []
+            
+            fcmax = []
+            fcmin = []
+            fc50 = []
+            fc75 = []
+            fc25 = []
+            
+            for hcm,(hcmm,hcdata_sel_day) in enumerate(hc_group_day): #loop through each month
+                fcm, fcdata_sel_day = fc_group_day[hcm]
+                
+                max_hc = hcdata_sel_day.max('year').max('member').drop('time').drop('step').drop('validation_time')
+                min_hc = hcdata_sel_day.min('year').min('member').drop('time').drop('step').drop('validation_time')
+                hcmax.append(max_hc)
+                hcmin.append(min_hc)
+                
+                max_fc = fcdata_sel_day.quantile(1)
+                min_fc = fcdata_sel_day.quantile(0)
+                p50_fc = fcdata_sel_day.quantile(0.5)
+                p25_fc = fcdata_sel_day.quantile(0.25)
+                p75_fc = fcdata_sel_day.quantile(0.75)
+                
+                fcmax.append(max_fc)
+                fcmin.append(min_fc)
+                fc50.append(p50_fc)
+                fc75.append(p75_fc)
+                fc25.append(p25_fc)
+                
+                
+            hcmax_plot = xr.concat(hcmax,dim='validation_time') 
+            hcmin_plot = xr.concat(hcmin,dim='validation_time') 
+            fcmax_plot = xr.concat(fcmax,dim='validation_time')
+            fcmin_plot = xr.concat(fcmin,dim='validation_time')
+            fc50_plot = xr.concat(fc50,dim='validation_time')
+            fc75_plot = xr.concat(fc75,dim='validation_time')
+            fc25_plot = xr.concat(fc25,dim='validation_time')
+                 
+            fcdata_sel_df = fcdata_sel.drop('step').to_dataframe().reset_index(level = 1,drop=True).reset_index(level=0)
+            hcdata_sel_df = hcdata_sel.drop('step').drop('year').to_dataframe().reset_index(level=0,drop=True).reset_index(level=1,drop=True).reset_index(level=0)
+            #hcdata_sel_df = hcdata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True).reset_index(level=0).reset_index(level=0)
+            eradata_sel_df = eradata_sel.drop('step').to_dataframe().reset_index(level=0,drop=True)
+        
+        
+            plt.close()
+            fig,ax=plt.subplots()
+            #sns.boxplot(x="validation_time", y="t2m",data=hcdata_sel_df, color='b', boxprops=dict(alpha=.1),ax=ax)
+            #sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
+            ax.fill_between(eradata_sel_df.validation_time, hcmax_plot.squeeze(),hcmin_plot.squeeze(),alpha=0.1,zorder=30)
+            ax.fill_between(eradata_sel_df.validation_time, fcmax_plot.squeeze(),fcmin_plot.squeeze(),alpha=0.1,zorder=30)
+            sns.boxplot(x="validation_time", y="t2m",data=fcdata_sel_df, color='b',ax=ax)
+            ax.plot(eradata_sel_df.t2m,'r-o',linewidth=4)
+            #ax.plot(eradata_sel_df.validation_time, eradata_sel_df.t2m,color='red', marker='o',linewidth=2,linestyle='dashed',)
+            x_dates = eradata_sel_df['validation_time'].dt.strftime('%m-%d').sort_values().unique()
+            ax.set_xticklabels(labels=x_dates, rotation=45, ha='right')
+            ax.set_ylim([-4.5, 6]) 
+            figname = 'HC_FC_step_' + str(lt.days) + '_month_' + str(mf) + '_' + reg + '.png'
+            plt.savefig(figname,dpi='figure',bbox_inches='tight')
+            
+            #plt.close()
+
+
+
+
+
+          
+            
+            
+            
+            
+            
  plt.close()
  fig,ax2=plt.subplots()
  #sns.lineplot(x="validation_time", y="t2m",data=hcdata_sel_df,ax=ax2,color='b', alpha=.1,err_style="band",ci=100)
