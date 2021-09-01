@@ -122,6 +122,7 @@ forecast           = xh.assign_validation_time(grid_forecast.data)
 fcc_step = []  
 hcc_step = []
 re_step  = []
+
 for lt in steps:
     fc_steps          = forecast.sel(step=pd.Timedelta(lt,'D')) #loop through each month
     hc_steps          = hindcast.sel(step=pd.Timedelta(lt,'D'))
@@ -230,8 +231,7 @@ region = {
             },
 }
 
-
- for lt in steps:
+for lt in steps:
     fc_steps          = forecast_anom.sel(step=pd.Timedelta(lt,'D')) #loop through each month
     hc_steps          = hindcast_anom.sel(step=pd.Timedelta(lt,'D'))
     era_steps          = era_anom.sel(step=pd.Timedelta(lt,'D'))         
