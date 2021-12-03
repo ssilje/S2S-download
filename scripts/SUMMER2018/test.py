@@ -76,12 +76,16 @@ region = {
 
 reanalysis         = xh.assign_validation_time(grid_observations_fc.data)
 forecast           = xh.assign_validation_time(grid_forecast.data)
+
+
 forecast = forecast.mean(dim='member')
+reanalysis = reanalysis.sel(time='2018') 
+
 fcc_step = []  
 re_step  = []
 
 for lt in steps:
-#lt = steps[3]
+
     fc_steps          = forecast.sel(step=pd.Timedelta(lt,'D')) #loop through each month
     re_steps          = reanalysis.sel(step=pd.Timedelta(lt,'D'))           
 
