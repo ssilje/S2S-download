@@ -80,7 +80,7 @@ plt.close()
 varplot = plotdata 
 levels_plot = np.linspace(-10,10,21)
 levels_cbar = np.linspace(-10,10,11)
-plot_title  = 't2m anomaly'
+plot_title  = 't2m anomaly' + plotdata['validation_time'].dt.strftime('%m-%d')
 fname       = 't2m_anomaly'
 label_text  = 'K'
 
@@ -100,7 +100,7 @@ for i,ax in enumerate(im.axes.flat):
   ax.coastlines(resolution = '10m', 
                 color      = 'black',
                 linewidth  = 0.2)
-  ax.set_extent((-10, 40, 20, 85), crs=ccrs.PlateCarree())
+  ax.set_extent((0, 25, 55, 75), crs=ccrs.PlateCarree())
  
         
 plt.suptitle(plot_title)
