@@ -52,12 +52,11 @@ for lt in steps:
             
             
             plt.close()
-                 
             varplot = plotdata 
             levels_plot = np.linspace(-10,10,21)
             levels_cbar = np.linspace(-10,10,11)
-            plot_title  = 't2m anomaly
-            fname       = 't2m_anomaly'
+            plot_title  = 't2m anomaly ' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D')
+            fname       = 't2m_anomaly_' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D')
             label_text  = 'K'
 
             im = varplot.plot(
@@ -71,43 +70,24 @@ for lt in steps:
                 cbar_kwargs      = {'label': label_text, 'ticks': levels_cbar}
             )
 
+
+            for i,ax in enumerate(im.axes.flat):
+            ax.coastlines(resolution = '10m', 
+                          color      = 'black',
+                          linewidth  = 0.2)
+            ax.set_extent((0, 25, 55, 75), crs=ccrs.PlateCarree())
+ 
+        
+            plt.suptitle(plot_title)
+
+            plt.savefig(fname+'.png',dpi='figure',bbox_inches='tight')
+            plt.close()
+            print('Figure stored at: '+fname+'.png')  
+
   
 
 
 
-plt.close()
-                 
-varplot = plotdata 
-levels_plot = np.linspace(-10,10,21)
-levels_cbar = np.linspace(-10,10,11)
-plot_title  = 't2m anomaly' + plotdata['validation_time'].dt.strftime('%m-%d')
-fname       = 't2m_anomaly_' + plotdata.validation_time.dt.strftime('%y-%m-%d').values
-label_text  = 'K'
-
-im = varplot.plot(
-    x               = 'lon',
-    y               = 'lat',
-    col              = 'quantile',
-    col_wrap         = 3,
-    levels           = levels_plot,
-    subplot_kws      = dict(projection=ccrs.PlateCarree()),
-    transform        = ccrs.PlateCarree(),
-    cbar_kwargs      = {'label': label_text, 'ticks': levels_cbar}
-)
-
-
-for i,ax in enumerate(im.axes.flat):
-  ax.coastlines(resolution = '10m', 
-                color      = 'black',
-                linewidth  = 0.2)
-  ax.set_extent((0, 25, 55, 75), crs=ccrs.PlateCarree())
- 
-        
-plt.suptitle(plot_title)
-
-plt.savefig(fname+'.png',dpi='figure',bbox_inches='tight')
-plt.close()
-print('Figure stored at: '+fname+'.png')  
               
               
               
