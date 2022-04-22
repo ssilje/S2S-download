@@ -16,6 +16,7 @@ for lt in steps:
         dim                 = 'validation_time.day'
         hc_group_day        = list(hcdata.groupby(dim))
         fc_group_day        = list(fcdata.groupby(dim))
+        era_group_day       = list(eradata.groupby(dim))
             
         hcmax = []
         hcmin = []
@@ -30,12 +31,16 @@ for lt in steps:
             
         for hcm,(hcmm,hcdata_sel_day) in enumerate(hc_group_day): #loop through each month
             fcm, fcdata_sel_day = fc_group_day[hcm]
+            ecm, era_sel_day = era_group_day[hcm]
+            
             plotdata_test = []
             plotdata = []    
             max_hc = hcdata_sel_day.max('year').max('member').drop('time').drop('step').drop('validation_time')
             min_hc = hcdata_sel_day.min('year').min('member').drop('time').drop('step').drop('validation_time')
             hcmax.append(max_hc)
             hcmin.append(min_hc)
+            
+            
                 
             max_fc = fcdata_sel_day.quantile(1,dim='member')
             plotdata_test.append(max_fc)
@@ -47,6 +52,9 @@ for lt in steps:
             plotdata_test.append(p25_fc)
             p75_fc = fcdata_sel_day.quantile(0.75,dim='member')
             plotdata_test.append(p75_fc)
+            
+            era_sel_day = era_sel_day.assign_coords(quantile='era')
+            plotdata_test.append(era_sel_day)
             
             plotdata = xr.concat(plotdata_test,dim='quantile')
             
@@ -84,6 +92,39 @@ for lt in steps:
             plt.close()
             print('Figure stored at: '+fname+'.png')  
 
+            
+plt.close()
+varplot = plotdata 
+levels_plot = np.linspace(-10,10,21)
+levels_cbar = np.linspace(-10,10,11)
+plot_title  = 't2m anomaly ' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + 'step (days)' + str(lt.days)
+fname       = 't2m_anomaly_' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + '_step_' + str(lt.days)
+label_text  = 'K'
+
+im = varplot.plot(
+    x               = 'lon',
+    y               = 'lat',
+    col              = 'quantile',
+    col_wrap         = 3,
+    levels           = levels_plot,
+    subplot_kws      = dict(projection=ccrs.PlateCarree()),
+    transform        = ccrs.PlateCarree(),
+    cbar_kwargs      = {'label': label_text, 'ticks': levels_cbar}
+)
+
+
+for i,ax in enumerate(im.axes.flat):
+    ax.coastlines(resolution = '10m', 
+                  color      = 'black',
+                  linewidth  = 0.2)
+    ax.set_extent((0, 25, 55, 75), crs=ccrs.PlateCarree())
+ 
+        
+plt.suptitle(plot_title)
+
+plt.savefig(fname+'.png',dpi='figure',bbox_inches='tight')
+plt.close()
+print('Figure stored at: '+fname+'.png')
   
 
 
