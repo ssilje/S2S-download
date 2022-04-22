@@ -81,7 +81,7 @@ varplot = plotdata
 levels_plot = np.linspace(-10,10,21)
 levels_cbar = np.linspace(-10,10,11)
 plot_title  = 't2m anomaly' + plotdata['validation_time'].dt.strftime('%m-%d')
-fname       = 't2m_anomaly'
+fname       = 't2m_anomaly_' + plotdata.validation_time.dt.strftime('%y-%m-%d').values
 label_text  = 'K'
 
 im = varplot.plot(
