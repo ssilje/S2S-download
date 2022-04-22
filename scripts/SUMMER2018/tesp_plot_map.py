@@ -72,10 +72,10 @@ for lt in steps:
 
 
             for i,ax in enumerate(im.axes.flat):
-            ax.coastlines(resolution = '10m', 
-                          color      = 'black',
-                          linewidth  = 0.2)
-            ax.set_extent((0, 25, 55, 75), crs=ccrs.PlateCarree())
+                ax.coastlines(resolution = '10m', 
+                              color      = 'black',
+                              linewidth  = 0.2)
+                ax.set_extent((0, 25, 55, 75), crs=ccrs.PlateCarree())
  
         
             plt.suptitle(plot_title)
