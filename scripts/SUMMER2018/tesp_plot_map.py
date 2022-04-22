@@ -55,8 +55,8 @@ for lt in steps:
             varplot = plotdata 
             levels_plot = np.linspace(-10,10,21)
             levels_cbar = np.linspace(-10,10,11)
-            plot_title  = 't2m anomaly ' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D')
-            fname       = 't2m_anomaly_' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D')
+            plot_title  = 't2m anomaly ' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + 'step (days)' + str(lt.days)
+            fname       = 't2m_anomaly_' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + '_step_' + str(lt.days)
             label_text  = 'K'
 
             im = varplot.plot(
