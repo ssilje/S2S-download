@@ -91,6 +91,74 @@ for lt in steps:
             plt.savefig(fname+'.png',dpi='figure',bbox_inches='tight')
             plt.close()
             print('Figure stored at: '+fname+'.png')  
+            
+            
+            def indices(a, func):
+                return [i for (i, val) in enumerate(a) if func(val)]
+
+
+            prob_dataset = []
+            prob_gt   = np.empty([fcdata_sel_day.lon.shape[0],fcdata_sel_day.lat.shape[0]])
+            prob_gt[:] = np.NaN
+            prob_lt   = np.empty([fcdata_sel_day.lon.shape[0],fcdata_sel_day.lat.shape[0]])
+            prob_lt[:] = np.NaN
+
+            for count_lat, value_lat in enumerate(fcdata_sel_day.lat.values):
+    
+                for count_lon, value_lon in enumerate(fcdata_sel_day.lon.values):
+    
+                    temp = np.squeeze(fcdata_sel_day)
+   
+                    inds_gt = indices(temp[:,count_lon,count_lat], lambda x: x > 0)
+                    inds_lt = indices(temp[:,count_lon,count_lat], lambda x: x < 0)
+                    prob_gt[count_lon,count_lat] = (len(inds_gt)/51)*100
+                    prob_lt[count_lon,count_lat] = (len(inds_lt)/51)*100
+        
+            prob_dataset = xr.Dataset(
+                {
+                    "prob_gt": (["lon", "lat"], prob_gt),
+                    "prob_lt": (["lon", "lat"], prob_lt),
+                },
+                coords={
+                    "lon": (["lon",], fcdata_sel_day.lon.values),
+                    "lat": (["lat"], fcdata_sel_day.lat.values),
+                },
+            )
+            
+            plt.close()
+            varplot = prob_dataset.prob_gt
+            levels_plot = np.linspace(0,100,21)
+            levels_cbar = np.linspace(0,100,11)
+            plot_title  = 't2m prob ' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + 'step (days)' + str(lt.days)
+            fname       = 't2m_prob_' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + '_step_' + str(lt.days)
+            label_text  = '%'
+
+            im = varplot.plot(
+                x               = 'lon',
+                y               = 'lat',
+                levels           = levels_plot,
+                subplot_kws      = dict(projection=ccrs.PlateCarree()),
+                transform        = ccrs.PlateCarree(),
+                cbar_kwargs      = {'label': label_text, 'ticks': levels_cbar}
+            )
+
+
+            im.axes.coastlines(resolution = '10m', 
+                        color      = 'black',
+                        linewidth  = 0.2)
+            im.axes.set_extent((0, 25, 55, 75), crs=ccrs.PlateCarree())
+ 
+        
+            plt.suptitle(plot_title)
+
+            plt.savefig(fname+'.png',dpi='figure',bbox_inches='tight')
+            plt.close()
+            print('Figure stored at: '+fname+'.png')
+
+
+            
+            
+            
 
 
 def indices(a, func):
