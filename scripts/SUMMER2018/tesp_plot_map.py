@@ -92,6 +92,29 @@ for lt in steps:
             plt.close()
             print('Figure stored at: '+fname+'.png')  
 
+
+def indices(a, func):
+    return [i for (i, val) in enumerate(a) if func(val)]
+
+a = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+
+for count_lat, value_lat in enumerate(fcdata_sel_day.lat.values):
+    print(count_lat, value_lat)
+    for count_lon, value_lon in enumerate(fcdata_sel_day.lon.values):
+    
+        
+        print(count_lon, value_lon)
+        
+        temp = np.squeeze(fcdata_sel_day)
+       
+        
+        inds = indices(temp[:,count_lon,count_lat], lambda x: x > 0)
+        (len(inds)/51)*100
+        
+
+
+
+
             
 plt.close()
 varplot = plotdata 
