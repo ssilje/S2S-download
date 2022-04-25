@@ -127,10 +127,40 @@ for lt in steps:
             
             plt.close()
             varplot = prob_dataset.prob_gt
-            levels_plot = np.linspace(0,100,21)
-            levels_cbar = np.linspace(0,100,11)
-            plot_title  = 't2m prob ' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + 'step (days)' + str(lt.days)
-            fname       = 't2m_prob_' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + '_step_' + str(lt.days)
+            levels_plot = np.linspace(0,110,21)
+            levels_cbar = np.linspace(0,110,11)
+            plot_title  = 'prob t2m anomaly > 0 ' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + 'step (days)' + str(lt.days)
+            fname       = 't2m_prob_gt_' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + '_step_' + str(lt.days)
+            label_text  = '%'
+
+            im = varplot.plot(
+                x               = 'lon',
+                y               = 'lat',
+                levels           = levels_plot,
+                subplot_kws      = dict(projection=ccrs.PlateCarree()),
+                transform        = ccrs.PlateCarree(),
+                cbar_kwargs      = {'label': label_text, 'ticks': levels_cbar}
+            )
+
+
+            im.axes.coastlines(resolution = '10m', 
+                        color      = 'black',
+                        linewidth  = 0.2)
+            im.axes.set_extent((0, 25, 55, 75), crs=ccrs.PlateCarree())
+ 
+        
+            plt.suptitle(plot_title)
+
+            plt.savefig(fname+'.png',dpi='figure',bbox_inches='tight')
+            plt.close()
+            print('Figure stored at: '+fname+'.png')
+            
+            plt.close()
+            varplot = prob_dataset.prob_lt
+            levels_plot = np.linspace(0,110,21)
+            levels_cbar = np.linspace(0,110,11)
+            plot_title  = 'prob t2m anomaly < 0 ' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + 'step (days)' + str(lt.days)
+            fname       = 't2m_prob_lt_' + np.datetime_as_string(plotdata.validation_time[0].values, unit='D') + '_step_' + str(lt.days)
             label_text  = '%'
 
             im = varplot.plot(
